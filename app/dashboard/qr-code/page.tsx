@@ -7,13 +7,13 @@ import { createBrowserClient } from "@supabase/ssr";
 import { ArrowLeft, Download, QrCode, Copy, Check } from "lucide-react";
 
 const templates = [
-  { id: 'classic-blue', name: 'Classic Blue', color: '#0A2463', desc: 'General Practice · Dental · Orthopedic' },
-  { id: 'mint-green', name: 'Mint Green', color: '#2E7D32', desc: 'Pediatrics · Aesthetics · TCM' },
-  { id: 'elegant-violet', name: 'Elegant Violet', color: '#4A148C', desc: 'Luxury Aesthetics · Plastic Surgery' },
-  { id: 'coral-orange', name: 'Coral Orange', color: '#E64A19', desc: 'Family Clinic · Physical Therapy' },
-  { id: 'professional-gray', name: 'Pro Gray', color: '#37474F', desc: 'Tech Clinic · Lab · Specialist' },
-  { id: 'forest-green', name: 'Forest Green', color: '#33691E', desc: 'TCM · Wellness · Organic' },
-  { id: 'luxury-blue-gold', name: 'Luxury Gold', color: '#051C3A', desc: 'Premium Private · VIP' },
+  { id: 'classic-blue', name: 'Classic Blue', color: '#0A2463', desc: 'General Practice · Dental · Orthopedic', preview: 'preview_style_01_classic_blue.jpg' },
+  { id: 'mint-green', name: 'Mint Green', color: '#2E7D32', desc: 'Pediatrics · Aesthetics · TCM', preview: 'preview_style_02_mint_green.jpg' },
+  { id: 'elegant-violet', name: 'Elegant Violet', color: '#4A148C', desc: 'Luxury Aesthetics · Plastic Surgery', preview: 'preview_style_03_violet.jpg' },
+  { id: 'coral-orange', name: 'Coral Orange', color: '#E64A19', desc: 'Family Clinic · Physical Therapy', preview: 'preview_style_04_coral.jpg' },
+  { id: 'professional-gray', name: 'Pro Gray', color: '#37474F', desc: 'Tech Clinic · Lab · Specialist', preview: 'preview_style_05_gray.jpg' },
+  { id: 'forest-green', name: 'Forest Green', color: '#33691E', desc: 'TCM · Wellness · Organic', preview: 'preview_style_06_forest.jpg' },
+  { id: 'luxury-blue-gold', name: 'Luxury Gold', color: '#051C3A', desc: 'Premium Private · VIP', preview: 'preview_style_07_luxury.jpg' },
 ];
 
 export default function QRCodePage() {
@@ -83,6 +83,8 @@ export default function QRCodePage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const selectedTemplateData = templates.find(t => t.id === selectedTemplate);
+
   if (loading) return <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center"><div className="text-brand-muted">Loading...</div></div>;
 
   return (
@@ -137,6 +139,24 @@ export default function QRCodePage() {
               </button>
             ))}
           </div>
+
+          {/* 预览图 */}
+          {selectedTemplateData && (
+            <div className="mt-6 p-4 rounded-[12px] border border-[#E0E7F1] bg-gray-50">
+              <p className="text-sm font-medium text-brand-dark mb-3">
+                Preview: {selectedTemplateData.name}
+              </p>
+              <img 
+                src={`/images/qr-previews/${selectedTemplateData.preview}`}
+                alt={`${selectedTemplateData.name} preview`}
+                className="w-full max-w-lg rounded-lg shadow-sm mx-auto"
+              />
+              <p className="text-xs text-brand-muted mt-2 text-center">
+                Desktop stand + Business card preview
+              </p>
+            </div>
+          )}
+
           <div className="mt-4 flex justify-center">
             <button onClick={generateQR} disabled={generating || !placeId}
               className="px-8 py-3 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors disabled:opacity-50">
@@ -195,7 +215,7 @@ export default function QRCodePage() {
           <h3 className="font-semibold text-brand-dark mb-3">💡 Placement Tips</h3>
           <ul className="space-y-2 text-sm text-brand-muted">
             <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Place the stand where patients pay — right after a positive experience</li>
-            <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Train front desk to say: "If you had a great visit, we'd love your feedback on Google"</li>
+            <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Train front desk to say: "If you had a great visit, we\'d love your feedback on Google"</li>
             <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Include the card with receipts for patients who might review later</li>
             <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Pro tip: Ask for reviews from patients who complimented your service</li>
           </ul>
