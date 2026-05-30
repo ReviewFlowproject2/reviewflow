@@ -389,6 +389,26 @@ export default function DashboardPage() {
     );
   };
 
+
+  // 删除患者
+  const handleDeletePatient = async (patientId: string) => {
+    if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) return;
+
+    try {
+      const { error } = await supabase
+        .from("patients")
+        .delete()
+        .eq("id", patientId);
+
+      if (error) throw error;
+
+      addToast("Patient deleted successfully", "success");
+      loadData();
+    } catch (err: any) {
+      addToast(err.message || "Failed to delete patient", "error");
+    }
+  };
+
   const getActionButton = (patient: Patient) => {
     const isUpdating = updatingId === patient.id;
     const isSending = sendingId === patient.id;
@@ -490,6 +510,7 @@ export default function DashboardPage() {
         return <span className="text-xs text-brand-muted/50">-</span>;
     }
   };
+
 
   const filteredPatients = patients.filter((p) =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -666,7 +687,16 @@ export default function DashboardPage() {
                       )}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {getActionButton(patient)}
+                      <div className="flex items-center justify-end gap-2">
+                        {getActionButton(patient)}
+                        <button
+                          onClick={() => handleDeletePatient(patient.id)}
+                          className="text-red-400 hover:text-red-600 transition-colors p-1"
+                          title="Delete patient"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -697,8 +727,15 @@ export default function DashboardPage() {
                   {" · "}
                   {new Date(patient.visit_date).toLocaleDateString()}
                 </div>
-                <div className="mb-2">
+                <div className="mb-2 flex items-center justify-between">
                   {getActionButton(patient)}
+                  <button
+                    onClick={() => handleDeletePatient(patient.id)}
+                    className="text-red-400 hover:text-red-600 transition-colors p-1"
+                    title="Delete patient"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
                 {patient.review_rating && (
                   <div className="flex gap-0.5 mb-2">
