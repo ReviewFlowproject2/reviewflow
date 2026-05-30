@@ -7,13 +7,13 @@ import { createBrowserClient } from "@supabase/ssr";
 import { ArrowLeft, Download, QrCode, Copy, Check } from "lucide-react";
 
 const templates = [
-  { id: 'classic-blue', name: 'Classic Blue', color: '#0A2463', desc: '全科诊所 · 牙科 · 骨科' },
-  { id: 'mint-green', name: 'Mint Green', color: '#2E7D32', desc: '儿科 · 医美 · 中医' },
-  { id: 'elegant-violet', name: 'Elegant Violet', color: '#4A148C', desc: '高端医美 · 整形' },
-  { id: 'coral-orange', name: 'Coral Orange', color: '#E64A19', desc: '家庭诊所 · 理疗' },
-  { id: 'professional-gray', name: 'Pro Gray', color: '#37474F', desc: '科技诊所 · 专科' },
-  { id: 'forest-green', name: 'Forest Green', color: '#33691E', desc: '中医 · 养生' },
-  { id: 'luxury-blue-gold', name: 'Luxury Gold', color: '#051C3A', desc: '高端私立 · VIP' },
+  { id: 'classic-blue', name: 'Classic Blue', color: '#0A2463', desc: 'General Practice · Dental · Orthopedic' },
+  { id: 'mint-green', name: 'Mint Green', color: '#2E7D32', desc: 'Pediatrics · Aesthetics · TCM' },
+  { id: 'elegant-violet', name: 'Elegant Violet', color: '#4A148C', desc: 'Luxury Aesthetics · Plastic Surgery' },
+  { id: 'coral-orange', name: 'Coral Orange', color: '#E64A19', desc: 'Family Clinic · Physical Therapy' },
+  { id: 'professional-gray', name: 'Pro Gray', color: '#37474F', desc: 'Tech Clinic · Lab · Specialist' },
+  { id: 'forest-green', name: 'Forest Green', color: '#33691E', desc: 'TCM · Wellness · Organic' },
+  { id: 'luxury-blue-gold', name: 'Luxury Gold', color: '#051C3A', desc: 'Premium Private · VIP' },
 ];
 
 export default function QRCodePage() {
@@ -163,10 +163,10 @@ export default function QRCodePage() {
                 <h4 className="font-medium text-brand-dark text-sm">Download for Print</h4>
                 <div className="space-y-3">
                   {[
-                    { size: 1500, label: 'desk-stand', name: 'Front Desk Stand (5"×5")', desc: 'High-res for professional printing' },
-                    { size: 1050, label: 'card-front', name: 'Business Card Front (3.5"×2")', desc: 'Doctor info & contact details' },
-                    { size: 1050, label: 'card-back', name: 'Business Card Back (3.5"×2")', desc: 'QR code with review prompt' },
-                    { size: 600, label: 'receipt', name: 'Receipt Sticker (2"×2")', desc: 'Small sticker for receipts' },
+                    { size: 1500, label: 'desk-stand', name: 'Front Desk Stand (5\"×5\")', desc: 'High-res for professional printing' },
+                    { size: 1050, label: 'card-front', name: 'Business Card Front (3.5\"×2\")', desc: 'Doctor info & contact details' },
+                    { size: 1050, label: 'card-back', name: 'Business Card Back (3.5\"×2\")', desc: 'QR code with review prompt' },
+                    { size: 600, label: 'receipt', name: 'Receipt Sticker (2\"×2\")', desc: 'Small sticker for receipts' },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between p-4 rounded-[12px] border border-[#E0E7F1]">
                       <div>
