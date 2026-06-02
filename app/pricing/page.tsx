@@ -32,7 +32,6 @@ export default function PricingPage() {
 
     (window as any).Paddle.Initialize({
       token: PADDLE_CLIENT_TOKEN,
-      environment: "production",
     });
 
     (window as any).Paddle.Checkout.open({
