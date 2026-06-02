@@ -7,22 +7,10 @@ import { useState, useEffect } from "react";
 
 const PADDLE_CLIENT_TOKEN = "live_70c09ad4de252bfa5440b90a9ca";
 
-interface PricingPlan {
-  priceId: string;
-  price: number;
-  period: string;
-  save?: string;
-}
-
-interface PricingTier {
-  pro: PricingPlan;
-  agency: PricingPlan;
-}
-
-const PRICING: Record<string, PricingTier> = {
+const PRICING = {
   monthly: {
-    pro: { priceId: "pri_01kt19xahgfjcw0hcmc9gkws26", price: 39, period: "/mo" },
-    agency: { priceId: "pri_01kt1a0wwqa4nbny8d3ae0tben", price: 69, period: "/mo" },
+    pro: { priceId: "pri_01kt19xahgfjcw0hcmc9gkws26", price: 39, period: "/mo", save: "" },
+    agency: { priceId: "pri_01kt1a0wwqa4nbny8d3ae0tben", price: 69, period: "/mo", save: "" },
   },
   quarterly: {
     pro: { priceId: "pri_01kt4s6zamveeevqt9rv42e8z8", price: 105, period: "/3mo", save: "Save 10%" },
@@ -67,6 +55,11 @@ export default function PricingPage() {
     { key: "quarterly", label: "Quarterly" },
     { key: "yearly", label: "Yearly" },
   ];
+
+  const getSaveLabel = (plan: "pro" | "agency") => {
+    const save = PRICING[cycle][plan].save;
+    return save ? save : null;
+  };
 
   return (
     <>
@@ -119,9 +112,9 @@ export default function PricingPage() {
             {/* Pro */}
             <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">Most Popular</div>
-              {PRICING[cycle].pro.save && (
+              {getSaveLabel("pro") && (
                 <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  {PRICING[cycle].pro.save}
+                  {getSaveLabel("pro")}
                 </div>
               )}
               <h3 className="font-outfit font-bold text-xl text-brand-dark mb-2">Pro</h3>
@@ -149,9 +142,9 @@ export default function PricingPage() {
 
             {/* Agency */}
             <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1] relative">
-              {PRICING[cycle].agency.save && (
+              {getSaveLabel("agency") && (
                 <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  {PRICING[cycle].agency.save}
+                  {getSaveLabel("agency")}
                 </div>
               )}
               <h3 className="font-outfit font-bold text-xl text-brand-dark mb-2">Agency</h3>
