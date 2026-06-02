@@ -7,7 +7,19 @@ import { useState, useEffect } from "react";
 
 const PADDLE_CLIENT_TOKEN = "live_70c09ad4de252bfa5440b90a9ca";
 
-const PRICING = {
+interface PricingPlan {
+  priceId: string;
+  price: number;
+  period: string;
+  save?: string;
+}
+
+interface PricingTier {
+  pro: PricingPlan;
+  agency: PricingPlan;
+}
+
+const PRICING: Record<string, PricingTier> = {
   monthly: {
     pro: { priceId: "pri_01kt19xahgfjcw0hcmc9gkws26", price: 39, period: "/mo" },
     agency: { priceId: "pri_01kt1a0wwqa4nbny8d3ae0tben", price: 69, period: "/mo" },
@@ -136,7 +148,7 @@ export default function PricingPage() {
             </div>
 
             {/* Agency */}
-            <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
+            <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1] relative">
               {PRICING[cycle].agency.save && (
                 <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   {PRICING[cycle].agency.save}
