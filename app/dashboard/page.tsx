@@ -7,7 +7,6 @@ import {
   Star,
   MessageCircle,
   AlertTriangle,
-  Send,
   ShieldAlert,
   CheckCircle,
   Check,
@@ -25,6 +24,7 @@ import {
   Stethoscope,
   RefreshCw,
   Clock,
+  Zap,
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -56,6 +56,7 @@ interface Business {
   name: string;
   trial_ends_at: string;
   google_review_link: string;
+  plan?: string; // free / pro / agency
 }
 
 interface Toast {
@@ -98,7 +99,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
 }
 
 // ==================== Sidebar ====================
-function Sidebar({ businessName }: { businessName: string }) {
+function Sidebar({ business }: { business: Business | null }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -123,6 +124,13 @@ function Sidebar({ businessName }: { businessName: string }) {
   const trialDaysLeft = Math.max(0, Math.ceil(
     (new Date("2026-06-20").getTime() - Date.now()) / (1000 * 60 * 60 * 24)
   ));
+
+  const currentPlan = business?.plan || "free";
+  const planLabel = { free: "Free", pro: "Pro", agency: "Agency" }[currentPlan];
+  const planColor = { free: "text-gray-500", pro: "text-brand-blue", agency: "text-amber-600" }[currentPlan];
+  const showUpgrade = currentPlan !== "agency";
+  const upgradeTarget = currentPlan === "free" ? "Pro" : "Agency";
+  const upgradeColor = currentPlan === "free" ? "bg-brand-blue hover:bg-brand-dark" : "bg-amber-500 hover:bg-amber-600";
 
   return (
     <aside className="w-[260px] min-h-screen bg-white border-r border-[#E9F1FA] fixed left-0 top-0 flex flex-col z-40">
@@ -150,11 +158,26 @@ function Sidebar({ businessName }: { businessName: string }) {
           );
         })}
       </nav>
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 space-y-3">
+        {/* Trial Info */}
         <div className="bg-brand-soft rounded-xl p-4">
           <p className="text-xs text-brand-muted mb-1">Trial ends in</p>
           <p className="font-outfit font-bold text-lg text-brand-blue">{trialDaysLeft} days</p>
-          <p className="text-xs text-brand-muted mt-1">{businessName}</p>
+          <p className="text-xs text-brand-muted mt-1">{business?.name || "Your Clinic"}</p>
+        </div>
+
+        {/* Plan Info */}
+        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+          <p className="text-xs text-brand-muted mb-1">Current Plan</p>
+          <p className={`font-outfit font-bold text-sm ${planColor}`}>{planLabel}</p>
+          {showUpgrade && (
+            <Link
+              href="/pricing"
+              className={`mt-2 block w-full text-center py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${upgradeColor}`}
+            >
+              Upgrade to {upgradeTarget}
+            </Link>
+          )}
         </div>
       </div>
       <div className="px-4 pb-6">
@@ -517,6 +540,14 @@ export default function DashboardPage() {
     p.phone.includes(searchTerm)
   );
 
+  const currentPlan = business?.plan || "free";
+  const showTopBanner = currentPlan !== "agency";
+  const upgradeTarget = currentPlan === "free" ? "Pro" : "Agency";
+  const bannerColor = currentPlan === "free" ? "bg-brand-blue" : "bg-amber-500";
+  const bannerText = currentPlan === "free" 
+    ? "You're on the Free plan. Upgrade to Pro to automate review requests and monitor your reputation."
+    : "You're on Pro. Upgrade to Agency to unlock Daily Digest, Priority SMS Alerts, and team management.";
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center">
@@ -527,11 +558,28 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex">
-      <Sidebar businessName={business?.name || "Your Clinic"} />
+      <Sidebar business={business} />
 
       <main className="flex-1 ml-[260px] p-6 lg:p-8 max-w-7xl">
         {/* Toast Container */}
         <ToastContainer toasts={toasts} onRemove={removeToast} />
+
+        {/* Top Upgrade Banner */}
+        {showTopBanner && (
+          <div className={`${bannerColor} rounded-2xl p-4 mb-6 flex items-center justify-between gap-4`}>
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-white shrink-0" />
+              <p className="text-white text-sm font-medium">{bannerText}</p>
+            </div>
+            <Link
+              href="/pricing"
+              className="shrink-0 px-4 py-2 bg-white text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+              style={{ color: bannerColor === "bg-brand-blue" ? "#2563eb" : "#d97706" }}
+            >
+              Upgrade to {upgradeTarget}
+            </Link>
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">

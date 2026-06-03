@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Zap, Users, Bell } from "lucide-react";
 import Script from "next/script";
 import { useState, useEffect } from "react";
 
@@ -23,6 +23,12 @@ const PRICING = {
 };
 
 type BillingCycle = "monthly" | "quarterly" | "yearly";
+
+const AgencyBadge = ({ children }: { children: React.ReactNode }) => (
+  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">
+    {children}
+  </span>
+);
 
 export default function PricingPage() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
@@ -92,20 +98,20 @@ export default function PricingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             {/* Free */}
             <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-2">Free</h3>
+              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
               <p className="text-brand-muted text-sm mb-4">QR code generation</p>
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
               <Link href="/register" className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors">
                 Get Started
               </Link>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>QR code generation</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Google Review link</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Basic dashboard</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Up to 50 patients</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Up to 50 patients</li>
               </ul>
             </div>
 
@@ -117,8 +123,8 @@ export default function PricingPage() {
                   {getSaveLabel("pro")}
                 </div>
               )}
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-2">Pro</h3>
-              <p className="text-brand-muted text-sm mb-4">Automate your growth</p>
+              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
+              <p className="text-brand-muted text-sm mb-4">For single practice owners</p>
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
                 ${PRICING[cycle].pro.price}<span className="text-lg text-brand-muted">{PRICING[cycle].pro.period}</span>
               </div>
@@ -131,41 +137,76 @@ export default function PricingPage() {
                 {paddleLoaded ? "Start 7-Day Free Trial" : "Loading..."}
               </button>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Everything in Free</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Automated email follow-ups</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Real-time negative review alerts</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Competitor tracking</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Reply templates</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Unlimited patients</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review monitoring</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email negative review alerts</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>500 SMS review requests / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
               </ul>
             </div>
 
             {/* Agency */}
-            <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1] relative">
+            <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
               {getSaveLabel("agency") && (
                 <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   {getSaveLabel("agency")}
                 </div>
               )}
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-2">Agency</h3>
-              <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
+              <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                <Zap size={12} /> Agency Only
+              </div>
+              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
+              <p className="text-brand-muted text-sm mb-4">For practice managers & teams</p>
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
                 ${PRICING[cycle].agency.price}<span className="text-lg text-brand-muted">{PRICING[cycle].agency.period}</span>
               </div>
               <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].agency.priceId)}
-                className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors disabled:opacity-50"
+                className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
                 disabled={!paddleLoaded}
               >
                 {paddleLoaded ? "Start 7-Day Free Trial" : "Loading..."}
               </button>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Everything in Pro</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Multi-clinic dashboard</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>White-label branding</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>API access</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500"/>Dedicated manager</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
+
+                <li className="flex items-start gap-2">
+                  <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">Daily Reputation Digest</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span>
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2">
+                  <Bell size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">Priority SMS Alerts</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">1-2⭐ reviews within 10 min via SMS</span>
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2">
+                  <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">Multi-Recipient Alerts</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">Up to 5 staff members notified</span>
+                  </span>
+                </li>
+
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5,000 SMS review requests / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
               </ul>
             </div>
           </div>
