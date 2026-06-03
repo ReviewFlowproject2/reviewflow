@@ -25,6 +25,7 @@ import {
   RefreshCw,
   Clock,
   Zap,
+  CheckSquare,
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -49,6 +50,7 @@ interface ReviewAlert {
   comment: string;
   created_at: string;
   is_new: boolean;
+  resolved?: boolean;
 }
 
 interface Business {
@@ -56,7 +58,7 @@ interface Business {
   name: string;
   trial_ends_at: string;
   google_review_link: string;
-  plan?: string; // free / pro / agency
+  plan?: string;
 }
 
 interface Toast {
@@ -159,14 +161,11 @@ function Sidebar({ business }: { business: Business | null }) {
         })}
       </nav>
       <div className="px-4 pb-4 space-y-3">
-        {/* Trial Info */}
         <div className="bg-brand-soft rounded-xl p-4">
           <p className="text-xs text-brand-muted mb-1">Trial ends in</p>
           <p className="font-outfit font-bold text-lg text-brand-blue">{trialDaysLeft} days</p>
           <p className="text-xs text-brand-muted mt-1">{business?.name || "Your Clinic"}</p>
         </div>
-
-        {/* Plan Info */}
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
           <p className="text-xs text-brand-muted mb-1">Current Plan</p>
           <p className={`font-outfit font-bold text-sm ${planColor}`}>{planLabel}</p>
@@ -203,6 +202,7 @@ export default function DashboardPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [stats, setStats] = useState({
     newReviews: 0,
@@ -255,10 +255,12 @@ export default function DashboardPage() {
 
     if (pts) setPatients(pts);
 
+    // 只查未 resolved 的差评
     const { data: revs } = await supabase
       .from("reviews")
       .select("*")
       .eq("business_id", businessId)
+      .eq("resolved", false)
       .lt("rating", 4)
       .order("created_at", { ascending: false })
       .limit(10);
@@ -271,6 +273,7 @@ export default function DashboardPage() {
         comment: r.comment || "No comment",
         created_at: r.created_at,
         is_new: true,
+        resolved: r.resolved,
       })));
     }
 
@@ -307,6 +310,30 @@ export default function DashboardPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // 标记差评已处理
+  const handleResolveAlert = async (alertId: string) => {
+    setResolvingId(alertId);
+    try {
+      const res = await fetch("/api/reviews/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviewId: alertId }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        addToast("Review marked as resolved", "success");
+        loadData();
+      } else {
+        addToast(data.error || "Failed to resolve", "error");
+      }
+    } catch (err: any) {
+      addToast(err.message || "Network error", "error");
+    } finally {
+      setResolvingId(null);
+    }
+  };
 
   // 更新就诊状态
   const updateStatus = async (patientId: string, newStatus: string) => {
@@ -659,15 +686,25 @@ export default function DashboardPage() {
                         {new Date(alert.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <a
-                      href={business?.google_review_link || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-sm font-medium rounded-lg hover:bg-brand-dark transition-colors shrink-0"
-                    >
-                      <ExternalLink size={14} />
-                      Reply on Google
-                    </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => handleResolveAlert(alert.id)}
+                        disabled={resolvingId === alert.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                      >
+                        <CheckSquare size={14} />
+                        {resolvingId === alert.id ? "Resolving..." : "Mark Resolved"}
+                      </button>
+                      <a
+                        href={business?.google_review_link || "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-sm font-medium rounded-lg hover:bg-brand-dark transition-colors"
+                      >
+                        <ExternalLink size={14} />
+                        Reply on Google
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}
