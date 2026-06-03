@@ -10,13 +10,11 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@reviewflowdental.com";
 
 export async function GET(request: Request) {
-  // 验证 cron secret
   const authHeader = request.headers.get("Authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 查询所有 Agency 用户且开启了 Priority Alert
   const { data: businesses, error } = await supabase
     .from("businesses")
     .select("*")
@@ -30,7 +28,6 @@ export async function GET(request: Request) {
   const results = [];
 
   for (const biz of businesses || []) {
-    // 找未 alert 的 1-2 星差评（过去10分钟内新产生的）
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     const { data: reviews } = await supabase
@@ -45,48 +42,32 @@ export async function GET(request: Request) {
 
     if (!reviews || reviews.length === 0) continue;
 
-    // 收集邮件接收人：owner + alert_recipients 里的 email
-    const recipients: string[] = [biz.owner_email];
     const alertRecipients = biz.alert_recipients || [];
-    alertRecipients.forEach((r: any) => {
-      if (r.email && !recipients.includes(r.email)) recipients.push(r.email);
-    });
+    const recipients: string[] = alertRecipients
+      .filter((r: any) => r.email)
+      .map((r: any) => r.email);
 
-    if (recipients.length === 0) continue;
+    if (recipients.length === 0) {
+      recipients.push(biz.owner_email);
+    }
 
     for (const review of reviews) {
       const subject = `[URGENT] ${biz.name} — New ${review.rating}⭐ Review Detected`;
 
-      const body = review.content?.substring(0, 200) || "No comment";
-      const reviewUrl = biz.google_review_url || "https://reviewflow.app/dashboard";
+      const stars = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+      const reviewUrl = biz.google_review_url || "https://reviewflowdental.com/dashboard";
+      const dashboardUrl = "https://reviewflowdental.com/dashboard";
 
-      const html = `
-        <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:24px;color:#1e293b;">
-          <div style="background:#dc2626;color:white;padding:16px;border-radius:12px 12px 0 0;text-align:center;">
-            <h2 style="margin:0;font-size:18px;">⚠️ Priority Alert</h2>
-          </div>
-          <div style="border:1px solid #e0e7f1;border-top:none;padding:24px;border-radius:0 0 12px 12px;">
-            <p style="font-size:16px;margin-bottom:16px;"><strong>${biz.name}</strong> received a new <strong>${review.rating}⭐</strong> review:</p>
-
-            <div style="background:#fef2f2;padding:16px;border-radius:8px;border-left:4px solid #dc2626;margin:16px 0;">
-              <p style="margin:0;font-style:italic;color:#7f1d1d;">"${body}"</p>
-              <p style="margin:8px 0 0;color:#991b1b;font-size:12px;">— ${review.author_name || "Anonymous"}</p>
-            </div>
-
-            <p style="color:#64748b;font-size:14px;margin-bottom:16px;">This review requires immediate attention. A 1-2 star review can significantly impact your clinic's reputation.</p>
-
-            <div style="text-align:center;margin-top:24px;">
-              <a href="${reviewUrl}" style="background:#dc2626;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
-                Reply on Google Now
-              </a>
-            </div>
-
-            <p style="margin-top:24px;color:#94a3b8;font-size:12px;text-align:center;">
-              ReviewFlow Priority Alert — Sent within 10 minutes of detection
-            </p>
-          </div>
-        </div>
-      `;
+      const html = generateAlertHTML({
+        clinicName: biz.name,
+        date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        rating: review.rating,
+        stars,
+        authorName: review.author_name || "Anonymous",
+        reviewContent: review.content || "No comment",
+        reviewUrl,
+        dashboardUrl,
+      });
 
       for (const to of recipients) {
         try {
@@ -108,7 +89,6 @@ export async function GET(request: Request) {
         }
       }
 
-      // 标记已 alert（字段名保持 sms_alerted 兼容，实际发送的是邮件）
       await supabase
         .from("reviews")
         .update({
@@ -131,4 +111,90 @@ export async function GET(request: Request) {
     alertsSent: results.length,
     details: results,
   });
+}
+
+function generateAlertHTML({
+  clinicName,
+  date,
+  rating,
+  stars,
+  authorName,
+  reviewContent,
+  reviewUrl,
+  dashboardUrl,
+}: {
+  clinicName: string;
+  date: string;
+  rating: number;
+  stars: string;
+  authorName: string;
+  reviewContent: string;
+  reviewUrl: string;
+  dashboardUrl: string;
+}) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviewFlow Priority Alert</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);padding:32px 40px;">
+              <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr><td style="font-size:24px;font-weight:700;color:#ffffff;">⚠️ Priority Alert</td></tr>
+                <tr><td style="font-size:12px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;padding-top:4px;">Urgent Review Detected — ${date}</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr><td style="height:4px;background:linear-gradient(90deg, #ef4444 0%, #f87171 100%);"></td></tr>
+          <tr>
+            <td style="padding:32px 40px;">
+              <p style="font-size:18px;font-weight:600;color:#1e293b;margin:0 0 8px;"><span style="color:#dc2626;">${clinicName}</span> received a new ${rating}⭐ review</p>
+              <p style="font-size:14px;color:#64748b;margin:0 0 24px;">This requires immediate attention. A 1-2 star review can significantly impact your clinic's reputation.</p>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fef2f2;border-radius:12px;padding:20px;margin-bottom:24px;border:1px solid #fecaca;">
+                <tr><td>
+                  <p style="font-size:14px;font-weight:600;color:#991b1b;margin:0 0 8px;">📝 Review from ${authorName}</p>
+                  <p style="font-size:22px;color:#f59e0b;margin:0 0 8px;">${stars}</p>
+                  <p style="font-size:15px;color:#7f1d1d;margin:0;font-style:italic;line-height:1.5;">"${reviewContent}"</p>
+                </td></tr>
+              </table>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ed;border-radius:12px;padding:20px;margin-bottom:24px;border-left:4px solid #dc2626;">
+                <tr><td>
+                  <p style="font-size:14px;font-weight:600;color:#92400e;margin:0 0 8px;">⚡ Why this matters</p>
+                  <p style="font-size:13px;color:#92400e;margin:0;line-height:1.5;">A single 1-star review can drop your average rating by 0.3 points and deter potential patients. Responding within 24 hours improves patient trust by 70%.</p>
+                </td></tr>
+              </table>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:16px;">
+                <tr><td align="center">
+                  <a href="${reviewUrl}" style="display:inline-block;background:linear-gradient(135deg, #991b1b 0%, #dc2626 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-size:15px;font-weight:700;">Reply on Google Now →</a>
+                </td></tr>
+              </table>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr><td align="center" style="padding-top:8px;">
+                  <a href="${dashboardUrl}" style="display:inline-block;color:#64748b;text-decoration:none;font-size:13px;">Open Dashboard</a>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="font-size:11px;color:#94a3b8;margin:0;">ReviewFlow Priority Alert — Sent within 10 minutes of detection<br/><a href="#" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> · <a href="#" style="color:#94a3b8;text-decoration:underline;">Update preferences</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }

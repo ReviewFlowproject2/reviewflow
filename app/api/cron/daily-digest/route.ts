@@ -10,7 +10,6 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@reviewflowdental.com";
 
 export async function GET(request: Request) {
-  // 验证 cron secret（防止外部调用）
   const authHeader = request.headers.get("Authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +19,6 @@ export async function GET(request: Request) {
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split("T")[0];
 
-  // 查询所有 Agency 用户且开启了 Daily Digest
   const { data: businesses, error } = await supabase
     .from("businesses")
     .select("*")
@@ -34,7 +32,6 @@ export async function GET(request: Request) {
   const results = [];
 
   for (const biz of businesses || []) {
-    // 检查今天是否已发送（防重复）
     const { data: existing } = await supabase
       .from("digest_logs")
       .select("id")
@@ -48,7 +45,6 @@ export async function GET(request: Request) {
     const startOfYesterday = `${yesterdayStr}T00:00:00Z`;
     const endOfYesterday = `${yesterdayStr}T23:59:59Z`;
 
-    // 昨日新 reviews
     const { data: newReviews } = await supabase
       .from("reviews")
       .select("*")
@@ -57,21 +53,18 @@ export async function GET(request: Request) {
       .lte("created_at", endOfYesterday)
       .order("created_at", { ascending: false });
 
-    // 昨日差评 (1-3星)
     const negativeReviews = newReviews?.filter((r) => r.rating <= 3) || [];
 
-    // 平均评分
     const avgRating = newReviews?.length
       ? (newReviews.reduce((sum, r) => sum + r.rating, 0) / newReviews.length).toFixed(1)
       : "0.0";
 
-    // 竞品数据
-    const { data: competitors } = await supabase
-      .from("competitors")
-      .select("*")
-      .eq("business_id", businessId)
-      .order("last_checked_at", { ascending: false })
-      .limit(5);
+    const { data: allReviews } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("business_id", businessId);
+
+    const totalReviews = allReviews?.length || 0;
 
     const dateFormatted = yesterday.toLocaleDateString("en-US", {
       month: "long",
@@ -81,58 +74,21 @@ export async function GET(request: Request) {
 
     const subject = `[ReviewFlow] Your Daily Reputation Digest — ${dateFormatted}`;
 
-    let negativeListHtml = "";
-    if (negativeReviews.length > 0) {
-      negativeListHtml = `<h3 style="color:#dc2626;margin-top:16px;">⚠️ Negative Reviews (${negativeReviews.length})</h3>`;
-      negativeReviews.forEach((r) => {
-        negativeListHtml += `<p style="margin:4px 0;font-size:14px;"><strong>${r.author_name || "Anonymous"}:</strong> ${r.rating}⭐ — "${r.content?.substring(0, 100) || "No comment"}"</p>`;
-      });
-    }
+    const actionText = negativeReviews.length > 0
+      ? `You have ${negativeReviews.length} unanswered negative reviews from this week. Responding to reviews can improve patient satisfaction by 35%.`
+      : "No negative reviews yesterday. Keep monitoring your reputation to maintain your clinic's excellent standing.";
 
-    let competitorHtml = "";
-    if (competitors && competitors.length > 0) {
-      competitorHtml = `<h3 style="color:#2563eb;margin-top:16px;">📊 Competitor Update</h3>`;
-      competitors.forEach((c) => {
-        competitorHtml += `<p style="margin:4px 0;font-size:14px;">${c.name}: ${c.review_count || 0} reviews, ${c.current_rating || "N/A"}⭐ avg</p>`;
-      });
-    }
+    const html = generateEmailHTML({
+      clinicName: biz.name,
+      date: dateFormatted,
+      newReviews: newReviews?.length || 0,
+      avgRating,
+      negativeReviews: negativeReviews.length,
+      totalReviews,
+      actionText,
+      dashboardUrl: "https://reviewflowdental.com/dashboard",
+    });
 
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;color:#1e293b;">
-        <div style="border-bottom:2px solid #e0e7f1;padding-bottom:16px;margin-bottom:24px;">
-          <h2 style="color:#1e40af;margin:0;font-size:20px;">ReviewFlow</h2>
-          <p style="color:#64748b;margin:4px 0 0;font-size:14px;">Daily Reputation Digest</p>
-        </div>
-
-        <p style="font-size:16px;margin-bottom:16px;">Good morning, <strong>${biz.name}</strong>!</p>
-        <p style="color:#64748b;font-size:14px;margin-bottom:16px;">Yesterday at a glance:</p>
-
-        <div style="background:#f8faff;padding:16px;border-radius:12px;margin:16px 0;border:1px solid #e0e7f1;">
-          <p style="margin:8px 0;font-size:15px;"><strong>⭐ New Reviews:</strong> ${newReviews?.length || 0}</p>
-          <p style="margin:8px 0;font-size:15px;"><strong>Average Rating:</strong> ${avgRating} / 5</p>
-          <p style="margin:8px 0;font-size:15px;"><strong>⚠️ Negative Reviews:</strong> ${negativeReviews.length}</p>
-        </div>
-
-        ${negativeListHtml}
-        ${competitorHtml}
-
-        <div style="margin-top:24px;padding:16px;background:#fef3c7;border-radius:8px;border:1px solid #fde68a;">
-          <p style="margin:0;font-weight:bold;color:#92400e;font-size:14px;">🎯 Action Recommended:</p>
-          <p style="margin:4px 0;color:#92400e;font-size:14px;">- Respond to negative reviews ASAP</p>
-          <p style="margin:4px 0;color:#92400e;font-size:14px;">- Monitor competitor trends</p>
-        </div>
-
-        <p style="margin-top:24px;color:#94a3b8;font-size:12px;">
-          Have a great day,<br/>ReviewFlow
-        </p>
-
-        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e0e7f1;text-align:center;">
-          <a href="https://reviewflow.app/dashboard" style="color:#2563eb;font-size:13px;text-decoration:none;">Open Dashboard →</a>
-        </div>
-      </div>
-    `;
-
-    // 发送给 owner + alert_recipients
     const recipients: string[] = [biz.owner_email];
     const alertRecipients = biz.alert_recipients || [];
     alertRecipients.forEach((r: any) => {
@@ -159,7 +115,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // 记录日志
     await supabase.from("digest_logs").insert({
       business_id: biz.id,
       digest_date: yesterdayStr,
@@ -173,4 +128,108 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.json({ success: true, sent: results.length, details: results });
+}
+
+function generateEmailHTML({
+  clinicName,
+  date,
+  newReviews,
+  avgRating,
+  negativeReviews,
+  totalReviews,
+  actionText,
+  dashboardUrl,
+}: {
+  clinicName: string;
+  date: string;
+  newReviews: number;
+  avgRating: string;
+  negativeReviews: number;
+  totalReviews: number;
+  actionText: string;
+  dashboardUrl: string;
+}) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviewFlow Daily Digest</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);padding:32px 40px;">
+              <table width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr><td style="font-size:24px;font-weight:700;color:#ffffff;">ReviewFlow</td></tr>
+                <tr><td style="font-size:12px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;padding-top:4px;">Daily Reputation Digest — ${date}</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr><td style="height:4px;background:linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);"></td></tr>
+          <tr>
+            <td style="padding:32px 40px;">
+              <p style="font-size:18px;font-weight:600;color:#1e293b;margin:0 0 8px;">Good morning, <span style="color:#2563eb;">${clinicName}</span>!</p>
+              <p style="font-size:14px;color:#64748b;margin:0 0 24px;">Here is how your clinic performed yesterday. Keep up the great work!</p>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px;">
+                <tr>
+                  <td width="32%" style="padding-right:8px;">
+                    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;border:1px solid #e2e8f0;">
+                      <tr><td style="font-size:28px;font-weight:700;color:#22c55e;">${newReviews}</td></tr>
+                      <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">New Reviews</td></tr>
+                    </table>
+                  </td>
+                  <td width="32%" style="padding:0 8px;">
+                    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;border:1px solid #e2e8f0;">
+                      <tr><td style="font-size:28px;font-weight:700;color:#f59e0b;">${avgRating}</td></tr>
+                      <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">Avg Rating</td></tr>
+                    </table>
+                  </td>
+                  <td width="32%" style="padding-left:8px;">
+                    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;border:1px solid #e2e8f0;">
+                      <tr><td style="font-size:28px;font-weight:700;color:#ef4444;">${negativeReviews}</td></tr>
+                      <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">Negative Reviews</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fefce8;border-radius:12px;padding:16px 20px;margin-bottom:24px;border:1px solid #fde68a;">
+                <tr><td>
+                  <span style="font-size:20px;color:#f59e0b;">★★★★★</span>
+                  <span style="font-size:24px;font-weight:700;color:#1e293b;margin-left:8px;">${avgRating}</span>
+                  <span style="font-size:14px;color:#64748b;">/ 5.0 · Based on ${totalReviews} reviews</span>
+                </td></tr>
+              </table>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ed;border-radius:12px;padding:20px;margin-bottom:24px;border-left:4px solid #f59e0b;">
+                <tr><td>
+                  <p style="font-size:14px;font-weight:600;color:#92400e;margin:0 0 8px;">💡 Action Recommended</p>
+                  <p style="font-size:13px;color:#92400e;margin:0;line-height:1.5;">${actionText}</p>
+                </td></tr>
+              </table>
+
+              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:16px;">
+                <tr><td align="center">
+                  <a href="${dashboardUrl}" style="display:inline-block;background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:600;">Open Dashboard →</a>
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
+              <p style="font-size:13px;color:#2563eb;margin:0 0 8px;"><a href="${dashboardUrl}" style="color:#2563eb;text-decoration:none;">Open Dashboard</a></p>
+              <p style="font-size:11px;color:#94a3b8;margin:0;">ReviewFlow · You're receiving this because you're a ReviewFlow member<br/><a href="#" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> · <a href="#" style="color:#94a3b8;text-decoration:underline;">Update preferences</a></p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 }
