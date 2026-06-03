@@ -19,7 +19,7 @@ import {
   Search,
   Filter,
   Paperclip,
-  MessageSquare
+  MessageSquare,
 } from 'lucide-react';
 
 // ===================== TYPES =====================
@@ -51,8 +51,8 @@ interface Reply {
 const MOCK_TICKETS: TicketItem[] = [
   {
     id: 'T-001',
-    title: '导入患者 CSV 时中文姓名乱码',
-    description: '上传 CSV 文件后，患者姓名中的中文字符显示为问号。文件编码是 UTF-8，但导入后全部乱码。希望能支持 UTF-8 with BOM 或者自动检测编码。',
+    title: 'CSV import shows garbled Chinese characters',
+    description: 'After uploading the CSV file, Chinese characters in patient names display as question marks. The file is UTF-8 encoded, but the import seems to use ASCII. Please support UTF-8 with BOM or auto-detect encoding.',
     type: 'bug',
     status: 'processing',
     priority: 'high',
@@ -62,16 +62,16 @@ const MOCK_TICKETS: TicketItem[] = [
       {
         id: 'R-1',
         from: 'team',
-        author: 'ReviewFlow 技术支持',
-        content: '感谢您的反馈！我们已复现这个问题。原因是后端读取 CSV 时默认使用了 ASCII 编码。我们计划在本周五的更新中修复，增加 UTF-8 自动检测。',
+        author: 'ReviewFlow Support',
+        content: 'Thanks for reporting! We have reproduced this issue. The backend was defaulting to ASCII encoding when reading CSV files. We plan to fix this in Friday's update by adding UTF-8 auto-detection.',
         createdAt: '2026-06-03T14:20:00'
       }
     ]
   },
   {
     id: 'T-002',
-    title: '希望增加微信通知渠道',
-    description: '我们诊所的员工更常用微信，希望能把差评提醒和周报也推送到企业微信或微信群机器人。',
+    title: 'Request WeChat notification channel',
+    description: 'Our clinic staff use WeChat heavily. It would be great if negative review alerts and weekly reports could also be pushed to WeChat Work or a WeChat group bot.',
     type: 'feature',
     status: 'submitted',
     priority: 'medium',
@@ -81,8 +81,8 @@ const MOCK_TICKETS: TicketItem[] = [
   },
   {
     id: 'T-003',
-    title: 'Dashboard 趋势图数据不对',
-    description: 'Dashboard 上的评分趋势图显示上周平均 4.2 星，但手动计算应该是 3.8 星。怀疑是统计逻辑有问题。',
+    title: 'Dashboard trend chart data is incorrect',
+    description: 'The rating trend chart on the Dashboard shows an average of 4.2 stars last week, but manual calculation should be 3.8 stars. Suspect there is a bug in the aggregation logic.',
     type: 'bug',
     status: 'resolved',
     priority: 'urgent',
@@ -92,29 +92,32 @@ const MOCK_TICKETS: TicketItem[] = [
       {
         id: 'R-2',
         from: 'team',
-        author: 'ReviewFlow 技术支持',
-        content: '已确认是时区转换导致的日期边界错误。已在 v1.2.1 中修复，请刷新页面查看最新数据。',
+        author: 'ReviewFlow Support',
+        content: 'Confirmed: this was caused by a timezone conversion error at date boundaries. Fixed in v1.2.1. Please refresh the page to see the corrected data.',
         createdAt: '2026-06-01T11:00:00'
       },
       {
         id: 'R-3',
         from: 'user',
-        author: '诊所管理员',
-        content: '已验证，数据现在正确了，谢谢！',
+        author: 'Clinic Admin',
+        content: 'Verified, the data is now correct. Thank you!',
         createdAt: '2026-06-01T13:30:00'
       }
     ]
   }
 ];
 
+const SUPPORT_EMAIL = 'dengxiaofeng880914@gmail.com';
+const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${SUPPORT_EMAIL}`;
+
 // ===================== COMPONENTS =====================
 
 const TypeBadge = ({ type }: { type: TicketType }) => {
   const config = {
     bug: { icon: Bug, label: 'Bug', color: 'bg-red-50 text-red-700 border-red-200' },
-    feature: { icon: Lightbulb, label: '功能建议', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-    question: { icon: HelpCircle, label: '使用问题', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    other: { icon: MessageSquare, label: '其他', color: 'bg-gray-50 text-gray-700 border-gray-200' }
+    feature: { icon: Lightbulb, label: 'Feature', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+    question: { icon: HelpCircle, label: 'Question', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    other: { icon: MessageSquare, label: 'Other', color: 'bg-gray-50 text-gray-700 border-gray-200' }
   };
   const { icon: Icon, label, color } = config[type];
   return (
@@ -127,10 +130,10 @@ const TypeBadge = ({ type }: { type: TicketType }) => {
 
 const StatusBadge = ({ status }: { status: TicketStatus }) => {
   const config = {
-    submitted: { icon: Send, label: '已提交', color: 'bg-gray-50 text-gray-700 border-gray-200' },
-    processing: { icon: Loader2, label: '处理中', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    resolved: { icon: CheckCircle2, label: '已解决', color: 'bg-green-50 text-green-700 border-green-200' },
-    closed: { icon: XCircle, label: '已关闭', color: 'bg-gray-50 text-gray-500 border-gray-200' }
+    submitted: { icon: Send, label: 'Submitted', color: 'bg-gray-50 text-gray-700 border-gray-200' },
+    processing: { icon: Loader2, label: 'Processing', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+    resolved: { icon: CheckCircle2, label: 'Resolved', color: 'bg-green-50 text-green-700 border-green-200' },
+    closed: { icon: XCircle, label: 'Closed', color: 'bg-gray-50 text-gray-500 border-gray-200' }
   };
   const { icon: Icon, label, color } = config[status];
   return (
@@ -143,10 +146,10 @@ const StatusBadge = ({ status }: { status: TicketStatus }) => {
 
 const PriorityBadge = ({ priority }: { priority: Priority }) => {
   const config = {
-    urgent: { label: '紧急', color: 'bg-red-100 text-red-800' },
-    high: { label: '高', color: 'bg-orange-100 text-orange-800' },
-    medium: { label: '中', color: 'bg-yellow-100 text-yellow-800' },
-    low: { label: '低', color: 'bg-green-100 text-green-800' }
+    urgent: { label: 'Urgent', color: 'bg-red-100 text-red-800' },
+    high: { label: 'High', color: 'bg-orange-100 text-orange-800' },
+    medium: { label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
+    low: { label: 'Low', color: 'bg-green-100 text-green-800' }
   };
   const { label, color } = config[priority];
   return (
@@ -165,8 +168,10 @@ export default function SupportTickets() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
-  // Form state
   const [formTitle, setFormTitle] = useState('');
   const [formType, setFormType] = useState<TicketType>('bug');
   const [formPriority, setFormPriority] = useState<Priority>('medium');
@@ -189,33 +194,65 @@ export default function SupportTickets() {
     urgent: tickets.filter((t) => t.priority === 'urgent' && t.status !== 'resolved' && t.status !== 'closed').length
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim() || !formDesc.trim()) return;
 
-    const newTicket: TicketItem = {
-      id: `T-${String(tickets.length + 1).padStart(3, '0')}`,
-      title: formTitle,
-      description: formDesc,
-      type: formType,
-      status: 'submitted',
-      priority: formPriority,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      replies: []
-    };
+    setIsSubmitting(true);
+    setSubmitError('');
 
-    setTickets((prev) => [newTicket, ...prev]);
-    setFormTitle('');
-    setFormDesc('');
-    setFormType('bug');
-    setFormPriority('medium');
-    setShowModal(false);
+    const ticketId = `T-${String(tickets.length + 1).padStart(3, '0')}`;
+    const subject = `[ReviewFlow Support] [${formType.toUpperCase()}] ${formTitle}`;
+    const messageBody = `Ticket ID: ${ticketId}\nType: ${formType}\nPriority: ${formPriority}\n\nDescription:\n${formDesc}`;
+
+    try {
+      const response = await fetch(FORMSUBMIT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          name: 'ReviewFlow Clinic User',
+          email: 'noreply@reviewflow.com',
+          subject: subject,
+          message: messageBody
+        })
+      });
+
+      if (!response.ok) throw new Error('FormSubmit failed');
+
+      const newTicket: TicketItem = {
+        id: ticketId,
+        title: formTitle,
+        description: formDesc,
+        type: formType,
+        status: 'submitted',
+        priority: formPriority,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        replies: []
+      };
+
+      setTickets((prev) => [newTicket, ...prev]);
+      setFormTitle('');
+      setFormDesc('');
+      setFormType('bug');
+      setFormPriority('medium');
+      setSubmitSuccess(true);
+      setTimeout(() => setSubmitSuccess(false), 3000);
+    } catch (err) {
+      const mailtoLink = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(messageBody)}`;
+      window.open(mailtoLink, '_blank');
+      setSubmitError('Auto-send failed. Please send via your email client (we have pre-filled the content).');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -227,27 +264,29 @@ export default function SupportTickets() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
 
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">产品反馈与工单</h1>
-            <p className="text-gray-600">遇到问题或有新想法？提交工单，我们会尽快处理。</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Support & Feedback</h1>
+            <p className="text-gray-600">Found a bug or have an idea? Submit a ticket and we will get back to you.</p>
           </div>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={() => {
+              setShowModal(true);
+              setSubmitError('');
+              setSubmitSuccess(false);
+            }}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
           >
             <MessageSquarePlus size={18} />
-            提交反馈
+            Submit Ticket
           </button>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">我的工单</p>
+                <p className="text-sm text-gray-600">My Tickets</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               </div>
               <Ticket className="text-blue-500" size={24} />
@@ -256,7 +295,7 @@ export default function SupportTickets() {
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">处理中</p>
+                <p className="text-sm text-gray-600">Processing</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.processing}</p>
               </div>
               <Loader2 className="text-blue-500" size={24} />
@@ -265,7 +304,7 @@ export default function SupportTickets() {
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">已解决</p>
+                <p className="text-sm text-gray-600">Resolved</p>
                 <p className="text-2xl font-bold text-green-600">{stats.resolved}</p>
               </div>
               <CheckCircle2 className="text-green-500" size={24} />
@@ -274,7 +313,7 @@ export default function SupportTickets() {
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">待处理紧急</p>
+                <p className="text-sm text-gray-600">Urgent Pending</p>
                 <p className="text-2xl font-bold text-red-600">{stats.urgent}</p>
               </div>
               <AlertTriangle className="text-red-500" size={24} />
@@ -282,14 +321,13 @@ export default function SupportTickets() {
           </div>
         </div>
 
-        {/* Filters */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder="搜索工单标题、编号或关键词..."
+                placeholder="Search ticket title, ID, or keywords..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -302,11 +340,11 @@ export default function SupportTickets() {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="all">全部状态</option>
-                  <option value="submitted">已提交</option>
-                  <option value="processing">处理中</option>
-                  <option value="resolved">已解决</option>
-                  <option value="closed">已关闭</option>
+                  <option value="all">All Status</option>
+                  <option value="submitted">Submitted</option>
+                  <option value="processing">Processing</option>
+                  <option value="resolved">Resolved</option>
+                  <option value="closed">Closed</option>
                 </select>
                 <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
               </div>
@@ -316,11 +354,11 @@ export default function SupportTickets() {
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
                 >
-                  <option value="all">全部类型</option>
+                  <option value="all">All Types</option>
                   <option value="bug">Bug</option>
-                  <option value="feature">功能建议</option>
-                  <option value="question">使用问题</option>
-                  <option value="other">其他</option>
+                  <option value="feature">Feature</option>
+                  <option value="question">Question</option>
+                  <option value="other">Other</option>
                 </select>
                 <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
               </div>
@@ -328,19 +366,18 @@ export default function SupportTickets() {
           </div>
         </div>
 
-        {/* Ticket List */}
         <div className="space-y-3">
           {filteredTickets.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
               <Ticket className="mx-auto text-gray-300 mb-3" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">暂无工单</h3>
-              <p className="text-gray-500 mb-4">还没有提交过反馈，遇到问题请随时告诉我们。</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No tickets yet</h3>
+              <p className="text-gray-500 mb-4">Have a question or found an issue? We are here to help.</p>
               <button
                 onClick={() => setShowModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
               >
                 <MessageSquarePlus size={16} />
-                提交第一个反馈
+                Submit your first ticket
               </button>
             </div>
           ) : (
@@ -351,7 +388,6 @@ export default function SupportTickets() {
                   ticket.status === 'submitted' ? 'border-blue-300 shadow-md' : 'border-gray-200 shadow-sm'
                 }`}
               >
-                {/* Main Row */}
                 <div
                   className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                   onClick={() => setExpandedId(expandedId === ticket.id ? null : ticket.id)}
@@ -384,13 +420,13 @@ export default function SupportTickets() {
                         <div className="flex items-center gap-4 text-xs text-gray-400">
                           <span className="flex items-center gap-1">
                             <Clock size={12} />
-                            提交于 {formatDate(ticket.createdAt)}
+                            Submitted {formatDate(ticket.createdAt)}
                           </span>
-                          <span>更新于 {formatDate(ticket.updatedAt)}</span>
+                          <span>Updated {formatDate(ticket.updatedAt)}</span>
                           {ticket.replies.length > 0 && (
                             <span className="flex items-center gap-1 text-blue-600">
                               <MessageSquare size={12} />
-                              {ticket.replies.length} 条回复
+                              {ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'}
                             </span>
                           )}
                         </div>
@@ -405,20 +441,17 @@ export default function SupportTickets() {
                   </div>
                 </div>
 
-                {/* Expanded Detail */}
                 {expandedId === ticket.id && (
                   <div className="border-t border-gray-100 p-4 bg-gray-50/50">
                     <div className="ml-14">
-                      {/* Description */}
                       <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">问题描述</h4>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Description</h4>
                         <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
                       </div>
 
-                      {/* Replies */}
                       {ticket.replies.length > 0 && (
                         <div className="space-y-3 mb-4">
-                          <h4 className="text-sm font-semibold text-gray-900">回复记录</h4>
+                          <h4 className="text-sm font-semibold text-gray-900">Conversation</h4>
                           {ticket.replies.map((reply) => (
                             <div
                               key={reply.id}
@@ -442,11 +475,10 @@ export default function SupportTickets() {
                         </div>
                       )}
 
-                      {/* Info Footer */}
                       <div className="flex items-center gap-6 text-xs text-gray-500">
-                        <span>工单编号: {ticket.id}</span>
-                        <span>类型: {ticket.type === 'bug' ? 'Bug' : ticket.type === 'feature' ? '功能建议' : ticket.type === 'question' ? '使用问题' : '其他'}</span>
-                        <span>优先级: {ticket.priority === 'urgent' ? '紧急' : ticket.priority === 'high' ? '高' : ticket.priority === 'medium' ? '中' : '低'}</span>
+                        <span>Ticket ID: {ticket.id}</span>
+                        <span>Type: {ticket.type === 'bug' ? 'Bug' : ticket.type === 'feature' ? 'Feature Request' : ticket.type === 'question' ? 'Question' : 'Other'}</span>
+                        <span>Priority: {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}</span>
                       </div>
                     </div>
                   </div>
@@ -457,13 +489,20 @@ export default function SupportTickets() {
         </div>
       </div>
 
-      {/* Submit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
           <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h2 className="text-lg font-bold text-gray-900">提交新反馈</h2>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
+                  <MessageSquare size={16} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">New Support Ticket</h2>
+                  <p className="text-xs text-gray-500">Sent to {SUPPORT_EMAIL}</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowModal(false)}
                 className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -472,114 +511,156 @@ export default function SupportTickets() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  反馈类型 <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { value: 'bug', label: 'Bug 报告', icon: Bug },
-                    { value: 'feature', label: '功能建议', icon: Lightbulb },
-                    { value: 'question', label: '使用问题', icon: HelpCircle },
-                    { value: 'other', label: '其他', icon: MessageSquare }
-                  ] as const).map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setFormType(opt.value)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                        formType === opt.value
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <opt.icon size={16} />
-                      {opt.label}
-                    </button>
-                  ))}
+            {submitSuccess ? (
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} className="text-green-600" />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  优先级
-                </label>
-                <div className="flex gap-2">
-                  {([
-                    { value: 'urgent', label: '紧急' },
-                    { value: 'high', label: '高' },
-                    { value: 'medium', label: '中' },
-                    { value: 'low', label: '低' }
-                  ] as const).map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setFormPriority(opt.value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                        formPriority === opt.value
-                          ? opt.value === 'urgent' ? 'bg-red-100 border-red-300 text-red-800' :
-                            opt.value === 'high' ? 'bg-orange-100 border-orange-300 text-orange-800' :
-                            opt.value === 'medium' ? 'bg-yellow-100 border-yellow-300 text-yellow-800' :
-                            'bg-green-100 border-green-300 text-green-800'
-                          : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  标题 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="简要描述问题，例如：CSV 导入中文乱码"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  详细描述 <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  required
-                  rows={5}
-                  placeholder="请详细描述问题现象、复现步骤、期望结果等..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                  value={formDesc}
-                  onChange={(e) => setFormDesc(e.target.value)}
-                />
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Paperclip size={16} />
-                <span>截图上传功能开发中，目前请用文字描述。</span>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Ticket Submitted!</h3>
+                <p className="text-gray-600 mb-4">We have received your ticket and will reply via email shortly.</p>
                 <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    setShowModal(false);
+                    setSubmitSuccess(false);
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  提交工单
+                  Got it
                 </button>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="p-4 space-y-4">
+                {submitError && (
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium">{submitError}</p>
+                        <p className="text-xs mt-1">Your email client should have opened with a pre-filled message. Just hit send!</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ticket Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { value: 'bug', label: 'Bug Report', icon: Bug },
+                      { value: 'feature', label: 'Feature Request', icon: Lightbulb },
+                      { value: 'question', label: 'Question', icon: HelpCircle },
+                      { value: 'other', label: 'Other', icon: MessageSquare }
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setFormType(opt.value)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                          formType === opt.value
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <opt.icon size={16} />
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Priority
+                  </label>
+                  <div className="flex gap-2">
+                    {([
+                      { value: 'urgent', label: 'Urgent' },
+                      { value: 'high', label: 'High' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'low', label: 'Low' }
+                    ] as const).map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setFormPriority(opt.value)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                          formPriority === opt.value
+                            ? opt.value === 'urgent' ? 'bg-red-100 border-red-300 text-red-800' :
+                              opt.value === 'high' ? 'bg-orange-100 border-orange-300 text-orange-800' :
+                              opt.value === 'medium' ? 'bg-yellow-100 border-yellow-300 text-yellow-800' :
+                              'bg-green-100 border-green-300 text-green-800'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g., CSV import shows garbled characters"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    required
+                    rows={5}
+                    placeholder="Describe the issue, steps to reproduce, expected vs actual behavior..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                    value={formDesc}
+                    onChange={(e) => setFormDesc(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Paperclip size={16} />
+                  <span>Screenshot upload coming soon. Please describe in detail for now.</span>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={16} />
+                        Submit Ticket
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
