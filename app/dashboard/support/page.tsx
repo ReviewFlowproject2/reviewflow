@@ -52,7 +52,7 @@ const MOCK_TICKETS: TicketItem[] = [
   {
     id: 'T-001',
     title: 'CSV import shows garbled Chinese characters',
-    description: 'After uploading the CSV file, Chinese characters in patient names display as question marks. The file is UTF-8 encoded, but the import seems to use ASCII. Please support UTF-8 with BOM or auto-detect encoding.',
+    description: "After uploading the CSV file, Chinese characters in patient names display as question marks. The file is UTF-8 encoded, but the import seems to use ASCII. Please support UTF-8 with BOM or auto-detect encoding.",
     type: 'bug',
     status: 'processing',
     priority: 'high',
@@ -63,7 +63,7 @@ const MOCK_TICKETS: TicketItem[] = [
         id: 'R-1',
         from: 'team',
         author: 'ReviewFlow Support',
-        content: 'Thanks for reporting! We have reproduced this issue. The backend was defaulting to ASCII encoding when reading CSV files. We plan to fix this in Friday's update by adding UTF-8 auto-detection.',
+        content: "Thanks for reporting! We have reproduced this issue. The backend was defaulting to ASCII encoding when reading CSV files. We plan to fix this in Friday's update by adding UTF-8 auto-detection.",
         createdAt: '2026-06-03T14:20:00'
       }
     ]
@@ -71,7 +71,7 @@ const MOCK_TICKETS: TicketItem[] = [
   {
     id: 'T-002',
     title: 'Request WeChat notification channel',
-    description: 'Our clinic staff use WeChat heavily. It would be great if negative review alerts and weekly reports could also be pushed to WeChat Work or a WeChat group bot.',
+    description: "Our clinic staff use WeChat heavily. It would be great if negative review alerts and weekly reports could also be pushed to WeChat Work or a WeChat group bot.",
     type: 'feature',
     status: 'submitted',
     priority: 'medium',
@@ -82,7 +82,7 @@ const MOCK_TICKETS: TicketItem[] = [
   {
     id: 'T-003',
     title: 'Dashboard trend chart data is incorrect',
-    description: 'The rating trend chart on the Dashboard shows an average of 4.2 stars last week, but manual calculation should be 3.8 stars. Suspect there is a bug in the aggregation logic.',
+    description: "The rating trend chart on the Dashboard shows an average of 4.2 stars last week, but manual calculation should be 3.8 stars. Suspect there is a bug in the aggregation logic.",
     type: 'bug',
     status: 'resolved',
     priority: 'urgent',
@@ -93,14 +93,14 @@ const MOCK_TICKETS: TicketItem[] = [
         id: 'R-2',
         from: 'team',
         author: 'ReviewFlow Support',
-        content: 'Confirmed: this was caused by a timezone conversion error at date boundaries. Fixed in v1.2.1. Please refresh the page to see the corrected data.',
+        content: "Confirmed: this was caused by a timezone conversion error at date boundaries. Fixed in v1.2.1. Please refresh the page to see the corrected data.",
         createdAt: '2026-06-01T11:00:00'
       },
       {
         id: 'R-3',
         from: 'user',
         author: 'Clinic Admin',
-        content: 'Verified, the data is now correct. Thank you!',
+        content: "Verified, the data is now correct. Thank you!",
         createdAt: '2026-06-01T13:30:00'
       }
     ]
