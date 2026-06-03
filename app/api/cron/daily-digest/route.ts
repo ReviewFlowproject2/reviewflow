@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const RESEND_API_KEY = "re_KgwoHDsh_2tXMiNgK1pgTDhe7XcTizSWR";
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "noreply@reviewflowdental.com";
 
 export async function GET(request: Request) {
@@ -149,83 +149,123 @@ function generateEmailHTML({
   actionText: string;
   dashboardUrl: string;
 }) {
-  return `<!DOCTYPE html>
-<html>
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ReviewFlow Daily Digest</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<body style="margin:0; padding:0; background-color:#f5f7fa; font-family:Arial, Helvetica, sans-serif; -webkit-font-smoothing:antialiased;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f5f7fa;">
     <tr>
       <td align="center" style="padding:40px 20px;">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:12px; border:1px solid #e0e7f1;">
+
+          <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);padding:32px 40px;">
-              <table width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr><td style="font-size:24px;font-weight:700;color:#ffffff;">ReviewFlow</td></tr>
-                <tr><td style="font-size:12px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;padding-top:4px;">Daily Reputation Digest — ${date}</td></tr>
+            <td style="background-color:#1e3a5f; padding:32px 40px; border-radius:12px 12px 0 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="font-size:24px; font-weight:700; color:#ffffff;">ReviewFlow</td>
+                </tr>
+                <tr>
+                  <td style="font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; padding-top:4px;">
+                    Daily Reputation Digest — ${date}
+                  </td>
+                </tr>
               </table>
             </td>
           </tr>
-          <tr><td style="height:4px;background:linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);"></td></tr>
+
+          <!-- Yellow accent line -->
+          <tr>
+            <td style="height:4px; background-color:#f59e0b;"></td>
+          </tr>
+
+          <!-- Content -->
           <tr>
             <td style="padding:32px 40px;">
-              <p style="font-size:18px;font-weight:600;color:#1e293b;margin:0 0 8px;">Good morning, <span style="color:#2563eb;">${clinicName}</span>!</p>
-              <p style="font-size:14px;color:#64748b;margin:0 0 24px;">Here is how your clinic performed yesterday. Keep up the great work!</p>
+              <p style="font-size:18px; font-weight:600; color:#1e293b; margin:0 0 8px;">Good morning, <span style="color:#2563eb;">${clinicName}</span>!</p>
+              <p style="font-size:14px; color:#64748b; margin:0 0 24px;">Here is how your clinic performed yesterday. Keep up the great work!</p>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:24px;">
+              <!-- Stats Cards -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:24px;">
                 <tr>
                   <td width="32%" style="padding-right:8px;">
-                    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;border:1px solid #e2e8f0;">
-                      <tr><td style="font-size:28px;font-weight:700;color:#22c55e;">${newReviews}</td></tr>
-                      <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">New Reviews</td></tr>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+                      <tr><td style="padding:20px; text-align:center;">
+                        <p style="font-size:28px; font-weight:700; color:#22c55e; margin:0;">${newReviews}</p>
+                        <p style="font-size:12px; color:#64748b; margin:4px 0 0;">New Reviews</p>
+                      </td></tr>
                     </table>
                   </td>
                   <td width="32%" style="padding:0 8px;">
-                    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;border:1px solid #e2e8f0;">
-                      <tr><td style="font-size:28px;font-weight:700;color:#f59e0b;">${avgRating}</td></tr>
-                      <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">Avg Rating</td></tr>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+                      <tr><td style="padding:20px; text-align:center;">
+                        <p style="font-size:28px; font-weight:700; color:#f59e0b; margin:0;">${avgRating}</p>
+                        <p style="font-size:12px; color:#64748b; margin:4px 0 0;">Avg Rating</p>
+                      </td></tr>
                     </table>
                   </td>
                   <td width="32%" style="padding-left:8px;">
-                    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f8fafc;border-radius:12px;padding:20px;text-align:center;border:1px solid #e2e8f0;">
-                      <tr><td style="font-size:28px;font-weight:700;color:#ef4444;">${negativeReviews}</td></tr>
-                      <tr><td style="font-size:12px;color:#64748b;padding-top:4px;">Negative Reviews</td></tr>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+                      <tr><td style="padding:20px; text-align:center;">
+                        <p style="font-size:28px; font-weight:700; color:#ef4444; margin:0;">${negativeReviews}</p>
+                        <p style="font-size:12px; color:#64748b; margin:4px 0 0;">Negative Reviews</p>
+                      </td></tr>
                     </table>
                   </td>
                 </tr>
               </table>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fefce8;border-radius:12px;padding:16px 20px;margin-bottom:24px;border:1px solid #fde68a;">
-                <tr><td>
-                  <span style="font-size:20px;color:#f59e0b;">★★★★★</span>
-                  <span style="font-size:24px;font-weight:700;color:#1e293b;margin-left:8px;">${avgRating}</span>
-                  <span style="font-size:14px;color:#64748b;">/ 5.0 · Based on ${totalReviews} reviews</span>
+              <!-- Rating Bar -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fefce8; border:1px solid #fde68a; border-radius:12px; margin-bottom:24px;">
+                <tr><td style="padding:16px 20px;">
+                  <span style="font-size:20px; color:#f59e0b;">★★★★★</span>
+                  <span style="font-size:24px; font-weight:700; color:#1e293b; margin-left:8px;">${avgRating}</span>
+                  <span style="font-size:14px; color:#64748b;">/ 5.0 · Based on ${totalReviews} reviews</span>
                 </td></tr>
               </table>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ed;border-radius:12px;padding:20px;margin-bottom:24px;border-left:4px solid #f59e0b;">
-                <tr><td>
-                  <p style="font-size:14px;font-weight:600;color:#92400e;margin:0 0 8px;">💡 Action Recommended</p>
-                  <p style="font-size:13px;color:#92400e;margin:0;line-height:1.5;">${actionText}</p>
+              <!-- Action Recommended -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fff7ed; border-left:4px solid #f59e0b; border-radius:12px; margin-bottom:24px;">
+                <tr><td style="padding:20px;">
+                  <p style="font-size:14px; font-weight:600; color:#92400e; margin:0 0 8px;">💡 Action Recommended</p>
+                  <p style="font-size:13px; color:#92400e; margin:0; line-height:1.5;">${actionText}</p>
                 </td></tr>
               </table>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:16px;">
-                <tr><td align="center">
-                  <a href="${dashboardUrl}" style="display:inline-block;background:linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:600;">Open Dashboard →</a>
+              <!-- CTA Button -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:16px;">
+                <tr><td align="center" style="padding:16px 0;">
+                  <table border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="background-color:#2563eb; border-radius:10px;">
+                        <a href="${dashboardUrl}" style="display:inline-block; padding:14px 32px; font-size:14px; font-weight:600; color:#ffffff; text-decoration:none; border-radius:10px;">Open Dashboard →</a>
+                      </td>
+                    </tr>
+                  </table>
                 </td></tr>
               </table>
+
             </td>
           </tr>
+
+          <!-- Footer -->
           <tr>
-            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="font-size:13px;color:#2563eb;margin:0 0 8px;"><a href="${dashboardUrl}" style="color:#2563eb;text-decoration:none;">Open Dashboard</a></p>
-              <p style="font-size:11px;color:#94a3b8;margin:0;">ReviewFlow · You're receiving this because you're a ReviewFlow member<br/><a href="#" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> · <a href="#" style="color:#94a3b8;text-decoration:underline;">Update preferences</a></p>
+            <td style="padding:24px 40px; border-top:1px solid #e2e8f0; text-align:center;">
+              <p style="font-size:13px; color:#2563eb; margin:0 0 8px;">
+                <a href="${dashboardUrl}" style="color:#2563eb; text-decoration:none;">Open Dashboard</a>
+              </p>
+              <p style="font-size:11px; color:#94a3b8; margin:0;">
+                ReviewFlow · You're receiving this because you're a ReviewFlow member<br/>
+                <a href="#" style="color:#94a3b8; text-decoration:underline;">Unsubscribe</a> · 
+                <a href="#" style="color:#94a3b8; text-decoration:underline;">Update preferences</a>
+              </p>
             </td>
           </tr>
+
         </table>
       </td>
     </tr>

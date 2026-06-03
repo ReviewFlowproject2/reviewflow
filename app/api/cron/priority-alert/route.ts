@@ -132,65 +132,99 @@ function generateAlertHTML({
   reviewUrl: string;
   dashboardUrl: string;
 }) {
-  return `<!DOCTYPE html>
-<html>
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ReviewFlow Priority Alert</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+<body style="margin:0; padding:0; background-color:#f5f7fa; font-family:Arial, Helvetica, sans-serif; -webkit-font-smoothing:antialiased;">
+  <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f5f7fa;">
     <tr>
       <td align="center" style="padding:40px 20px;">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+        <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; width:100%; background-color:#ffffff; border-radius:12px; border:1px solid #e0e7f1;">
+
+          <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);padding:32px 40px;">
-              <table width="100%" cellspacing="0" cellpadding="0" border="0">
-                <tr><td style="font-size:24px;font-weight:700;color:#ffffff;">⚠️ Priority Alert</td></tr>
-                <tr><td style="font-size:12px;color:rgba(255,255,255,0.8);text-transform:uppercase;letter-spacing:1px;padding-top:4px;">Urgent Review Detected — ${date}</td></tr>
+            <td style="background-color:#dc2626; padding:32px 40px; border-radius:12px 12px 0 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td style="font-size:24px; font-weight:700; color:#ffffff;">⚠️ Priority Alert</td>
+                </tr>
+                <tr>
+                  <td style="font-size:12px; color:#fca5a5; text-transform:uppercase; letter-spacing:1px; padding-top:4px;">
+                    Urgent Review Detected — ${date}
+                  </td>
+                </tr>
               </table>
             </td>
           </tr>
-          <tr><td style="height:4px;background:linear-gradient(90deg, #ef4444 0%, #f87171 100%);"></td></tr>
+
+          <!-- Red accent line -->
+          <tr>
+            <td style="height:4px; background-color:#ef4444;"></td>
+          </tr>
+
+          <!-- Content -->
           <tr>
             <td style="padding:32px 40px;">
-              <p style="font-size:18px;font-weight:600;color:#1e293b;margin:0 0 8px;"><span style="color:#dc2626;">${clinicName}</span> received a new ${rating}⭐ review</p>
-              <p style="font-size:14px;color:#64748b;margin:0 0 24px;">This requires immediate attention. A 1-2 star review can significantly impact your clinic's reputation.</p>
+              <p style="font-size:18px; font-weight:600; color:#1e293b; margin:0 0 8px;">
+                <span style="color:#dc2626;">${clinicName}</span> received a new ${rating}⭐ review
+              </p>
+              <p style="font-size:14px; color:#64748b; margin:0 0 24px;">This requires immediate attention. A 1-2 star review can significantly impact your clinic's reputation.</p>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fef2f2;border-radius:12px;padding:20px;margin-bottom:24px;border:1px solid #fecaca;">
-                <tr><td>
-                  <p style="font-size:14px;font-weight:600;color:#991b1b;margin:0 0 8px;">📝 Review from ${authorName}</p>
-                  <p style="font-size:22px;color:#f59e0b;margin:0 0 8px;">${stars}</p>
-                  <p style="font-size:15px;color:#7f1d1d;margin:0;font-style:italic;line-height:1.5;">"${reviewContent}"</p>
+              <!-- Review Card -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fef2f2; border:1px solid #fecaca; border-radius:12px; margin-bottom:24px;">
+                <tr><td style="padding:20px;">
+                  <p style="font-size:14px; font-weight:600; color:#991b1b; margin:0 0 8px;">📝 Review from ${authorName}</p>
+                  <p style="font-size:22px; color:#f59e0b; margin:0 0 8px;">${stars}</p>
+                  <p style="font-size:15px; color:#7f1d1d; margin:0; font-style:italic; line-height:1.5;">"${reviewContent}"</p>
                 </td></tr>
               </table>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#fff7ed;border-radius:12px;padding:20px;margin-bottom:24px;border-left:4px solid #dc2626;">
-                <tr><td>
-                  <p style="font-size:14px;font-weight:600;color:#92400e;margin:0 0 8px;">⚡ Why this matters</p>
-                  <p style="font-size:13px;color:#92400e;margin:0;line-height:1.5;">A single 1-star review can drop your average rating by 0.3 points and deter potential patients. Responding within 24 hours improves patient trust by 70%.</p>
+              <!-- Impact Warning -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#fff7ed; border-left:4px solid #dc2626; border-radius:12px; margin-bottom:24px;">
+                <tr><td style="padding:20px;">
+                  <p style="font-size:14px; font-weight:600; color:#92400e; margin:0 0 8px;">⚡ Why this matters</p>
+                  <p style="font-size:13px; color:#92400e; margin:0; line-height:1.5;">A single 1-star review can drop your average rating by 0.3 points and deter potential patients. Responding within 24 hours improves patient trust by 70%.</p>
                 </td></tr>
               </table>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:16px;">
-                <tr><td align="center">
-                  <a href="${reviewUrl}" style="display:inline-block;background:linear-gradient(135deg, #991b1b 0%, #dc2626 100%);color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:10px;font-size:15px;font-weight:700;">Reply on Google Now →</a>
+              <!-- CTA Button -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:16px;">
+                <tr><td align="center" style="padding:16px 0;">
+                  <table border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td align="center" style="background-color:#dc2626; border-radius:10px;">
+                        <a href="${reviewUrl}" style="display:inline-block; padding:16px 40px; font-size:15px; font-weight:700; color:#ffffff; text-decoration:none; border-radius:10px;">Reply on Google Now →</a>
+                      </td>
+                    </tr>
+                  </table>
                 </td></tr>
               </table>
 
-              <table width="100%" cellspacing="0" cellpadding="0" border="0">
+              <!-- Secondary CTA -->
+              <table border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr><td align="center" style="padding-top:8px;">
-                  <a href="${dashboardUrl}" style="display:inline-block;color:#64748b;text-decoration:none;font-size:13px;">Open Dashboard</a>
+                  <a href="${dashboardUrl}" style="color:#64748b; text-decoration:none; font-size:13px;">Open Dashboard</a>
                 </td></tr>
               </table>
+
             </td>
           </tr>
+
+          <!-- Footer -->
           <tr>
-            <td style="padding:24px 40px;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="font-size:11px;color:#94a3b8;margin:0;">ReviewFlow Priority Alert — Sent within 10 minutes of detection<br/><a href="#" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> · <a href="#" style="color:#94a3b8;text-decoration:underline;">Update preferences</a></p>
+            <td style="padding:24px 40px; border-top:1px solid #e2e8f0; text-align:center;">
+              <p style="font-size:11px; color:#94a3b8; margin:0;">
+                ReviewFlow Priority Alert — Sent within 10 minutes of detection<br/>
+                <a href="#" style="color:#94a3b8; text-decoration:underline;">Unsubscribe</a> · 
+                <a href="#" style="color:#94a3b8; text-decoration:underline;">Update preferences</a>
+              </p>
             </td>
           </tr>
+
         </table>
       </td>
     </tr>
