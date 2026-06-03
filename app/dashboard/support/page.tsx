@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import Link from 'next/link';
 import {
+  ArrowLeft,
   MessageSquarePlus,
   Ticket,
   Bug,
@@ -18,8 +20,12 @@ import {
   ChevronUp,
   Search,
   Filter,
-  Paperclip,
+  Upload,
+  FileText,
+  Trash2,
   MessageSquare,
+  Headphones,
+  MessageCircle
 } from 'lucide-react';
 
 // ===================== TYPES =====================
@@ -176,6 +182,8 @@ export default function SupportTickets() {
   const [formType, setFormType] = useState<TicketType>('bug');
   const [formPriority, setFormPriority] = useState<Priority>('medium');
   const [formDesc, setFormDesc] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredTickets = tickets.filter((t) => {
     const matchesSearch =
@@ -194,6 +202,23 @@ export default function SupportTickets() {
     urgent: tickets.filter((t) => t.priority === 'urgent' && t.status !== 'resolved' && t.status !== 'closed').length
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setFiles((prev) => [...prev, ...newFiles].slice(0, 5));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formTitle.trim() || !formDesc.trim()) return;
@@ -206,18 +231,19 @@ export default function SupportTickets() {
     const messageBody = `Ticket ID: ${ticketId}\nType: ${formType}\nPriority: ${formPriority}\n\nDescription:\n${formDesc}`;
 
     try {
+      const formData = new FormData();
+      formData.append('name', 'ReviewFlow Clinic User');
+      formData.append('email', 'noreply@reviewflow.com');
+      formData.append('_subject', subject);
+      formData.append('message', messageBody);
+
+      files.forEach((file) => {
+        formData.append('file', file);
+      });
+
       const response = await fetch(FORMSUBMIT_URL, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          name: 'ReviewFlow Clinic User',
-          email: 'noreply@reviewflow.com',
-          subject: subject,
-          message: messageBody
-        })
+        body: formData
       });
 
       if (!response.ok) throw new Error('FormSubmit failed');
@@ -239,6 +265,7 @@ export default function SupportTickets() {
       setFormDesc('');
       setFormType('bug');
       setFormPriority('medium');
+      setFiles([]);
       setSubmitSuccess(true);
       setTimeout(() => setSubmitSuccess(false), 3000);
     } catch (err) {
@@ -264,24 +291,79 @@ export default function SupportTickets() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
 
-        <div className="flex items-center justify-between mb-8">
+        {/* Back to Dashboard + Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Back to Dashboard
+          </Link>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Support & Feedback</h1>
             <p className="text-gray-600">Found a bug or have an idea? Submit a ticket and we will get back to you.</p>
           </div>
+          <div className="flex items-center gap-3">
+            {/* Live Chat Button - opens Crisp or external chat */}
+            <button
+              onClick={() => {
+                // @ts-ignore
+                if (window.$crisp) {
+                  // @ts-ignore
+                  window.$crisp.push(['do', 'chat:open']);
+                } else {
+                  alert('Live chat is loading... If it does not appear, please submit a ticket below.');
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
+            >
+              <Headphones size={16} />
+              Live Chat
+            </button>
+            <button
+              onClick={() => {
+                setShowModal(true);
+                setSubmitError('');
+                setSubmitSuccess(false);
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+            >
+              <MessageSquarePlus size={18} />
+              Submit Ticket
+            </button>
+          </div>
+        </div>
+
+        {/* Live Chat Banner for Agency users */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 mb-6 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+              <MessageCircle size={20} className="text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">Priority Support Available</h3>
+              <p className="text-xs text-blue-100">Agency plan includes 1-on-1 dedicated support. Average response time: under 2 hours.</p>
+            </div>
+          </div>
           <button
             onClick={() => {
-              setShowModal(true);
-              setSubmitError('');
-              setSubmitSuccess(false);
+              // @ts-ignore
+              if (window.$crisp) {
+                // @ts-ignore
+                window.$crisp.push(['do', 'chat:open']);
+              }
             }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+            className="px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors shrink-0"
           >
-            <MessageSquarePlus size={18} />
-            Submit Ticket
+            Start Chat
           </button>
         </div>
 
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
@@ -321,6 +403,7 @@ export default function SupportTickets() {
           </div>
         </div>
 
+        {/* Filters */}
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -366,6 +449,7 @@ export default function SupportTickets() {
           </div>
         </div>
 
+        {/* Ticket List */}
         <div className="space-y-3">
           {filteredTickets.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
@@ -489,6 +573,7 @@ export default function SupportTickets() {
         </div>
       </div>
 
+      {/* Submit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
@@ -500,7 +585,7 @@ export default function SupportTickets() {
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">New Support Ticket</h2>
-                  <p className="text-xs text-gray-500">Sent to {SUPPORT_EMAIL}</p>
+                  <p className="text-xs text-gray-500">We typically reply within 24 hours</p>
                 </div>
               </div>
               <button
@@ -628,9 +713,51 @@ export default function SupportTickets() {
                   />
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Paperclip size={16} />
-                  <span>Screenshot upload coming soon. Please describe in detail for now.</span>
+                {/* File Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Attachments
+                  </label>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.zip"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-colors"
+                  >
+                    <Upload size={18} />
+                    Click to upload screenshots or files (max 5)
+                  </button>
+
+                  {files.length > 0 && (
+                    <div className="mt-2 space-y-2">
+                      {files.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-200"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <FileText size={16} className="text-gray-400 shrink-0" />
+                            <span className="text-sm text-gray-700 truncate">{file.name}</span>
+                            <span className="text-xs text-gray-400 shrink-0">{formatFileSize(file.size)}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors shrink-0"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-3 pt-2">
