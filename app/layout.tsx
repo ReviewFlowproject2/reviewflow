@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ReviewFlow — Google Review Automation for Dental Offices',
-  description: 'Automate patient review collection with QR codes and email follow-ups. Real-time negative review alerts for dental clinics.',
+  title: 'ReviewFlow — 牙科诊所 Google 评论自动化工具',
+  description: '自动收集患者五星好评，实时监控差评预警。专为牙科诊所打造的口碑增长引擎。',
 }
 
 export default function RootLayout({
@@ -12,7 +12,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body className="antialiased">{children}</body>
     </html>
   )
