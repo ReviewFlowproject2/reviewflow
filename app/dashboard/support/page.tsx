@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Zap, Users, Bell, Headphones, MessageSquare } from "lucide-react";
+import { Check, Zap, Users, Bell, Headphones, MessageSquare, ArrowLeft } from "lucide-react";
 import Script from "next/script";
 import { useState, useEffect } from "react";
 
@@ -72,6 +72,17 @@ export default function PricingPage() {
       <Script src="https://cdn.paddle.com/paddle/v2/paddle.js" strategy="afterInteractive" />
       <div className="min-h-screen bg-[#F8FAFF]">
         <div className="max-w-6xl mx-auto px-6 py-16">
+          {/* Back to Dashboard */}
+          <div className="mb-6">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors"
+            >
+              <ArrowLeft size={16} />
+              Back to Dashboard
+            </Link>
+          </div>
+
           <h1 className="font-outfit font-bold text-4xl text-brand-blue text-center mb-4">
             Simple, Transparent Pricing
           </h1>
@@ -147,7 +158,6 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>500 SMS review requests / month</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
@@ -185,7 +195,6 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>API access</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Custom integrations</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5,000 SMS review requests / month</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
@@ -204,9 +213,9 @@ export default function PricingPage() {
                 <li className="flex items-start gap-2">
                   <Bell size={14} className="text-amber-500 shrink-0 mt-0.5"/>
                   <span>
-                    <span className="font-semibold">Priority SMS Alerts</span>
+                    <span className="font-semibold">Priority Email Alerts</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">1-2⭐ reviews within 10 min via SMS</span>
+                    <span className="block text-xs text-brand-muted">1-2⭐ reviews within 10 min via email</span>
                   </span>
                 </li>
 
@@ -275,9 +284,9 @@ export default function PricingPage() {
           <div className="text-center mt-16">
             <p className="text-brand-muted text-sm mb-4">
               Still have questions?{" "}
-              <Link href="/dashboard/support" className="text-brand-blue hover:underline font-medium">
+              <a href="mailto:support@reviewflowdental.com" className="text-brand-blue hover:underline font-medium">
                 Contact Support
-              </Link>
+              </a>
             </p>
             <div className="flex items-center justify-center gap-6 text-xs text-brand-muted/60">
               <Link href="/privacy" className="hover:text-brand-muted transition-colors">Privacy Policy</Link>

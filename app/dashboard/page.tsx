@@ -121,7 +121,7 @@ function Sidebar({ business }: { business: Business | null }) {
     { icon: Users, label: "Import Patients", href: "/patients/import" },
     { icon: QrCode, label: "QR Code", href: "/dashboard/qr-code" },
     { icon: Star, label: "Reviews", href: "/dashboard/feedback" },
-    { icon: MessageCircle, label: "Support", href: "/dashboard/support" },
+    { icon: Zap, label: "Pricing", href: "/dashboard/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
@@ -173,7 +173,7 @@ function Sidebar({ business }: { business: Business | null }) {
           <p className={`font-outfit font-bold text-sm ${planColor}`}>{planLabel}</p>
           {showUpgrade && (
             <Link
-              href="/pricing"
+              href="/dashboard/support"
               className={`mt-2 block w-full text-center py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${upgradeColor}`}
             >
               Upgrade to {upgradeTarget}
@@ -575,7 +575,7 @@ export default function DashboardPage() {
   const bannerColor = currentPlan === "free" ? "bg-brand-blue" : "bg-amber-500";
   const bannerText = currentPlan === "free" 
     ? "You're on the Free plan. Upgrade to Pro to automate review requests and monitor your reputation."
-    : "You're on Pro. Upgrade to Agency to unlock Daily Digest, Priority SMS Alerts, and team management.";
+    : "You're on Pro. Upgrade to Agency to unlock Daily Digest, multi-clinic management, and team collaboration.";
 
   if (loading) {
     return (
@@ -601,7 +601,7 @@ export default function DashboardPage() {
               <p className="text-white text-sm font-medium">{bannerText}</p>
             </div>
             <Link
-              href="/pricing"
+              href="/dashboard/support"
               className="shrink-0 px-4 py-2 bg-white text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
               style={{ color: bannerColor === "bg-brand-blue" ? "#2563eb" : "#d97706" }}
             >

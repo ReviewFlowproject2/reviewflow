@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
@@ -14,10 +14,11 @@ import {
   ArrowRight,
   Mail,
   Bell,
-  Smartphone,
   QrCode,
+  User,
+  LogOut,
 } from "lucide-react";
-import { useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -302,7 +303,7 @@ function PricingSection() {
     },
     {
       name: "Pro",
-      price: "$29",
+      price: "$39",
       period: "/month",
       description: "Automate your reputation growth",
       features: [
@@ -311,15 +312,18 @@ function PricingSection() {
         "Real-time negative review alerts",
         "Competitor tracking dashboard",
         "Reply templates & suggestions",
-        "Unlimited patients",
-        "Priority support",
+        "1,000 patients / month",
+        "3 competitor tracking",
+        "30-day historical data",
+        "1 team member",
+        "Priority email support",
       ],
-      cta: "Start 30-Day Free Trial",
+      cta: "Start 7-Day Free Trial",
       popular: true,
     },
     {
       name: "Agency",
-      price: "$99",
+      price: "$69",
       period: "/month",
       description: "Manage multiple clinics",
       features: [
@@ -328,8 +332,13 @@ function PricingSection() {
         "White-label branding",
         "API access",
         "Custom integrations",
-        "Dedicated account manager",
-        "SLA guarantee",
+        "10,000 patients / month",
+        "20 competitor tracking",
+        "Unlimited historical data",
+        "5 team members",
+        "Export monthly reports",
+        "Daily Reputation Digest",
+        "1-on-1 Dedicated Support",
       ],
       cta: "Contact Sales",
       popular: false,
@@ -343,7 +352,7 @@ function PricingSection() {
           <h2 className="font-outfit font-bold text-3xl md:text-4xl text-brand-blue mb-3">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-brand-muted">Start free. Upgrade when you're ready to automate.</p>
+          <p className="text-brand-muted">Start free. Upgrade when you&apos;re ready to automate.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -374,6 +383,8 @@ function PricingSection() {
                 onClick={() => {
                   if (plan.name === "Agency") {
                     window.location.href = "mailto:sales@reviewflowdental.com";
+                  } else if (plan.name === "Pro") {
+                    router.push("/dashboard/support");
                   } else {
                     router.push("/register");
                   }
@@ -450,7 +461,7 @@ function CTASection() {
           Ready to Grow Your Reviews?
         </h2>
         <p className="text-white/80 mb-8 leading-relaxed">
-          Join Houston dental offices using ReviewFlow. Start free, no credit card required.
+          Join dental offices using ReviewFlow. Start free, no credit card required.
         </p>
         <button
           onClick={() => router.push("/register")}
@@ -471,7 +482,7 @@ function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="font-outfit font-bold text-xl">ReviewFlow</div>
           <div className="text-sm text-white/60">
-            © 2026 ReviewFlow. Built for Houston Dental Offices.
+            © 2026 ReviewFlow. Built for Dental Offices.
           </div>
           <div className="flex gap-6 text-sm text-white/80">
             <Link href="/login" className="hover:text-white transition-colors">Log In</Link>
@@ -486,6 +497,33 @@ function Footer() {
 // ==================== Navbar ====================
 function Navbar() {
   const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    router.push("/");
+    router.refresh();
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-20 bg-white/85 backdrop-blur-md border-b border-[#E9F1FA]">
       <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
@@ -498,18 +536,52 @@ function Navbar() {
           <a href="#faq" className="hover:text-brand-blue transition-colors">FAQ</a>
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="text-sm text-brand-blue font-semibold hover:underline"
-          >
-            Log In
-          </Link>
-          <button
-            onClick={() => router.push("/register")}
-            className="text-sm px-5 py-2 bg-brand-blue text-white font-semibold rounded-[8px] hover:bg-brand-dark transition-colors"
-          >
-            Start Free
-          </button>
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 text-sm text-brand-dark font-medium hover:text-brand-blue transition-colors"
+              >
+                <div className="w-8 h-8 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue">
+                  <User size={16} />
+                </div>
+                <span className="hidden sm:inline max-w-[120px] truncate">{user.email}</span>
+              </button>
+              {showDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-[#E0E7F1] shadow-lg py-2 z-50">
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-brand-dark hover:bg-brand-soft transition-colors"
+                  >
+                    <Star size={14} />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-red-50 w-full text-left transition-colors"
+                  >
+                    <LogOut size={14} />
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="text-sm text-brand-blue font-semibold hover:underline"
+              >
+                Log In
+              </Link>
+              <button
+                onClick={() => router.push("/register")}
+                className="text-sm px-5 py-2 bg-brand-blue text-white font-semibold rounded-[8px] hover:bg-brand-dark transition-colors"
+              >
+                Start Free
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>
