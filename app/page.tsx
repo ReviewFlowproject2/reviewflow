@@ -16,6 +16,9 @@ import {
   Bell,
   QrCode,
   Quote,
+  Zap,
+  Users,
+  Headphones,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -346,68 +349,15 @@ function TestimonialsSection() {
   );
 }
 
-// ==================== Pricing Section ====================
+// ==================== Pricing Section (同步 /pricing 页面) ====================
 function PricingSection() {
   const router = useRouter();
 
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "",
-      description: "Get started with QR codes",
-      features: [
-        "QR code generation",
-        "Google Review link",
-        "Basic dashboard",
-        "Up to 50 patients",
-        "Email support",
-      ],
-      cta: "Get Started",
-      popular: false,
-    },
-    {
-      name: "Pro",
-      price: "$39",
-      period: "/month",
-      description: "Automate your reputation growth",
-      features: [
-        "Everything in Free",
-        "Automated email follow-ups",
-        "Real-time negative review alerts",
-        "1,000 patients / month",
-        "500 SMS review requests / month",
-        "3 competitor tracking",
-        "30-day historical data",
-        "1 team member",
-        "Priority email support",
-      ],
-      cta: "Start 7-Day Free Trial",
-      popular: true,
-    },
-    {
-      name: "Agency",
-      price: "$69",
-      period: "/month",
-      description: "Manage multiple clinics",
-      features: [
-        "Everything in Pro",
-        "Multi-clinic dashboard",
-        "White-label branding",
-        "API access",
-        "Custom integrations",
-        "10,000 patients / month",
-        "5,000 SMS review requests / month",
-        "20 competitor tracking",
-        "Unlimited historical data",
-        "5 team members",
-        "Export monthly reports",
-        "1-on-1 dedicated support",
-      ],
-      cta: "Contact Sales",
-      popular: false,
-    },
-  ];
+  const AgencyBadge = ({ children }: { children: React.ReactNode }) => (
+    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">
+      {children}
+    </span>
+  );
 
   return (
     <section className="py-20 md:py-28 bg-white">
@@ -416,60 +366,124 @@ function PricingSection() {
           <h2 className="font-outfit font-bold text-3xl md:text-4xl text-brand-blue mb-3">
             Simple, Transparent Pricing
           </h2>
-          <p className="text-brand-muted">Start free. Upgrade when you're ready to automate.</p>
+          <p className="text-brand-muted">Start free. Upgrade when you&apos;re ready to automate.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative bg-white rounded-[16px] p-8 transition-all hover:shadow-lg ${
-                plan.popular
-                  ? "border-2 border-brand-blue shadow-card"
-                  : "border border-[#E0E7F1]"
-              }`}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          {/* Free */}
+          <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
+            <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
+            <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
+            <Link
+              href="/register"
+              className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors"
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
-                  Most Popular
-                </div>
-              )}
+              Get Started
+            </Link>
+            <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Up to 50 patients</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email support</li>
+            </ul>
+          </div>
 
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">{plan.name}</h3>
-              <p className="text-sm text-brand-muted mb-4">{plan.description}</p>
-
-              <div className="mb-6">
-                <span className="font-outfit font-bold text-4xl text-brand-blue">{plan.price}</span>
-                <span className="text-brand-muted">{plan.period}</span>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (plan.name === "Agency") {
-                    window.location.href = "mailto:sales@reviewflowdental.com";
-                  } else {
-                    router.push("/register");
-                  }
-                }}
-                className={`w-full py-2.5 rounded-[10px] font-semibold text-sm transition-all hover:scale-[1.01] ${
-                  plan.popular
-                    ? "bg-brand-blue text-white hover:bg-brand-dark"
-                    : "border-2 border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
-                }`}
-              >
-                {plan.cta}
-              </button>
-
-              <ul className="mt-6 space-y-3">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-brand-dark">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+          {/* Pro */}
+          <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
+              Most Popular
             </div>
-          ))}
+            <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
+            <p className="text-brand-muted text-sm mb-4">Automate your reputation growth</p>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+              $39<span className="text-lg text-brand-muted">/mo</span>
+            </div>
+            <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+            <button
+              onClick={() => router.push("/register")}
+              className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors"
+            >
+              Start 7-Day Free Trial
+            </button>
+            <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>500 SMS review requests / month</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Priority email support</li>
+            </ul>
+          </div>
+
+          {/* Agency */}
+          <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
+            <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+              <Zap size={12} /> Agency Only
+            </div>
+            <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
+            <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+              $69<span className="text-lg text-brand-muted">/mo</span>
+            </div>
+            <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+            <button
+              onClick={() => window.location.href = "mailto:sales@reviewflowdental.com"}
+              className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors"
+            >
+              Contact Sales
+            </button>
+            <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>White-label branding</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>API access</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Custom integrations</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5,000 SMS review requests / month</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
+
+              <li className="flex items-start gap-2">
+                <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">Daily Reputation Digest</span>
+                  <AgencyBadge>Agency Only</AgencyBadge>
+                  <span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Bell size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">Priority SMS Alerts</span>
+                  <AgencyBadge>Agency Only</AgencyBadge>
+                  <span className="block text-xs text-brand-muted">1-2⭐ reviews within 10 min via SMS</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">Multi-Recipient Alerts</span>
+                  <AgencyBadge>Agency Only</AgencyBadge>
+                  <span className="block text-xs text-brand-muted">Up to 5 staff members notified</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Headphones size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">1-on-1 Dedicated Support</span>
+                  <AgencyBadge>Agency Only</AgencyBadge>
+                  <span className="block text-xs text-brand-muted">Dedicated account manager + live chat</span>
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
