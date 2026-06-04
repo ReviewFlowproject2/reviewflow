@@ -1,796 +1,292 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import Link from 'next/link';
-import {
-  ArrowLeft,
-  MessageSquarePlus,
-  Ticket,
-  Bug,
-  Lightbulb,
-  HelpCircle,
-  AlertTriangle,
-  Clock,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  Send,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Search,
-  Filter,
-  Upload,
-  FileText,
-  Trash2,
-  MessageSquare,
-  Headphones,
-  MessageCircle
-} from 'lucide-react';
+import Link from "next/link";
+import { Check, Zap, Users, Bell, Headphones, MessageSquare } from "lucide-react";
+import Script from "next/script";
+import { useState, useEffect } from "react";
 
-// ===================== TYPES =====================
-type TicketType = 'bug' | 'feature' | 'question' | 'other';
-type TicketStatus = 'submitted' | 'processing' | 'resolved' | 'closed';
-type Priority = 'urgent' | 'high' | 'medium' | 'low';
+const PADDLE_CLIENT_TOKEN = "live_70c09ad4de252bfa5440b90a9ca";
 
-interface TicketItem {
-  id: string;
-  title: string;
-  description: string;
-  type: TicketType;
-  status: TicketStatus;
-  priority: Priority;
-  createdAt: string;
-  updatedAt: string;
-  replies: Reply[];
-}
-
-interface Reply {
-  id: string;
-  from: 'user' | 'team';
-  author: string;
-  content: string;
-  createdAt: string;
-}
-
-// ===================== MOCK DATA =====================
-const MOCK_TICKETS: TicketItem[] = [
-  {
-    id: 'T-001',
-    title: 'CSV import shows garbled Chinese characters',
-    description: "After uploading the CSV file, Chinese characters in patient names display as question marks. The file is UTF-8 encoded, but the import seems to use ASCII. Please support UTF-8 with BOM or auto-detect encoding.",
-    type: 'bug',
-    status: 'processing',
-    priority: 'high',
-    createdAt: '2026-06-02T10:30:00',
-    updatedAt: '2026-06-03T14:20:00',
-    replies: [
-      {
-        id: 'R-1',
-        from: 'team',
-        author: 'ReviewFlow Support',
-        content: "Thanks for reporting! We have reproduced this issue. The backend was defaulting to ASCII encoding when reading CSV files. We plan to fix this in Friday's update by adding UTF-8 auto-detection.",
-        createdAt: '2026-06-03T14:20:00'
-      }
-    ]
+const PRICING = {
+  monthly: {
+    pro: { priceId: "pri_01kt19xahgfjcw0hcmc9gkws26", price: 39, period: "/mo", save: "" },
+    agency: { priceId: "pri_01kt1a0wwqa4nbny8d3ae0tben", price: 69, period: "/mo", save: "" },
   },
-  {
-    id: 'T-002',
-    title: 'Request WeChat notification channel',
-    description: "Our clinic staff use WeChat heavily. It would be great if negative review alerts and weekly reports could also be pushed to WeChat Work or a WeChat group bot.",
-    type: 'feature',
-    status: 'submitted',
-    priority: 'medium',
-    createdAt: '2026-06-03T09:15:00',
-    updatedAt: '2026-06-03T09:15:00',
-    replies: []
+  quarterly: {
+    pro: { priceId: "pri_01kt4s6zamveeevqt9rv42e8z8", price: 105, period: "/3mo", save: "Save 10%" },
+    agency: { priceId: "pri_01kt4s86yv5g5ty0epzr96g0cp", price: 189, period: "/3mo", save: "Save 9%" },
   },
-  {
-    id: 'T-003',
-    title: 'Dashboard trend chart data is incorrect',
-    description: "The rating trend chart on the Dashboard shows an average of 4.2 stars last week, but manual calculation should be 3.8 stars. Suspect there is a bug in the aggregation logic.",
-    type: 'bug',
-    status: 'resolved',
-    priority: 'urgent',
-    createdAt: '2026-05-28T16:00:00',
-    updatedAt: '2026-06-01T11:00:00',
-    replies: [
-      {
-        id: 'R-2',
-        from: 'team',
-        author: 'ReviewFlow Support',
-        content: "Confirmed: this was caused by a timezone conversion error at date boundaries. Fixed in v1.2.1. Please refresh the page to see the corrected data.",
-        createdAt: '2026-06-01T11:00:00'
-      },
-      {
-        id: 'R-3',
-        from: 'user',
-        author: 'Clinic Admin',
-        content: "Verified, the data is now correct. Thank you!",
-        createdAt: '2026-06-01T13:30:00'
+  yearly: {
+    pro: { priceId: "pri_01kt4rxwhrsn4fep3shk2gjsbg", price: 390, period: "/yr", save: "Save 17%" },
+    agency: { priceId: "pri_01kt4s5kh3e7ft82grc8w5qzfc", price: 690, period: "/yr", save: "Save 17%" },
+  },
+};
+
+type BillingCycle = "monthly" | "quarterly" | "yearly";
+
+const AgencyBadge = ({ children }: { children: React.ReactNode }) => (
+  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">
+    {children}
+  </span>
+);
+
+export default function PricingPage() {
+  const [cycle, setCycle] = useState<BillingCycle>("monthly");
+  const [paddleLoaded, setPaddleLoaded] = useState(false);
+
+  useEffect(() => {
+    const checkPaddle = setInterval(() => {
+      if (typeof window !== "undefined" && (window as any).Paddle) {
+        setPaddleLoaded(true);
+        clearInterval(checkPaddle);
       }
-    ]
-  }
-];
+    }, 100);
+    return () => clearInterval(checkPaddle);
+  }, []);
 
-const SUPPORT_EMAIL = 'dengxiaofeng880914@gmail.com';
-const FORMSUBMIT_URL = `https://formsubmit.co/ajax/${SUPPORT_EMAIL}`;
-
-// ===================== COMPONENTS =====================
-
-const TypeBadge = ({ type }: { type: TicketType }) => {
-  const config = {
-    bug: { icon: Bug, label: 'Bug', color: 'bg-red-50 text-red-700 border-red-200' },
-    feature: { icon: Lightbulb, label: 'Feature', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-    question: { icon: HelpCircle, label: 'Question', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    other: { icon: MessageSquare, label: 'Other', color: 'bg-gray-50 text-gray-700 border-gray-200' }
-  };
-  const { icon: Icon, label, color } = config[type];
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${color}`}>
-      <Icon size={12} />
-      {label}
-    </span>
-  );
-};
-
-const StatusBadge = ({ status }: { status: TicketStatus }) => {
-  const config = {
-    submitted: { icon: Send, label: 'Submitted', color: 'bg-gray-50 text-gray-700 border-gray-200' },
-    processing: { icon: Loader2, label: 'Processing', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    resolved: { icon: CheckCircle2, label: 'Resolved', color: 'bg-green-50 text-green-700 border-green-200' },
-    closed: { icon: XCircle, label: 'Closed', color: 'bg-gray-50 text-gray-500 border-gray-200' }
-  };
-  const { icon: Icon, label, color } = config[status];
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${color}`}>
-      <Icon size={12} className={status === 'processing' ? 'animate-spin' : ''} />
-      {label}
-    </span>
-  );
-};
-
-const PriorityBadge = ({ priority }: { priority: Priority }) => {
-  const config = {
-    urgent: { label: 'Urgent', color: 'bg-red-100 text-red-800' },
-    high: { label: 'High', color: 'bg-orange-100 text-orange-800' },
-    medium: { label: 'Medium', color: 'bg-yellow-100 text-yellow-800' },
-    low: { label: 'Low', color: 'bg-green-100 text-green-800' }
-  };
-  const { label, color } = config[priority];
-  return (
-    <span className={`inline-flex px-2 py-0.5 rounded text-xs font-semibold ${color}`}>
-      {label}
-    </span>
-  );
-};
-
-// ===================== MAIN PAGE =====================
-
-export default function SupportTickets() {
-  const [tickets, setTickets] = useState<TicketItem[]>(MOCK_TICKETS);
-  const [showModal, setShowModal] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState('');
-
-  const [formTitle, setFormTitle] = useState('');
-  const [formType, setFormType] = useState<TicketType>('bug');
-  const [formPriority, setFormPriority] = useState<Priority>('medium');
-  const [formDesc, setFormDesc] = useState('');
-  const [files, setFiles] = useState<File[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const filteredTickets = tickets.filter((t) => {
-    const matchesSearch =
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
-    const matchesType = typeFilter === 'all' || t.type === typeFilter;
-    return matchesSearch && matchesStatus && matchesType;
-  }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
-  const stats = {
-    total: tickets.length,
-    processing: tickets.filter((t) => t.status === 'processing').length,
-    resolved: tickets.filter((t) => t.status === 'resolved').length,
-    urgent: tickets.filter((t) => t.priority === 'urgent' && t.status !== 'resolved' && t.status !== 'closed').length
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...newFiles].slice(0, 5));
+  const openCheckout = (priceId: string) => {
+    if (!(window as any).Paddle) {
+      alert("Payment system loading, please try again in a moment.");
+      return;
     }
-  };
-
-  const removeFile = (index: number) => {
-    setFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formTitle.trim() || !formDesc.trim()) return;
-
-    setIsSubmitting(true);
-    setSubmitError('');
-
-    const ticketId = `T-${String(tickets.length + 1).padStart(3, '0')}`;
-    const subject = `[ReviewFlow Support] [${formType.toUpperCase()}] ${formTitle}`;
-    const messageBody = `Ticket ID: ${ticketId}\nType: ${formType}\nPriority: ${formPriority}\n\nDescription:\n${formDesc}`;
-
-    try {
-      const formData = new FormData();
-      formData.append('name', 'ReviewFlow Clinic User');
-      formData.append('email', 'noreply@reviewflow.com');
-      formData.append('_subject', subject);
-      formData.append('message', messageBody);
-
-      files.forEach((file) => {
-        formData.append('file', file);
-      });
-
-      const response = await fetch(FORMSUBMIT_URL, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) throw new Error('FormSubmit failed');
-
-      const newTicket: TicketItem = {
-        id: ticketId,
-        title: formTitle,
-        description: formDesc,
-        type: formType,
-        status: 'submitted',
-        priority: formPriority,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        replies: []
-      };
-
-      setTickets((prev) => [newTicket, ...prev]);
-      setFormTitle('');
-      setFormDesc('');
-      setFormType('bug');
-      setFormPriority('medium');
-      setFiles([]);
-      setSubmitSuccess(true);
-      setTimeout(() => setSubmitSuccess(false), 3000);
-    } catch (err) {
-      const mailtoLink = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(messageBody)}`;
-      window.open(mailtoLink, '_blank');
-      setSubmitError('Auto-send failed. Please send via your email client (we have pre-filled the content).');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    (window as any).Paddle.Initialize({ token: PADDLE_CLIENT_TOKEN });
+    (window as any).Paddle.Checkout.open({
+      items: [{ priceId: priceId, quantity: 1 }],
+      settings: { theme: "light", displayMode: "overlay", locale: "en" },
     });
   };
 
+  const cycles: { key: BillingCycle; label: string }[] = [
+    { key: "monthly", label: "Monthly" },
+    { key: "quarterly", label: "Quarterly" },
+    { key: "yearly", label: "Yearly" },
+  ];
+
+  const getSaveLabel = (plan: "pro" | "agency") => {
+    const save = PRICING[cycle][plan].save;
+    return save ? save : null;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
+    <>
+      <Script src="https://cdn.paddle.com/paddle/v2/paddle.js" strategy="afterInteractive" />
+      <div className="min-h-screen bg-[#F8FAFF]">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <h1 className="font-outfit font-bold text-4xl text-brand-blue text-center mb-4">
+            Simple, Transparent Pricing
+          </h1>
+          <p className="text-brand-muted text-center mb-8">
+            Start free. Upgrade when you&apos;re ready to automate.
+          </p>
 
-        {/* Back to Dashboard + Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to Dashboard
-          </Link>
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Support & Feedback</h1>
-            <p className="text-gray-600">Found a bug or have an idea? Submit a ticket and we will get back to you.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* Live Chat Button - opens Crisp or external chat */}
-            <button
-              onClick={() => {
-                // @ts-ignore
-                if (window.$crisp) {
-                  // @ts-ignore
-                  window.$crisp.push(['do', 'chat:open']);
-                } else {
-                  alert('Live chat is loading... If it does not appear, please submit a ticket below.');
-                }
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm"
-            >
-              <Headphones size={16} />
-              Live Chat
-            </button>
-            <button
-              onClick={() => {
-                setShowModal(true);
-                setSubmitError('');
-                setSubmitSuccess(false);
-              }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
-            >
-              <MessageSquarePlus size={18} />
-              Submit Ticket
-            </button>
-          </div>
-        </div>
-
-        {/* Live Chat Banner for Agency users */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 mb-6 text-white flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <MessageCircle size={20} className="text-white" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-sm">Priority Support Available</h3>
-              <p className="text-xs text-blue-100">Agency plan includes 1-on-1 dedicated support. Average response time: under 2 hours.</p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              // @ts-ignore
-              if (window.$crisp) {
-                // @ts-ignore
-                window.$crisp.push(['do', 'chat:open']);
-              }
-            }}
-            className="px-4 py-2 bg-white text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-50 transition-colors shrink-0"
-          >
-            Start Chat
-          </button>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">My Tickets</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <Ticket className="text-blue-500" size={24} />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Processing</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.processing}</p>
-              </div>
-              <Loader2 className="text-blue-500" size={24} />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Resolved</p>
-                <p className="text-2xl font-bold text-green-600">{stats.resolved}</p>
-              </div>
-              <CheckCircle2 className="text-green-500" size={24} />
-            </div>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Urgent Pending</p>
-                <p className="text-2xl font-bold text-red-600">{stats.urgent}</p>
-              </div>
-              <AlertTriangle className="text-red-500" size={24} />
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search ticket title, ID, or keywords..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-3">
-              <div className="relative">
-                <select
-                  className="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+          {/* Billing Cycle Toggle */}
+          <div className="flex justify-center mb-12">
+            <div className="bg-white rounded-full p-1 border border-[#E0E7F1] shadow-sm inline-flex">
+              {cycles.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setCycle(c.key)}
+                  className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                    cycle === c.key
+                      ? "bg-brand-blue text-white shadow-md"
+                      : "text-brand-muted hover:text-brand-dark"
+                  }`}
                 >
-                  <option value="all">All Status</option>
-                  <option value="submitted">Submitted</option>
-                  <option value="processing">Processing</option>
-                  <option value="resolved">Resolved</option>
-                  <option value="closed">Closed</option>
-                </select>
-                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-              </div>
-              <div className="relative">
-                <select
-                  className="appearance-none bg-gray-50 border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                >
-                  <option value="all">All Types</option>
-                  <option value="bug">Bug</option>
-                  <option value="feature">Feature</option>
-                  <option value="question">Question</option>
-                  <option value="other">Other</option>
-                </select>
-                <Filter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
-              </div>
+                  {c.label}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Ticket List */}
-        <div className="space-y-3">
-          {filteredTickets.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <Ticket className="mx-auto text-gray-300 mb-3" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No tickets yet</h3>
-              <p className="text-gray-500 mb-4">Have a question or found an issue? We are here to help.</p>
-              <button
-                onClick={() => setShowModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+            {/* FREE */}
+            <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
+              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
+              <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
+              <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
+              <Link 
+                href="/register" 
+                className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors"
               >
-                <MessageSquarePlus size={16} />
-                Submit your first ticket
-              </button>
+                Get Started
+              </Link>
+              <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Up to 50 patients</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email support</li>
+              </ul>
             </div>
-          ) : (
-            filteredTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className={`bg-white rounded-xl border transition-all duration-200 overflow-hidden ${
-                  ticket.status === 'submitted' ? 'border-blue-300 shadow-md' : 'border-gray-200 shadow-sm'
-                }`}
-              >
-                <div
-                  className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => setExpandedId(expandedId === ticket.id ? null : ticket.id)}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                        ticket.type === 'bug' ? 'bg-red-100 text-red-600' :
-                        ticket.type === 'feature' ? 'bg-amber-100 text-amber-600' :
-                        ticket.type === 'question' ? 'bg-blue-100 text-blue-600' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {ticket.type === 'bug' && <Bug size={20} />}
-                        {ticket.type === 'feature' && <Lightbulb size={20} />}
-                        {ticket.type === 'question' && <HelpCircle size={20} />}
-                        {ticket.type === 'other' && <MessageSquare size={20} />}
-                      </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="text-xs font-mono text-gray-400">{ticket.id}</span>
-                          <h3 className="font-semibold text-gray-900">{ticket.title}</h3>
-                          <TypeBadge type={ticket.type} />
-                          <StatusBadge status={ticket.status} />
-                          <PriorityBadge priority={ticket.priority} />
-                        </div>
-
-                        <p className="text-gray-600 text-sm line-clamp-1 mb-1">{ticket.description}</p>
-
-                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />
-                            Submitted {formatDate(ticket.createdAt)}
-                          </span>
-                          <span>Updated {formatDate(ticket.updatedAt)}</span>
-                          {ticket.replies.length > 0 && (
-                            <span className="flex items-center gap-1 text-blue-600">
-                              <MessageSquare size={12} />
-                              {ticket.replies.length} {ticket.replies.length === 1 ? 'reply' : 'replies'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
-                        {expandedId === ticket.id ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                      </button>
-                    </div>
-                  </div>
+            {/* PRO */}
+            <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
+                Most Popular
+              </div>
+              {getSaveLabel("pro") && (
+                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  {getSaveLabel("pro")}
                 </div>
-
-                {expandedId === ticket.id && (
-                  <div className="border-t border-gray-100 p-4 bg-gray-50/50">
-                    <div className="ml-14">
-                      <div className="bg-white p-4 rounded-lg border border-gray-200 mb-4">
-                        <h4 className="text-sm font-semibold text-gray-900 mb-2">Description</h4>
-                        <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
-                      </div>
-
-                      {ticket.replies.length > 0 && (
-                        <div className="space-y-3 mb-4">
-                          <h4 className="text-sm font-semibold text-gray-900">Conversation</h4>
-                          {ticket.replies.map((reply) => (
-                            <div
-                              key={reply.id}
-                              className={`p-3 rounded-lg border text-sm ${
-                                reply.from === 'team'
-                                  ? 'bg-blue-50 border-blue-200'
-                                  : 'bg-white border-gray-200'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <span className={`font-medium ${
-                                  reply.from === 'team' ? 'text-blue-800' : 'text-gray-900'
-                                }`}>
-                                  {reply.author}
-                                </span>
-                                <span className="text-xs text-gray-400">{formatDate(reply.createdAt)}</span>
-                              </div>
-                              <p className="text-gray-700">{reply.content}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-6 text-xs text-gray-500">
-                        <span>Ticket ID: {ticket.id}</span>
-                        <span>Type: {ticket.type === 'bug' ? 'Bug' : ticket.type === 'feature' ? 'Feature Request' : ticket.type === 'question' ? 'Question' : 'Other'}</span>
-                        <span>Priority: {ticket.priority.charAt(0).toUpperCase() + ticket.priority.slice(1)}</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              )}
+              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
+              <p className="text-brand-muted text-sm mb-4">Automate your reputation growth</p>
+              <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+                ${PRICING[cycle].pro.price}<span className="text-lg text-brand-muted">{PRICING[cycle].pro.period}</span>
               </div>
-            ))
-          )}
+              <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+              <button
+                onClick={() => openCheckout(PRICING[cycle].pro.priceId)}
+                className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
+                disabled={!paddleLoaded}
+              >
+                {paddleLoaded ? "Start 7-Day Free Trial" : "Loading..."}
+              </button>
+              <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>500 SMS review requests / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Priority email support</li>
+              </ul>
+            </div>
+
+            {/* AGENCY */}
+            <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
+              {getSaveLabel("agency") && (
+                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  {getSaveLabel("agency")}
+                </div>
+              )}
+              <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                <Zap size={12} /> Agency Only
+              </div>
+              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
+              <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
+              <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+                ${PRICING[cycle].agency.price}<span className="text-lg text-brand-muted">{PRICING[cycle].agency.period}</span>
+              </div>
+              <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+              <button
+                onClick={() => openCheckout(PRICING[cycle].agency.priceId)}
+                className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
+                disabled={!paddleLoaded}
+              >
+                {paddleLoaded ? "Start 7-Day Free Trial" : "Loading..."}
+              </button>
+              <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>White-label branding</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>API access</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Custom integrations</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5,000 SMS review requests / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
+
+                {/* Agency Exclusive Features */}
+                <li className="flex items-start gap-2">
+                  <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">Daily Reputation Digest</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span>
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2">
+                  <Bell size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">Priority SMS Alerts</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">1-2⭐ reviews within 10 min via SMS</span>
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2">
+                  <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">Multi-Recipient Alerts</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">Up to 5 staff members notified</span>
+                  </span>
+                </li>
+
+                <li className="flex items-start gap-2">
+                  <Headphones size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span>
+                    <span className="font-semibold">1-on-1 Dedicated Support</span>
+                    <AgencyBadge>Agency Only</AgencyBadge>
+                    <span className="block text-xs text-brand-muted">Dedicated account manager + live chat</span>
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="max-w-3xl mx-auto mt-20">
+            <h2 className="font-outfit font-bold text-2xl text-brand-dark text-center mb-8">
+              Frequently Asked Questions
+            </h2>
+            <div className="space-y-4">
+              {[
+                {
+                  q: "Do I need a credit card to start?",
+                  a: "No credit card required for the Free plan. Pro and Agency plans include a 7-day free trial — we only ask for payment details when you decide to continue after the trial."
+                },
+                {
+                  q: "Can I cancel anytime?",
+                  a: "Yes, you can cancel your subscription at any time from your account settings. No questions asked, no hidden fees."
+                },
+                {
+                  q: "What happens after the 7-day trial?",
+                  a: "If you don't subscribe, your account automatically downgrades to the Free plan. You keep all your data and can upgrade again anytime."
+                },
+                {
+                  q: "Is my patient data secure?",
+                  a: "Absolutely. We use bank-level encryption (AES-256) and never share your patient data with third parties. We are HIPAA-compliant and GDPR-ready."
+                },
+                {
+                  q: "Can I switch plans later?",
+                  a: "Yes, you can upgrade or downgrade at any time. When upgrading, you only pay the prorated difference. When downgrading, the new rate applies at the next billing cycle."
+                },
+                {
+                  q: "Do you offer refunds?",
+                  a: "If you are not satisfied within the first 14 days of your paid subscription, contact us for a full refund — no questions asked."
+                }
+              ].map((faq, i) => (
+                <div key={i} className="bg-white rounded-xl border border-[#E0E7F1] p-5">
+                  <h3 className="font-semibold text-brand-dark mb-2">{faq.q}</h3>
+                  <p className="text-sm text-brand-muted leading-relaxed">{faq.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer CTA */}
+          <div className="text-center mt-16">
+            <p className="text-brand-muted text-sm mb-4">
+              Still have questions?{" "}
+              <Link href="/dashboard/support" className="text-brand-blue hover:underline font-medium">
+                Contact Support
+              </Link>
+            </p>
+            <div className="flex items-center justify-center gap-6 text-xs text-brand-muted/60">
+              <Link href="/privacy" className="hover:text-brand-muted transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-brand-muted transition-colors">Terms of Service</Link>
+              <Link href="/cookies" className="hover:text-brand-muted transition-colors">Cookie Policy</Link>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Submit Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
-          <div className="relative bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center">
-                  <MessageSquare size={16} className="text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">New Support Ticket</h2>
-                  <p className="text-xs text-gray-500">We typically reply within 24 hours</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowModal(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {submitSuccess ? (
-              <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 size={32} className="text-green-600" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Ticket Submitted!</h3>
-                <p className="text-gray-600 mb-4">We have received your ticket and will reply via email shortly.</p>
-                <button
-                  onClick={() => {
-                    setShowModal(false);
-                    setSubmitSuccess(false);
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  Got it
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="p-4 space-y-4">
-                {submitError && (
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-                    <div className="flex items-start gap-2">
-                      <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">{submitError}</p>
-                        <p className="text-xs mt-1">Your email client should have opened with a pre-filled message. Just hit send!</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ticket Type <span className="text-red-500">*</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      { value: 'bug', label: 'Bug Report', icon: Bug },
-                      { value: 'feature', label: 'Feature Request', icon: Lightbulb },
-                      { value: 'question', label: 'Question', icon: HelpCircle },
-                      { value: 'other', label: 'Other', icon: MessageSquare }
-                    ] as const).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setFormType(opt.value)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                          formType === opt.value
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        <opt.icon size={16} />
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Priority
-                  </label>
-                  <div className="flex gap-2">
-                    {([
-                      { value: 'urgent', label: 'Urgent' },
-                      { value: 'high', label: 'High' },
-                      { value: 'medium', label: 'Medium' },
-                      { value: 'low', label: 'Low' }
-                    ] as const).map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => setFormPriority(opt.value)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                          formPriority === opt.value
-                            ? opt.value === 'urgent' ? 'bg-red-100 border-red-300 text-red-800' :
-                              opt.value === 'high' ? 'bg-orange-100 border-orange-300 text-orange-800' :
-                              opt.value === 'medium' ? 'bg-yellow-100 border-yellow-300 text-yellow-800' :
-                              'bg-green-100 border-green-300 text-green-800'
-                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g., CSV import shows garbled characters"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    required
-                    rows={5}
-                    placeholder="Describe the issue, steps to reproduce, expected vs actual behavior..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                    value={formDesc}
-                    onChange={(e) => setFormDesc(e.target.value)}
-                  />
-                </div>
-
-                {/* File Upload */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Attachments
-                  </label>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    multiple
-                    accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.zip"
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 transition-colors"
-                  >
-                    <Upload size={18} />
-                    Click to upload screenshots or files (max 5)
-                  </button>
-
-                  {files.length > 0 && (
-                    <div className="mt-2 space-y-2">
-                      {files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-200"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <FileText size={16} className="text-gray-400 shrink-0" />
-                            <span className="text-sm text-gray-700 truncate">{file.name}</span>
-                            <span className="text-xs text-gray-400 shrink-0">{formatFileSize(file.size)}</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeFile(index)}
-                            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors shrink-0"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowModal(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send size={16} />
-                        Submit Ticket
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

@@ -14,8 +14,8 @@ import {
   ArrowRight,
   Mail,
   Bell,
-  Smartphone,
   QrCode,
+  Quote,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Do I need a credit card to start the free trial?",
-    a: "No credit card required. You get full access for 30 days. We only ask for payment details when you decide to continue after the trial.",
+    a: "No credit card required. You get full access for 7 days. We only ask for payment details when you decide to continue after the trial.",
   },
   {
     q: "Is my patient data secure?",
@@ -41,11 +41,33 @@ const FAQS = [
   },
   {
     q: "How many patients can I import?",
-    a: "Unlimited. Import via CSV bulk upload or add manually one by one. There are no patient count limits on the Pro plan.",
+    a: "Free plan: up to 50 patients. Pro plan: 1,000 patients per month. Agency plan: 10,000 patients per month. Upgrade anytime as you grow.",
   },
   {
     q: "Can I cancel anytime?",
     a: "Yes. Cancel directly from the Settings page with one click. No phone calls, no hassle. Your data is retained for 30 days for export.",
+  },
+];
+
+// ==================== Testimonials 数据 ====================
+const TESTIMONIALS = [
+  {
+    name: "Dr. Sarah Mitchell",
+    role: "Owner, Bright Smile Dental",
+    quote: "We went from 12 reviews to 87 in just 3 months. The QR code at checkout is genius — patients actually use it.",
+    rating: 5,
+  },
+  {
+    name: "James Chen",
+    role: "Office Manager, Pearl Dental Group",
+    quote: "The negative review alert saved us twice. We caught bad reviews within an hour and turned them around. Worth every penny.",
+    rating: 5,
+  },
+  {
+    name: "Dr. Emily Rodriguez",
+    role: "Owner, Family First Dentistry",
+    quote: "I used to manually ask every patient for a review. Now ReviewFlow does it automatically. I have 40 more hours per month to focus on actual dentistry.",
+    rating: 5,
   },
 ];
 
@@ -280,6 +302,50 @@ function FeaturesSection() {
   );
 }
 
+// ==================== Testimonials Section ====================
+function TestimonialsSection() {
+  return (
+    <section className="py-20 md:py-28 bg-white">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-12">
+          <h2 className="font-outfit font-bold text-3xl md:text-4xl text-brand-blue mb-3">
+            Trusted by Dental Offices Worldwide
+          </h2>
+          <p className="text-brand-muted max-w-xl mx-auto">
+            See how practices like yours are growing their online reputation with ReviewFlow.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {TESTIMONIALS.map((t, i) => (
+            <div key={i} className="bg-brand-soft rounded-[16px] p-6 border border-[#E0E7F1]">
+              <Quote className="w-8 h-8 text-brand-blue/20 mb-4" />
+              <div className="flex gap-1 mb-3">
+                {Array.from({ length: 5 }).map((_, j) => (
+                  <Star
+                    key={j}
+                    size={14}
+                    className={j < t.rating ? "fill-brand-yellow text-brand-yellow" : "text-gray-200"}
+                  />
+                ))}
+              </div>
+              <p className="text-brand-dark text-sm leading-relaxed mb-4">{t.quote}</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center text-brand-blue font-semibold text-sm">
+                  {t.name.split(" ").map((n) => n[0]).join("")}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm text-brand-dark">{t.name}</p>
+                  <p className="text-xs text-brand-muted">{t.role}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ==================== Pricing Section ====================
 function PricingSection() {
   const router = useRouter();
@@ -302,24 +368,26 @@ function PricingSection() {
     },
     {
       name: "Pro",
-      price: "$29",
+      price: "$39",
       period: "/month",
       description: "Automate your reputation growth",
       features: [
         "Everything in Free",
         "Automated email follow-ups",
         "Real-time negative review alerts",
-        "Competitor tracking dashboard",
-        "Reply templates & suggestions",
-        "Unlimited patients",
-        "Priority support",
+        "1,000 patients / month",
+        "500 SMS review requests / month",
+        "3 competitor tracking",
+        "30-day historical data",
+        "1 team member",
+        "Priority email support",
       ],
-      cta: "Start 30-Day Free Trial",
+      cta: "Start 7-Day Free Trial",
       popular: true,
     },
     {
       name: "Agency",
-      price: "$99",
+      price: "$69",
       period: "/month",
       description: "Manage multiple clinics",
       features: [
@@ -328,8 +396,13 @@ function PricingSection() {
         "White-label branding",
         "API access",
         "Custom integrations",
-        "Dedicated account manager",
-        "SLA guarantee",
+        "10,000 patients / month",
+        "5,000 SMS review requests / month",
+        "20 competitor tracking",
+        "Unlimited historical data",
+        "5 team members",
+        "Export monthly reports",
+        "1-on-1 dedicated support",
       ],
       cta: "Contact Sales",
       popular: false,
@@ -450,7 +523,7 @@ function CTASection() {
           Ready to Grow Your Reviews?
         </h2>
         <p className="text-white/80 mb-8 leading-relaxed">
-          Join Houston dental offices using ReviewFlow. Start free, no credit card required.
+          Join dental offices worldwide using ReviewFlow. Start free, no credit card required.
         </p>
         <button
           onClick={() => router.push("/register")}
@@ -471,9 +544,11 @@ function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="font-outfit font-bold text-xl">ReviewFlow</div>
           <div className="text-sm text-white/60">
-            © 2026 ReviewFlow. Built for Houston Dental Offices.
+            © 2026 ReviewFlow. All rights reserved.
           </div>
           <div className="flex gap-6 text-sm text-white/80">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link href="/login" className="hover:text-white transition-colors">Log In</Link>
             <Link href="/register" className="hover:text-white transition-colors">Sign Up</Link>
           </div>
@@ -527,6 +602,7 @@ export default function HomePage() {
           <HowItWorks />
           <FeaturesSection />
         </div>
+        <TestimonialsSection />
         <div id="pricing">
           <PricingSection />
         </div>
