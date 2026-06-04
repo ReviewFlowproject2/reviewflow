@@ -358,7 +358,7 @@ function PricingSection() {
             </div>
             <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
             <button
-              onClick={() => window.location.href = "mailto:sales@reviewflowdental.com"}
+              onClick={() => router.push("/dashboard/support")}
               className="block w-full text-center py-2.5 border-2 border-amber-500 text-amber-600 font-semibold rounded-[10px] text-sm hover:bg-amber-500 hover:text-white transition-colors"
             >
               Contact Sales

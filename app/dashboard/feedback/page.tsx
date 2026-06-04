@@ -147,7 +147,7 @@ const SentimentBadge = ({ sentiment }: { sentiment: Feedback['sentiment'] }) => 
 
 // ===================== MAIN PAGE =====================
 
-export default function FeedbackInbox() {
+export default function ReviewsPage() {
   const [feedbackList, setFeedbackList] = useState<Feedback[]>(MOCK_FEEDBACK);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -225,7 +225,7 @@ export default function FeedbackInbox() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Feedback Inbox</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Reviews</h1>
           <p className="text-gray-600">Manage and respond to patient reviews across all platforms.</p>
         </div>
 
@@ -243,7 +243,7 @@ export default function FeedbackInbox() {
           <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">New Feedback</p>
+                <p className="text-sm text-gray-600">New Reviews</p>
                 <p className="text-2xl font-bold text-blue-600">{stats.new}</p>
               </div>
               <Mail className="text-blue-500" size={24} />
@@ -321,7 +321,7 @@ export default function FeedbackInbox() {
           {filteredFeedback.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
               <MessageSquare className="mx-auto text-gray-300 mb-3" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No feedback found</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No reviews found</h3>
               <p className="text-gray-500">Try adjusting your filters or search query.</p>
             </div>
           ) : (

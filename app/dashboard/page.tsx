@@ -122,7 +122,7 @@ function Sidebar({ business }: { business: Business | null }) {
     { icon: Users, label: "Import Patients", href: "/patients/import" },
     { icon: QrCode, label: "QR Code", href: "/dashboard/qr-code" },
     { icon: Star, label: "Reviews", href: "/dashboard/feedback" },
-    { icon: MessageSquare, label: "Feedback", href: "/dashboard/feedback" },
+    { icon: MessageSquare, label: "Feedback", href: "/dashboard/site-feedback" },
     { icon: Zap, label: "Pricing", href: "/dashboard/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
