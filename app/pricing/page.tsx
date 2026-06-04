@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Zap, Users, Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Check, Zap, Users, Bell, Headphones, ArrowLeft, Home } from "lucide-react";
 import Script from "next/script";
 import { useState, useEffect } from "react";
+import { createBrowserClient } from "@supabase/ssr";
 
 const PADDLE_CLIENT_TOKEN = "live_70c09ad4de252bfa5440b90a9ca";
 
@@ -33,6 +35,13 @@ const AgencyBadge = ({ children }: { children: React.ReactNode }) => (
 export default function PricingPage() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const [paddleLoaded, setPaddleLoaded] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   useEffect(() => {
     const checkPaddle = setInterval(() => {
@@ -42,6 +51,15 @@ export default function PricingPage() {
       }
     }, 100);
     return () => clearInterval(checkPaddle);
+  }, []);
+
+  // Check login status
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
   }, []);
 
   const openCheckout = (priceId: string) => {
@@ -71,6 +89,32 @@ export default function PricingPage() {
     <>
       <Script src="https://cdn.paddle.com/paddle/v2/paddle.js" strategy="afterInteractive" />
       <div className="min-h-screen bg-[#F8FAFF]">
+        {/* Navigation */}
+        <nav className="h-20 bg-white/85 backdrop-blur-md border-b border-[#E9F1FA]">
+          <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
+            <Link href="/" className="font-outfit font-bold text-xl text-brand-blue">
+              ReviewFlow
+            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-sm text-brand-muted hover:text-brand-blue transition-colors flex items-center gap-1">
+                <Home size={16} /> Home
+              </Link>
+              {user ? (
+                <Link href="/dashboard" className="text-sm px-5 py-2 bg-brand-blue text-white font-semibold rounded-[8px] hover:bg-brand-dark transition-colors">
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/login" className="text-sm text-brand-blue font-semibold hover:underline">Log In</Link>
+                  <button onClick={() => router.push("/register")} className="text-sm px-5 py-2 bg-brand-blue text-white font-semibold rounded-[8px] hover:bg-brand-dark transition-colors">
+                    Start Free
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </nav>
+
         <div className="max-w-6xl mx-auto px-6 py-16">
           <h1 className="font-outfit font-bold text-4xl text-brand-blue text-center mb-4">
             Simple, Transparent Pricing
@@ -102,7 +146,7 @@ export default function PricingPage() {
             {/* Free */}
             <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
               <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
-              <p className="text-brand-muted text-sm mb-4">QR code generation</p>
+              <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
               <Link href="/register" className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors">
                 Get Started
@@ -112,6 +156,7 @@ export default function PricingPage() {
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Up to 50 patients</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email support</li>
               </ul>
             </div>
 
@@ -119,12 +164,10 @@ export default function PricingPage() {
             <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">Most Popular</div>
               {getSaveLabel("pro") && (
-                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  {getSaveLabel("pro")}
-                </div>
+                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">{getSaveLabel("pro")}</div>
               )}
               <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
-              <p className="text-brand-muted text-sm mb-4">For single practice owners</p>
+              <p className="text-brand-muted text-sm mb-4">Automate your reputation growth</p>
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
                 ${PRICING[cycle].pro.price}<span className="text-lg text-brand-muted">{PRICING[cycle].pro.period}</span>
               </div>
@@ -138,27 +181,26 @@ export default function PricingPage() {
               </button>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review monitoring</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email negative review alerts</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Priority email support</li>
               </ul>
             </div>
 
             {/* Agency */}
             <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
               {getSaveLabel("agency") && (
-                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                  {getSaveLabel("agency")}
-                </div>
+                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">{getSaveLabel("agency")}</div>
               )}
               <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
                 <Zap size={12} /> Agency Only
               </div>
               <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
-              <p className="text-brand-muted text-sm mb-4">For practice managers & teams</p>
+              <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
                 ${PRICING[cycle].agency.price}<span className="text-lg text-brand-muted">{PRICING[cycle].agency.period}</span>
               </div>
@@ -172,32 +214,58 @@ export default function PricingPage() {
               </button>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
-
-                <li className="flex items-start gap-2">
-                  <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
-                  <span>
-                    <span className="font-semibold">Daily Reputation Digest</span>
-                    <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span>
-                  </span>
-                </li>
-
-
-                <li className="flex items-start gap-2">
-                  <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
-                  <span>
-                    <span className="font-semibold">Multi-Recipient Alerts</span>
-                    <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">Up to 5 staff members notified</span>
-                  </span>
-                </li>
-
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>White-label branding</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>API access</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Custom integrations</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
+
+                <li className="flex items-start gap-2">
+                  <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span><span className="font-semibold">Daily Reputation Digest</span><AgencyBadge>Agency Only</AgencyBadge><span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span><span className="font-semibold">Multi-Recipient Alerts</span><AgencyBadge>Agency Only</AgencyBadge><span className="block text-xs text-brand-muted">Up to 5 staff members notified</span></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Headphones size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                  <span><span className="font-semibold">1-on-1 Dedicated Support</span><AgencyBadge>Agency Only</AgencyBadge><span className="block text-xs text-brand-muted">Dedicated account manager + live chat</span></span>
+                </li>
               </ul>
+            </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="max-w-3xl mx-auto mt-20">
+            <h2 className="font-outfit font-bold text-2xl text-brand-dark text-center mb-8">Frequently Asked Questions</h2>
+            <div className="space-y-4">
+              {[
+                { q: "Do I need a credit card to start?", a: "No credit card required for the Free plan. Pro and Agency plans include a 7-day free trial — we only ask for payment details when you decide to continue after the trial." },
+                { q: "Can I cancel anytime?", a: "Yes, you can cancel your subscription at any time from your account settings. No questions asked, no hidden fees." },
+                { q: "What happens after the 7-day trial?", a: "If you don't subscribe, your account automatically downgrades to the Free plan. You keep all your data and can upgrade again anytime." },
+                { q: "Is my patient data secure?", a: "Absolutely. We use bank-level encryption (AES-256) and never share your patient data with third parties. We are HIPAA-compliant and GDPR-ready." },
+                { q: "Can I switch plans later?", a: "Yes, you can upgrade or downgrade at any time. When upgrading, you only pay the prorated difference. When downgrading, the new rate applies at the next billing cycle." },
+                { q: "Do you offer refunds?", a: "If you are not satisfied within the first 14 days of your paid subscription, contact us for a full refund — no questions asked." },
+              ].map((faq, i) => (
+                <div key={i} className="bg-white rounded-xl border border-[#E0E7F1] p-5">
+                  <h3 className="font-semibold text-brand-dark mb-2">{faq.q}</h3>
+                  <p className="text-sm text-brand-muted leading-relaxed">{faq.a}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="text-center mt-16">
+            <p className="text-brand-muted text-sm mb-4">Still have questions? <Link href="/dashboard/support" className="text-brand-blue hover:underline font-medium">Contact Support</Link></p>
+            <div className="flex items-center justify-center gap-6 text-xs text-brand-muted/60">
+              <Link href="/privacy" className="hover:text-brand-muted transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-brand-muted transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
