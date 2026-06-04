@@ -17,6 +17,7 @@ import {
   QrCode,
   User,
   LogOut,
+  Zap,
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -281,69 +282,9 @@ function FeaturesSection() {
   );
 }
 
-// ==================== Pricing Section ====================
+// ==================== Pricing Section (synced with /dashboard/support style) ====================
 function PricingSection() {
   const router = useRouter();
-
-  const plans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "",
-      description: "Get started with QR codes",
-      features: [
-        "QR code generation",
-        "Google Review link",
-        "Basic dashboard",
-        "Up to 50 patients",
-        "Email support",
-      ],
-      cta: "Get Started",
-      popular: false,
-    },
-    {
-      name: "Pro",
-      price: "$39",
-      period: "/month",
-      description: "Automate your reputation growth",
-      features: [
-        "Everything in Free",
-        "Automated email follow-ups",
-        "Real-time negative review alerts",
-        "Competitor tracking dashboard",
-        "Reply templates & suggestions",
-        "1,000 patients / month",
-        "3 competitor tracking",
-        "30-day historical data",
-        "1 team member",
-        "Priority email support",
-      ],
-      cta: "Start 7-Day Free Trial",
-      popular: true,
-    },
-    {
-      name: "Agency",
-      price: "$69",
-      period: "/month",
-      description: "Manage multiple clinics",
-      features: [
-        "Everything in Pro",
-        "Multi-clinic dashboard",
-        "White-label branding",
-        "API access",
-        "Custom integrations",
-        "10,000 patients / month",
-        "20 competitor tracking",
-        "Unlimited historical data",
-        "5 team members",
-        "Export monthly reports",
-        "Daily Reputation Digest",
-        "1-on-1 Dedicated Support",
-      ],
-      cta: "Contact Sales",
-      popular: false,
-    },
-  ];
 
   return (
     <section className="py-20 md:py-28 bg-white">
@@ -355,59 +296,88 @@ function PricingSection() {
           <p className="text-brand-muted">Start free. Upgrade when you&apos;re ready to automate.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {plans.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative bg-white rounded-[16px] p-8 transition-all hover:shadow-lg ${
-                plan.popular
-                  ? "border-2 border-brand-blue shadow-card"
-                  : "border border-[#E0E7F1]"
-              }`}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          {/* FREE */}
+          <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
+            <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
+            <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
+            <button
+              onClick={() => router.push("/register")}
+              className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors"
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
-                  Most Popular
-                </div>
-              )}
+              Get Started
+            </button>
+            <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Up to 50 patients</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email support</li>
+            </ul>
+          </div>
 
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">{plan.name}</h3>
-              <p className="text-sm text-brand-muted mb-4">{plan.description}</p>
-
-              <div className="mb-6">
-                <span className="font-outfit font-bold text-4xl text-brand-blue">{plan.price}</span>
-                <span className="text-brand-muted">{plan.period}</span>
-              </div>
-
-              <button
-                onClick={() => {
-                  if (plan.name === "Agency") {
-                    window.location.href = "mailto:sales@reviewflowdental.com";
-                  } else if (plan.name === "Pro") {
-                    router.push("/dashboard/support");
-                  } else {
-                    router.push("/register");
-                  }
-                }}
-                className={`w-full py-2.5 rounded-[10px] font-semibold text-sm transition-all hover:scale-[1.01] ${
-                  plan.popular
-                    ? "bg-brand-blue text-white hover:bg-brand-dark"
-                    : "border-2 border-brand-blue text-brand-blue hover:bg-brand-blue hover:text-white"
-                }`}
-              >
-                {plan.cta}
-              </button>
-
-              <ul className="mt-6 space-y-3">
-                {plan.features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-3 text-sm text-brand-dark">
-                    <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+          {/* PRO */}
+          <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
+              Most Popular
             </div>
-          ))}
+            <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
+            <p className="text-brand-muted text-sm mb-4">Automate your reputation growth</p>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+              $39<span className="text-lg text-brand-muted">/month</span>
+            </div>
+            <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+            <button
+              onClick={() => router.push("/dashboard/support")}
+              className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors"
+            >
+              Start 7-Day Free Trial
+            </button>
+            <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Priority email support</li>
+            </ul>
+          </div>
+
+          {/* AGENCY */}
+          <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
+            <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+              <Zap size={12} /> Agency Only
+            </div>
+            <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
+            <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+              $69<span className="text-lg text-brand-muted">/month</span>
+            </div>
+            <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+            <button
+              onClick={() => window.location.href = "mailto:sales@reviewflowdental.com"}
+              className="block w-full text-center py-2.5 border-2 border-amber-500 text-amber-600 font-semibold rounded-[10px] text-sm hover:bg-amber-500 hover:text-white transition-colors"
+            >
+              Contact Sales
+            </button>
+            <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>White-label branding</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>API access</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Custom integrations</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Daily Reputation Digest</li>
+              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1-on-1 Dedicated Support</li>
+            </ul>
+          </div>
         </div>
       </div>
     </section>
@@ -531,9 +501,9 @@ function Navbar() {
           ReviewFlow
         </Link>
         <div className="hidden md:flex items-center gap-8 text-sm text-brand-muted">
-          <a href="#features" className="hover:text-brand-blue transition-colors">Features</a>
-          <a href="#pricing" className="hover:text-brand-blue transition-colors">Pricing</a>
-          <a href="#faq" className="hover:text-brand-blue transition-colors">FAQ</a>
+          <Link href="/dashboard/support" className="hover:text-brand-blue transition-colors">Features</Link>
+          <Link href="/dashboard/support" className="hover:text-brand-blue transition-colors">Pricing</Link>
+          <Link href="/dashboard/support" className="hover:text-brand-blue transition-colors">FAQ</Link>
         </div>
         <div className="flex items-center gap-4">
           {user ? (

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import Link from "next/link";
 import { 
   Search, 
   Filter, 
@@ -13,7 +14,8 @@ import {
   ChevronDown, 
   ChevronUp,
   MessageSquare,
-  X
+  X,
+  ArrowLeft
 } from 'lucide-react';
 
 // ===================== TYPES =====================
@@ -209,6 +211,17 @@ export default function FeedbackInbox() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+
+        {/* Back to Dashboard */}
+        <div className="mb-6">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Back to Dashboard
+          </Link>
+        </div>
 
         {/* Header */}
         <div className="mb-8">
