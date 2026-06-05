@@ -1,344 +1,307 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Upload, CheckCircle, AlertCircle, Download, User, Mail, Phone, Calendar } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
+import {
+  ArrowLeft, Upload, Download, CheckCircle, AlertTriangle,
+  FileSpreadsheet, X, ChevronDown, ChevronUp
+} from "lucide-react";
+
+interface CsvRow {
+  name: string;
+  phone: string;
+  email: string;
+  visit_date: string;
+  rowNumber: number;
+  errors: string[];
+}
 
 export default function ImportPatientsPage() {
   const router = useRouter();
-  const [patients, setPatients] = useState([
-    { name: "", email: "", phone: "", visit_date: "" },
-    { name: "", email: "", phone: "", visit_date: "" },
-    { name: "", email: "", phone: "", visit_date: "" },
-  ]);
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<{ success: number; failed: number; errors: string[] } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<CsvRow[]>([]);
+  const [errorRows, setErrorRows] = useState<CsvRow[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importedCount, setImportedCount] = useState(0);
+  const [showErrors, setShowErrors] = useState(true);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  const handleAddRow = () => {
-    setPatients([...patients, { name: "", email: "", phone: "", visit_date: "" }]);
+  // 下载 CSV 模板
+  const downloadTemplate = () => {
+    const template = `name,phone,email,visit_date
+John Doe,+1-555-0101,john@example.com,2026-06-01
+Jane Smith,+1-555-0102,jane@example.com,2026-06-02
+Robert Brown,+1-555-0103,,2026-06-03`;
+    const blob = new Blob([template], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "reviewflow_patients_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  const handleRemoveRow = (index: number) => {
-    if (patients.length <= 1) return;
-    setPatients(patients.filter((_, i) => i !== index));
+  // 解析 CSV
+  const parseCSV = (text: string): CsvRow[] => {
+    const lines = text.trim().split("
+");
+    if (lines.length < 2) return [];
+
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const nameIdx = headers.indexOf("name");
+    const phoneIdx = headers.indexOf("phone");
+    const emailIdx = headers.indexOf("email");
+    const dateIdx = headers.indexOf("visit_date");
+
+    const rows: CsvRow[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(",").map((c) => c.trim());
+      const errors: string[] = [];
+
+      if (nameIdx === -1 || !cols[nameIdx]) errors.push("Name is required");
+      if (phoneIdx === -1 || !cols[phoneIdx]) errors.push("Phone is required");
+      if (dateIdx === -1 || !cols[dateIdx]) errors.push("Visit date is required");
+      else {
+        const d = new Date(cols[dateIdx]);
+        if (isNaN(d.getTime())) errors.push("Invalid date format (use YYYY-MM-DD)");
+      }
+
+      rows.push({
+        name: cols[nameIdx] || "",
+        phone: cols[phoneIdx] || "",
+        email: emailIdx >= 0 ? cols[emailIdx] : "",
+        visit_date: cols[dateIdx] || "",
+        rowNumber: i + 1,
+        errors,
+      });
+    }
+    return rows;
   };
 
-  const handleChange = (index: number, field: string, value: string) => {
-    const newPatients = [...patients];
-    newPatients[index] = { ...newPatients[index], [field]: value };
-    setPatients(newPatients);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setFile(f);
+    setImportedCount(0);
 
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
-      const lines = text.trim().split("\n");
-      const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-
-      const nameIdx = headers.indexOf("name");
-      const emailIdx = headers.indexOf("email");
-      const phoneIdx = headers.indexOf("phone");
-      const dateIdx = headers.indexOf("visit_date");
-
-      if (nameIdx === -1 || emailIdx === -1 || dateIdx === -1) {
-        setResult({ success: 0, failed: 0, errors: ["CSV must have headers: name, email, phone, visit_date"] });
-        return;
-      }
-
-      const rows = lines.slice(1).map((line) => {
-        const cols = line.split(",");
-        return {
-          name: cols[nameIdx]?.trim(),
-          email: cols[emailIdx]?.trim(),
-          phone: phoneIdx >= 0 ? cols[phoneIdx]?.trim() : "",
-          visit_date: cols[dateIdx]?.trim(),
-        };
-      }).filter((r) => r.name && r.email && r.visit_date);
-
-      setPatients(rows.map((r) => ({ ...r })));
+      const rows = parseCSV(text);
+      const valid = rows.filter((r) => r.errors.length === 0);
+      const invalid = rows.filter((r) => r.errors.length > 0);
+      setPreview(valid);
+      setErrorRows(invalid);
     };
-    reader.readAsText(file);
-  };
+    reader.readAsText(f);
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setResult(null);
+  const handleImport = async () => {
+    if (preview.length === 0) return;
+    setImporting(true);
 
-    try {
-      const validPatients = patients.filter((p) => p.name.trim() && p.email.trim() && p.visit_date.trim());
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { router.push("/login"); return; }
 
-      if (validPatients.length === 0) {
-        throw new Error("Please fill in at least one patient");
-      }
+    const { data: biz } = await supabase.from("businesses").select("id").eq("user_id", user.id).single();
+    const businessId = biz?.id || user.id;
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login");
-        return;
-      }
-
-      const { data: biz } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      const businessId = biz?.id || user.id;
-
-      const formatted = validPatients.map((p) => ({
+    let successCount = 0;
+    for (const row of preview) {
+      const { error } = await supabase.from("patients").insert({
         business_id: businessId,
-        name: p.name.trim(),
-        email: p.email.trim().toLowerCase(),
-        phone: p.phone?.trim() || "",
-        visit_date: p.visit_date.trim(),
+        name: row.name,
+        phone: row.phone,
+        email: row.email || null,
+        visit_date: row.visit_date,
         email_status: "pending",
-      }));
-
-      const res = await fetch("/api/patients/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ csvData: formatted }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Import failed");
-      }
-
-      setResult({
-        success: data.imported || 0,
-        failed: data.failed || 0,
-        errors: [],
-      });
-
-      setPatients([{ name: "", email: "", phone: "", visit_date: "" }]);
-    } catch (err: any) {
-      setResult({
-        success: 0,
-        failed: 0,
-        errors: [err.message],
-      });
-    } finally {
-      setLoading(false);
+      if (!error) successCount++;
     }
+
+    setImportedCount(successCount);
+    setPreview([]);
+    setFile(null);
+    setImporting(false);
   };
 
-  const sampleCSV = `name,email,phone,visit_date
-John Smith,john@email.com,(713) 555-0123,2026-05-28
-Jane Doe,jane@email.com,(713) 555-0124,2026-05-28`;
+  const clearFile = () => {
+    setFile(null);
+    setPreview([]);
+    setErrorRows([]);
+    setImportedCount(0);
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFF]">
-      <div className="bg-white border-b border-[#E9F1FA]">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="font-outfit font-bold text-xl text-brand-blue">
-            ReviewFlow
-          </Link>
-          <Link href="/dashboard" className="text-sm text-brand-blue font-semibold hover:underline">
-            Back to Dashboard
+    <div className="min-h-screen bg-[#F8FAFF] p-6">
+      <div className="max-w-4xl mx-auto">
+        {/* Back */}
+        <div className="mb-6">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors">
+            <ArrowLeft size={16} />Back to Dashboard
           </Link>
         </div>
-      </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <div className="text-center mb-8">
-          <h1 className="font-outfit font-bold text-2xl text-brand-dark mb-2">
-            Import Patients
-          </h1>
-          <p className="text-brand-muted">
-            Add patients to send review request emails
-          </p>
-        </div>
+        <h1 className="font-outfit font-bold text-2xl text-brand-dark mb-2">Import Patients</h1>
+        <p className="text-brand-muted text-sm mb-8">Upload a CSV file to bulk import patients. Download the template below to get started.</p>
 
-        <div className="bg-white rounded-[16px] p-8 shadow-card">
-          {/* File Upload */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium text-brand-dark">Upload CSV File</h3>
-              <button
-                onClick={() => {
-                  const blob = new Blob([sampleCSV], { type: "text/csv" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = "patients-template.csv";
-                  a.click();
-                }}
-                className="flex items-center gap-2 text-sm text-brand-blue hover:underline"
-              >
-                <Download size={16} />
-                Download template
-              </button>
-            </div>
-
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-[#E0E7F1] rounded-xl p-8 text-center cursor-pointer hover:border-brand-blue transition-colors"
-            >
-              <Upload className="w-8 h-8 text-brand-muted mx-auto mb-3" />
-              <p className="text-sm text-brand-dark font-medium mb-1">
-                Click to upload CSV file
-              </p>
-              <p className="text-xs text-brand-muted">
-                or drag and drop here
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-            </div>
-          </div>
-
-          <div className="relative mb-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#E0E7F1]" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-brand-muted">or enter manually</span>
-            </div>
-          </div>
-
-          {/* Manual Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              {/* Header */}
-              <div className="grid grid-cols-12 gap-3 text-xs font-semibold text-brand-muted uppercase tracking-wider">
-                <div className="col-span-3">Name</div>
-                <div className="col-span-3">Email</div>
-                <div className="col-span-2">Phone</div>
-                <div className="col-span-3">Visit Date</div>
-                <div className="col-span-1"></div>
+        {/* Template Download */}
+        <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-brand-blue">
+                <FileSpreadsheet size={20} />
               </div>
-
-              {patients.map((patient, index) => (
-                <div key={index} className="grid grid-cols-12 gap-3 items-center">
-                  <div className="col-span-3">
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
-                      <input
-                        type="text"
-                        placeholder="Patient name"
-                        value={patient.name}
-                        onChange={(e) => handleChange(index, "name", e.target.value)}
-                        className="w-full h-10 rounded-lg border border-[#E0E7F1] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
-                      <input
-                        type="email"
-                        placeholder="email@example.com"
-                        value={patient.email}
-                        onChange={(e) => handleChange(index, "email", e.target.value)}
-                        className="w-full h-10 rounded-lg border border-[#E0E7F1] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-2">
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
-                      <input
-                        type="tel"
-                        placeholder="(713) 555-0123"
-                        value={patient.phone}
-                        onChange={(e) => handleChange(index, "phone", e.target.value)}
-                        className="w-full h-10 rounded-lg border border-[#E0E7F1] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-3">
-                    <div className="relative">
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted" />
-                      <input
-                        type="date"
-                        lang="en"
-                        value={patient.visit_date}
-                        onChange={(e) => handleChange(index, "visit_date", e.target.value)}
-                        className="w-full h-10 rounded-lg border border-[#E0E7F1] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-span-1">
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveRow(index)}
-                      className="w-8 h-8 rounded-lg text-brand-muted hover:text-red-500 hover:bg-red-50 transition-colors flex items-center justify-center"
-                      disabled={patients.length <= 1}
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))}
+              <div>
+                <h3 className="font-semibold text-brand-dark text-sm">CSV Template</h3>
+                <p className="text-xs text-brand-muted">Required columns: name, phone, email, visit_date</p>
+              </div>
             </div>
-
             <button
-              type="button"
-              onClick={handleAddRow}
-              className="mt-4 flex items-center gap-2 text-sm text-brand-blue hover:underline"
+              onClick={downloadTemplate}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-brand-blue text-brand-blue font-semibold rounded-xl text-sm hover:bg-brand-blue hover:text-white transition-colors"
             >
-              + Add another patient
+              <Download size={16} />Download Template
             </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 mt-6 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-all disabled:opacity-50"
-            >
-              {loading ? "Importing..." : `Import ${patients.filter((p) => p.name && p.email && p.visit_date).length} Patients`}
-            </button>
-          </form>
-
-          {/* Result */}
-          {result && (
-            <div className={`mt-6 p-4 rounded-xl ${result.errors.length > 0 ? "bg-red-50" : "bg-green-50"}`}>
-              {result.errors.length > 0 ? (
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-red-600 text-sm">Import failed</p>
-                    {result.errors.map((err, i) => (
-                      <p key={i} className="text-sm text-red-500 mt-1">{err}</p>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <div>
-                    <p className="font-medium text-green-600 text-sm">
-                      Successfully imported {result.success} patients
-                    </p>
-                    {result.failed > 0 && (
-                      <p className="text-sm text-brand-muted mt-1">
-                        {result.failed} rows skipped
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          </div>
         </div>
+
+        {/* Upload Area */}
+        {!file ? (
+          <div className="bg-white rounded-2xl border border-dashed border-brand-soft p-10 text-center">
+            <Upload className="mx-auto text-brand-muted mb-3" size={40} />
+            <h3 className="font-semibold text-brand-dark mb-1">Drop your CSV file here</h3>
+            <p className="text-sm text-brand-muted mb-4">or click to browse</p>
+            <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors cursor-pointer">
+              <Upload size={16} />Select File
+              <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+            </label>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-brand-soft/50 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <FileSpreadsheet size={20} className="text-brand-blue" />
+                <div>
+                  <p className="font-semibold text-brand-dark text-sm">{file.name}</p>
+                  <p className="text-xs text-brand-muted">{(file.size / 1024).toFixed(1)} KB</p>
+                </div>
+              </div>
+              <button onClick={clearFile} className="text-brand-muted hover:text-red-500 transition-colors"><X size={18} /></button>
+            </div>
+
+            {/* Preview Stats */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="bg-brand-soft rounded-xl p-3 text-center">
+                <p className="font-outfit font-bold text-lg text-brand-blue">{preview.length + errorRows.length}</p>
+                <p className="text-xs text-brand-muted">Total Rows</p>
+              </div>
+              <div className="bg-green-50 rounded-xl p-3 text-center">
+                <p className="font-outfit font-bold text-lg text-green-600">{preview.length}</p>
+                <p className="text-xs text-brand-muted">Valid</p>
+              </div>
+              <div className="bg-red-50 rounded-xl p-3 text-center">
+                <p className="font-outfit font-bold text-lg text-red-600">{errorRows.length}</p>
+                <p className="text-xs text-brand-muted">Errors</p>
+              </div>
+            </div>
+
+            {/* Error Rows */}
+            {errorRows.length > 0 && (
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowErrors(!showErrors)}
+                  className="flex items-center gap-2 text-sm text-red-600 font-semibold mb-2"
+                >
+                  <AlertTriangle size={16} />
+                  {errorRows.length} row(s) have errors
+                  {showErrors ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                </button>
+                {showErrors && (
+                  <div className="bg-red-50 rounded-xl border border-red-100 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-red-100">
+                          <th className="text-left px-4 py-2 text-xs font-semibold text-red-700">Row</th>
+                          <th className="text-left px-4 py-2 text-xs font-semibold text-red-700">Name</th>
+                          <th className="text-left px-4 py-2 text-xs font-semibold text-red-700">Error</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {errorRows.map((row) => (
+                          <tr key={row.rowNumber} className="border-b border-red-100/50">
+                            <td className="px-4 py-2 text-red-600 font-medium">#{row.rowNumber}</td>
+                            <td className="px-4 py-2 text-brand-dark">{row.name || "—"}</td>
+                            <td className="px-4 py-2 text-red-600">{row.errors.join("; ")}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Valid Preview */}
+            {preview.length > 0 && (
+              <div className="mb-4">
+                <p className="text-sm font-semibold text-brand-dark mb-2">Preview ({preview.length} valid rows)</p>
+                <div className="bg-brand-soft/50 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-white sticky top-0">
+                      <tr className="border-b border-brand-soft">
+                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Name</th>
+                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Phone</th>
+                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Email</th>
+                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Visit Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {preview.slice(0, 10).map((row, i) => (
+                        <tr key={i} className="border-b border-brand-soft/30">
+                          <td className="px-4 py-2 text-brand-dark">{row.name}</td>
+                          <td className="px-4 py-2 text-brand-muted">{row.phone}</td>
+                          <td className="px-4 py-2 text-brand-muted">{row.email || "—"}</td>
+                          <td className="px-4 py-2 text-brand-muted">{row.visit_date}</td>
+                        </tr>
+                      ))}
+                      {preview.length > 10 && (
+                        <tr><td colSpan={4} className="px-4 py-2 text-xs text-brand-muted text-center">...and {preview.length - 10} more rows</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Import Button */}
+            {preview.length > 0 && (
+              <button
+                onClick={handleImport}
+                disabled={importing}
+                className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              >
+                <Upload size={16} />
+                {importing ? "Importing..." : `Import ${preview.length} Patients`}
+              </button>
+            )}
+
+            {importedCount > 0 && (
+              <div className="mt-4 p-4 bg-green-50 rounded-xl flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                <p className="text-sm text-green-700">
+                  Successfully imported <span className="font-semibold">{importedCount}</span> patients!
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
