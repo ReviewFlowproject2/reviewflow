@@ -7,7 +7,7 @@ import {
   Star, MessageCircle, AlertTriangle, ShieldAlert, CheckCircle, Check,
   Search, Plus, LogOut, Settings, Users, Home, ExternalLink, QrCode, Mail,
   X, UserCheck, Stethoscope, RefreshCw, Clock, Zap, CheckSquare, MessageSquare,
-  TrendingUp, Calendar
+  TrendingUp, Calendar, BarChart3, Building2, Bell
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -57,7 +57,10 @@ function Sidebar({ business }: { business: Business | null }) {
     { icon: Users, label: "Import Patients", href: "/patients/import" },
     { icon: QrCode, label: "QR Code", href: "/dashboard/qr-code" },
     { icon: Star, label: "Reviews", href: "/dashboard/feedback" },
+    { icon: BarChart3, label: "Competitors", href: "/dashboard/competitors" },
+    { icon: Building2, label: "Clinics", href: "/dashboard/clinics" },
     { icon: MessageSquare, label: "Feedback", href: "/dashboard/site-feedback" },
+    { icon: Bell, label: "Notifications", href: "/dashboard/notifications" },
     { icon: Zap, label: "Pricing", href: "/dashboard/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
