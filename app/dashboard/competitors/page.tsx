@@ -13,6 +13,7 @@ interface Competitor {
   id: string;
   name: string;
   address: string;
+  google_link?: string;
   rating: number;
   review_count: number;
   platform: string;
