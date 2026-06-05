@@ -34,10 +34,7 @@ export default function ImportPatientsPage() {
 
   // 下载 CSV 模板
   const downloadTemplate = () => {
-    const template = `name,phone,email,visit_date
-John Doe,+1-555-0101,john@example.com,2026-06-01
-Jane Smith,+1-555-0102,jane@example.com,2026-06-02
-Robert Brown,+1-555-0103,,2026-06-03`;
+    const template = "name,phone,email,visit_date\nJohn Doe,+1-555-0101,john@example.com,2026-06-01\nJane Smith,+1-555-0102,jane@example.com,2026-06-02\nRobert Brown,+1-555-0103,,2026-06-03";
     const blob = new Blob([template], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -49,8 +46,7 @@ Robert Brown,+1-555-0103,,2026-06-03`;
 
   // 解析 CSV
   const parseCSV = (text: string): CsvRow[] => {
-    const lines = text.trim().split("
-");
+    const lines = text.trim().split("\n");
     if (lines.length < 2) return [];
 
     const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
