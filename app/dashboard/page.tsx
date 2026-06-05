@@ -161,6 +161,17 @@ export default function DashboardPage() {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [stats, setStats] = useState({ newReviews: 0, avgRating: 0, pendingAlerts: 0, emailSuccess: 0 });
   const [trendDays, setTrendDays] = useState<7 | 30>(7);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem("reviewflow_banner_dismissed");
+    if (dismissed) setBannerDismissed(true);
+  }, []);
+
+  const dismissBanner = () => {
+    setBannerDismissed(true);
+    localStorage.setItem("reviewflow_banner_dismissed", "true");
+  };
   const [trendData, setTrendData] = useState<TrendData[]>([]);
 
   const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
