@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   ArrowLeft, Save, CheckCircle, AlertTriangle, MessageSquare,
-  Trash2, FlaskConical, Bell
+  Trash2, FlaskConical, Bell, Zap, Info, ExternalLink
 } from "lucide-react";
 
 interface WebhookConfig {
@@ -107,7 +107,8 @@ export default function NotificationsPage() {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "*ReviewFlow Test Notification*\nThis is a test message to confirm your webhook is working correctly.",
+              text: "*ReviewFlow Test Notification*
+This is a test message to confirm your webhook is working correctly.",
             },
           },
         ],
@@ -130,9 +131,9 @@ export default function NotificationsPage() {
   };
 
   const typeLabels = {
-    slack: { name: "Slack", icon: MessageSquare, color: "bg-purple-50 text-purple-600" },
-    teams: { name: "Microsoft Teams", icon: MessageSquare, color: "bg-blue-50 text-blue-600" },
-    discord: { name: "Discord", icon: MessageSquare, color: "bg-indigo-50 text-indigo-600" },
+    slack: { name: "Slack", icon: MessageSquare, color: "bg-purple-50 text-purple-600", guide: "https://api.slack.com/messaging/webhooks" },
+    teams: { name: "Microsoft Teams", icon: MessageSquare, color: "bg-blue-50 text-blue-600", guide: "https://learn.microsoft.com/en-us/microsoftteams/platform/webhooks-and-connectors/how-to/add-incoming-webhook" },
+    discord: { name: "Discord", icon: MessageSquare, color: "bg-indigo-50 text-indigo-600", guide: "https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks" },
   };
 
   if (loading) {
@@ -174,10 +175,30 @@ export default function NotificationsPage() {
             </div>
           </div>
 
-          <div className="mb-4 p-3 bg-brand-soft rounded-xl">
-            <p className="text-xs font-semibold text-brand-dark mb-2">What is a Webhook URL?</p>
-            <p className="text-xs text-brand-muted mb-2">A webhook URL is like a "delivery address" where ReviewFlow sends instant notifications. When a patient leaves a review, we immediately push a message to your Slack channel or Teams chat.</p>
-            <p className="text-xs text-brand-muted">You don&apos;t need to keep checking the dashboard — reviews come to you automatically.</p>
+          {/* 优化: 更清晰的 Webhook 说明 */}
+          <div className="mb-4 p-4 bg-brand-soft rounded-xl border border-brand-soft/50">
+            <div className="flex items-start gap-3">
+              <Info size={16} className="text-brand-blue shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-brand-dark">What is a Webhook URL?</p>
+                <p className="text-xs text-brand-muted leading-relaxed">
+                  A webhook URL is a special address that ReviewFlow uses to send instant notifications to your team chat. 
+                  When a patient leaves a review (especially a negative one), we immediately push a message to your Slack channel, 
+                  Teams chat, or Discord server. You don&apos;t need to keep checking the dashboard — reviews come to you automatically.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-md font-medium">
+                    <Zap size={10} /> Slack
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md font-medium">
+                    <Zap size={10} /> Teams
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-700 text-xs rounded-md font-medium">
+                    <Zap size={10} /> Discord
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {!showAddForm ? (
@@ -218,34 +239,43 @@ export default function NotificationsPage() {
                   placeholder={newType === "slack" ? "https://hooks.slack.com/services/..." : newType === "teams" ? "https://outlook.office.com/webhook/..." : "https://discord.com/api/webhooks/..."}
                   className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                 />
-                <div className="mt-2 p-2 bg-brand-soft rounded-lg">
-                  <p className="text-xs font-semibold text-brand-dark mb-1">
-                    {newType === "slack" && "How to get Slack Webhook URL:"}
-                    {newType === "teams" && "How to get Teams Webhook URL:"}
-                    {newType === "discord" && "How to get Discord Webhook URL:"}
-                  </p>
-                  <ol className="text-xs text-brand-muted space-y-1 list-decimal list-inside">
+                <div className="mt-2 p-3 bg-brand-soft rounded-lg border border-brand-soft/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-semibold text-brand-dark">
+                      How to get {typeLabels[newType].name} Webhook URL:
+                    </p>
+                    <a 
+                      href={typeLabels[newType].guide} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-brand-blue hover:underline inline-flex items-center gap-1"
+                    >
+                      Full Guide <ExternalLink size={10} />
+                    </a>
+                  </div>
+                  <ol className="text-xs text-brand-muted space-y-1.5 list-decimal list-inside">
                     {newType === "slack" && (
                       <>
                         <li>Open your Slack workspace</li>
-                        <li>Go to Settings → Apps → Incoming Webhooks</li>
-                        <li>Click "Add to Slack" → Choose a channel</li>
-                        <li>Copy the Webhook URL (starts with https://hooks.slack.com/...)</li>
+                        <li>Go to <strong>Settings → Apps → Incoming Webhooks</strong></li>
+                        <li>Click <strong>&quot;Add to Slack&quot;</strong> → Choose a channel</li>
+                        <li>Copy the Webhook URL (starts with <code className="bg-white px-1 py-0.5 rounded text-[10px]">https://hooks.slack.com/...</code>)</li>
                       </>
                     )}
                     {newType === "teams" && (
                       <>
                         <li>Open Microsoft Teams</li>
-                        <li>Go to your channel → ... → Connectors</li>
-                        <li>Search "Incoming Webhook" → Add</li>
-                        <li>Copy the URL (starts with https://outlook.office.com/...)</li>
+                        <li>Go to your channel → <strong>... → Connectors</strong></li>
+                        <li>Search <strong>&quot;Incoming Webhook&quot;</strong> → Add</li>
+                        <li>Copy the URL (starts with <code className="bg-white px-1 py-0.5 rounded text-[10px]">https://outlook.office.com/...</code>)</li>
                       </>
                     )}
                     {newType === "discord" && (
                       <>
-                        <li>Open Discord → Server Settings</li>
-                        <li>Integrations → Webhooks → New Webhook</li>
-                        <li>Choose channel → Copy Webhook URL</li>
+                        <li>Open Discord → <strong>Server Settings</strong></li>
+                        <li><strong>Integrations → Webhooks → New Webhook</strong></li>
+                        <li>Choose channel → <strong>Copy Webhook URL</strong></li>
+                        <li>URL starts with <code className="bg-white px-1 py-0.5 rounded text-[10px]">https://discord.com/api/webhooks/...</code></li>
                       </>
                     )}
                   </ol>

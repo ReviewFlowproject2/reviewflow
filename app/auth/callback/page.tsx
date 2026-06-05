@@ -14,15 +14,30 @@ export default function AuthCallbackPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      // Supabase 会自动处理 URL hash 中的 access_token
-      const { data: { session }, error } = await supabase.auth.getSession();
+      // 修复: 处理 URL 中的 code 参数（magic link / email confirmation）
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      const type = url.searchParams.get("type");
 
-      if (error || !session) {
+      if (code) {
+        // 交换 code 获取 session
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error("Auth callback error:", error);
+          router.push("/login?error=auth_failed");
+          return;
+        }
+      }
+
+      // 获取 session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
         router.push("/login?error=auth_failed");
         return;
       }
 
-      // 检查是否是新用户（Google 登录），如果是则创建 business 记录
+      // 检查是否是新用户，如果是则创建 business 记录
       const { data: existingBiz } = await supabase
         .from("businesses")
         .select("id")
@@ -39,7 +54,15 @@ export default function AuthCallbackPage() {
         });
       }
 
-      router.push("/dashboard");
+      // 修复: 根据 type 参数决定跳转目标
+      // type=recovery -> 重置密码页面
+      // type=signup/invite -> 验证成功页面
+      // 其他 -> Dashboard
+      if (type === "recovery") {
+        router.push("/reset-password");
+      } else {
+        router.push("/dashboard");
+      }
       router.refresh();
     };
 

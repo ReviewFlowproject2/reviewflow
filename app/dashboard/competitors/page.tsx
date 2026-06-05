@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   ArrowLeft, Search, Plus, Star, TrendingUp,
-  MapPin, Trash2
+  MapPin, Trash2, Link as LinkIcon, Wand2
 } from "lucide-react";
 
 interface Competitor {
@@ -53,6 +53,41 @@ export default function CompetitorTrackingPage() {
   };
 
   useEffect(() => { loadCompetitors(); }, []);
+
+  // 新增: 解析 Google Maps URL 自动填充
+  const extractFromGoogleMaps = (url: string) => {
+    try {
+      // 尝试从 URL 中提取诊所名称
+      // Google Maps URL 格式: https://www.google.com/maps/place/Clinic+Name/...
+      const placeMatch = url.match(/\/place\/([^/]+)/);
+      if (placeMatch) {
+        const decodedName = decodeURIComponent(placeMatch[1]).replace(/[+]/g, " ");
+        setNewName(decodedName);
+      }
+
+      // 尝试提取 place_id (cid 参数)
+      const cidMatch = url.match(/[?&]cid=([^&]+)/);
+      if (cidMatch) {
+        // 有 cid 说明是有效的 Google Maps 链接
+        console.log("Found CID:", cidMatch[1]);
+      }
+
+      // 如果 URL 中有地址信息
+      const addrMatch = url.match(/[?&]q=([^&]+)/);
+      if (addrMatch) {
+        setNewAddress(decodeURIComponent(addrMatch[1]).replace(/[+]/g, ","));
+      }
+    } catch (e) {
+      console.error("Failed to parse Google Maps URL", e);
+    }
+  };
+
+  const handleGoogleLinkChange = (value: string) => {
+    setNewGoogleLink(value);
+    if (value.includes("google.com/maps") || value.includes("g.page")) {
+      extractFromGoogleMaps(value);
+    }
+  };
 
   const handleAdd = async () => {
     if (!newName.trim() || !newRating || !newReviews) return;
@@ -148,6 +183,17 @@ export default function CompetitorTrackingPage() {
         {showAddForm && (
           <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
             <h3 className="font-semibold text-brand-dark text-sm mb-4">Add New Competitor</h3>
+
+            {/* 新增: 快捷输入提示 */}
+            <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex items-start gap-2">
+                <Wand2 size={14} className="text-blue-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-700">
+                  <strong>Tip:</strong> Paste a Google Maps URL and we&apos;ll auto-fill the clinic name and address for you.
+                </p>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-semibold text-brand-dark mb-1.5">Clinic Name *</label>
@@ -166,8 +212,29 @@ export default function CompetitorTrackingPage() {
                 <input type="number" min="0" value={newReviews} onChange={(e) => setNewReviews(e.target.value)} placeholder="e.g. 127" className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-brand-dark mb-1.5">Google Maps Link <span className="text-brand-muted font-normal">(optional, click to check their latest reviews)</span></label>
-                <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)} placeholder="https://www.google.com/maps/place/..." className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
+                <label className="block text-sm font-semibold text-brand-dark mb-1.5">
+                  Google Maps Link <span className="text-brand-muted font-normal">(optional — paste to auto-fill name/address)</span>
+                </label>
+                <div className="flex gap-2">
+                  <input 
+                    type="url" 
+                    value={newGoogleLink} 
+                    onChange={(e) => handleGoogleLinkChange(e.target.value)} 
+                    placeholder="https://www.google.com/maps/place/... or https://g.page/..." 
+                    className="flex-1 rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" 
+                  />
+                  {newGoogleLink && (
+                    <a 
+                      href={newGoogleLink} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="px-3 py-2.5 bg-brand-soft rounded-xl text-brand-muted hover:text-brand-blue transition-colors shrink-0"
+                      title="Open link"
+                    >
+                      <LinkIcon size={16} />
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
             <button onClick={handleAdd} disabled={saving || !newName.trim() || !newRating || !newReviews} className="px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center gap-2">

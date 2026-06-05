@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import {
   ArrowLeft, Download, Printer, QrCode, Copy, CheckCircle,
-  Link as LinkIcon, AlertTriangle
+  Link as LinkIcon, AlertTriangle, ExternalLink, HelpCircle,
+  ChevronDown, ChevronUp
 } from "lucide-react";
 
 export default function QRCodePage() {
@@ -16,6 +17,7 @@ export default function QRCodePage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [qrSize, setQrSize] = useState<"small" | "medium" | "large">("medium");
+  const [showGuide, setShowGuide] = useState(false);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -109,9 +111,62 @@ export default function QRCodePage() {
           <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 mb-6">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <h3 className="font-semibold text-yellow-800 text-sm mb-1">Google Review Link Not Set</h3>
                 <p className="text-sm text-yellow-700 mb-3">You need to add your Google Review link in Settings before generating a QR code.</p>
+
+                {/* 新增: 获取链接的引导 */}
+                <div className="bg-white rounded-xl border border-yellow-200 p-4 mb-3">
+                  <button 
+                    onClick={() => setShowGuide(!showGuide)}
+                    className="flex items-center gap-2 text-sm font-semibold text-yellow-800 hover:text-yellow-900 transition-colors w-full"
+                  >
+                    <HelpCircle size={16} />
+                    How do I get my Google Review Link?
+                    {showGuide ? <ChevronUp size={16} className="ml-auto" /> : <ChevronDown size={16} className="ml-auto" />}
+                  </button>
+
+                  {showGuide && (
+                    <div className="mt-3 space-y-3 text-sm text-yellow-800">
+                      <div className="flex gap-3">
+                        <span className="w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-xs font-bold shrink-0">1</span>
+                        <div>
+                          <p className="font-medium">Go to Google Business Profile</p>
+                          <p className="text-yellow-700/80 text-xs mt-0.5">Visit <a href="https://business.google.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-yellow-900 inline-flex items-center gap-1">business.google.com <ExternalLink size={10} /></a> and sign in</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-xs font-bold shrink-0">2</span>
+                        <div>
+                          <p className="font-medium">Find your clinic</p>
+                          <p className="text-yellow-700/80 text-xs mt-0.5">Select your dental clinic from the dashboard</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-xs font-bold shrink-0">3</span>
+                        <div>
+                          <p className="font-medium">Get more reviews</p>
+                          <p className="text-yellow-700/80 text-xs mt-0.5">Click the "Get more reviews" button or go to "Customers" → "Reviews"</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-xs font-bold shrink-0">4</span>
+                        <div>
+                          <p className="font-medium">Copy the short URL</p>
+                          <p className="text-yellow-700/80 text-xs mt-0.5">Copy the link (looks like <code className="bg-yellow-100 px-1 py-0.5 rounded text-xs">g.page/your-clinic/review</code>)</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <span className="w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-xs font-bold shrink-0">5</span>
+                        <div>
+                          <p className="font-medium">Paste in Settings</p>
+                          <p className="text-yellow-700/80 text-xs mt-0.5">Go to Settings → paste the link → come back here</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <Link href="/settings" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors">
                   Go to Settings
                 </Link>

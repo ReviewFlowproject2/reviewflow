@@ -16,6 +16,7 @@ interface Patient {
   id: string; name: string; phone: string; email: string | null;
   visit_date: string; email_status: string; review_rating: number | null;
   created_at: string; email_sent_count?: number; email_sent_at?: string;
+  business_id?: string; user_id?: string;
 }
 interface ReviewAlert {
   id: string; patient_name: string; rating: number; comment: string;
@@ -23,7 +24,7 @@ interface ReviewAlert {
 }
 interface Business {
   id: string; name: string; trial_ends_at: string;
-  google_review_link: string; plan?: string;
+  google_review_link: string; plan?: string; user_id?: string;
 }
 interface Toast { id: string; message: string; type: "success" | "error"; }
 interface TrendData { date: string; count: number; }
@@ -64,10 +65,27 @@ function Sidebar({ business }: { business: Business | null }) {
     { icon: Zap, label: "Pricing", href: "/dashboard/support" },
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
-  const trialDaysLeft = Math.max(0, Math.ceil((new Date("2026-06-20").getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+
+  // 修复: 从 business.trial_ends_at 动态计算
+  const getTrialInfo = () => {
+    if (!business?.trial_ends_at) return { daysLeft: 0, dateRange: "—", isExpired: true };
+    const endDate = new Date(business.trial_ends_at);
+    const now = new Date();
+    const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 假设试用期7天
+    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    const isExpired = daysLeft <= 0;
+
+    const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+    const dateRange = `${fmt(startDate)} - ${fmt(endDate)}`;
+
+    return { daysLeft, dateRange, isExpired };
+  };
+
+  const trialInfo = getTrialInfo();
   const currentPlan = business?.plan || "free";
   const planLabel = { free: "Free", pro: "Pro", agency: "Agency" }[currentPlan];
   const planColor = { free: "text-gray-500", pro: "text-brand-blue", agency: "text-amber-600" }[currentPlan];
+
   return (
     <aside className="w-[260px] min-h-screen bg-white border-r border-[#E9F1FA] fixed left-0 top-0 flex flex-col z-40">
       <div className="h-20 flex items-center px-6 border-b border-[#E9F1FA]">
@@ -84,10 +102,18 @@ function Sidebar({ business }: { business: Business | null }) {
         })}
       </nav>
       <div className="px-4 pb-4 space-y-3">
+        {/* 修复: 显示日期区间 */}
         <div className="bg-brand-soft rounded-xl p-4">
-          <p className="text-xs text-brand-muted mb-1">Trial ends in</p>
-          <p className="font-outfit font-bold text-lg text-brand-blue">{trialDaysLeft} days</p>
-          <p className="text-xs text-brand-muted mt-1">{business?.name || "Your Clinic"}</p>
+          <p className="text-xs text-brand-muted mb-1">Trial period</p>
+          <p className="font-outfit font-bold text-lg text-brand-blue">{trialInfo.dateRange}</p>
+          <p className="text-xs text-brand-muted mt-1">
+            {trialInfo.isExpired ? (
+              <span className="text-red-500 font-medium">Trial expired</span>
+            ) : (
+              <span>{trialInfo.daysLeft} days remaining</span>
+            )}
+          </p>
+          <p className="text-xs text-brand-muted/70 mt-1">{business?.name || "Your Clinic"}</p>
         </div>
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
           <p className="text-xs text-brand-muted mb-1">Current Plan</p>
@@ -188,18 +214,58 @@ export default function DashboardPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
+    // 修复: 先获取 business，再用正确的 business_id 查询 patients
     const { data: biz } = await supabase.from("businesses").select("*").eq("user_id", user.id).single();
     if (biz) setBusiness(biz);
-    const businessId = biz?.id || user.id;
 
-    const { data: pts } = await supabase.from("patients").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(50);
+    // 修复: 使用 business_id 或 user_id 查询 patients，确保数据关联正确
+    const businessId = biz?.id;
+    const userId = user.id;
+
+    let pts: Patient[] | null = null;
+
+    if (businessId) {
+      // 优先用 business_id 查询
+      const { data } = await supabase
+        .from("patients")
+        .select("*")
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      pts = data;
+
+      // 如果 business_id 查询不到数据，尝试用 user_id（兼容旧数据）
+      if (!pts || pts.length === 0) {
+        const { data: ptsByUser } = await supabase
+          .from("patients")
+          .select("*")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (ptsByUser && ptsByUser.length > 0) {
+          pts = ptsByUser;
+          // 如果有 user_id 数据但没有 business_id，更新这些数据
+          // 注意：这里不自动更新，避免意外修改
+        }
+      }
+    } else {
+      // 没有 business 记录，用 user_id 查询
+      const { data } = await supabase
+        .from("patients")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      pts = data;
+    }
+
     if (pts) setPatients(pts);
 
-    const { data: revs } = await supabase.from("reviews").select("*").eq("business_id", businessId).eq("resolved", false).lt("rating", 4).order("created_at", { ascending: false }).limit(10);
+    const { data: revs } = await supabase.from("reviews").select("*").eq("business_id", businessId || userId).eq("resolved", false).lt("rating", 4).order("created_at", { ascending: false }).limit(10);
     if (revs) setAlerts(revs.map((r: any) => ({ id: r.id, patient_name: r.patient_name || "Unknown", rating: r.rating, comment: r.comment || "No comment", created_at: r.created_at, is_new: true, resolved: r.resolved })));
 
-    const { data: allReviews } = await supabase.from("reviews").select("rating,created_at").eq("business_id", businessId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-    const { data: allPatients } = await supabase.from("patients").select("email_status").eq("business_id", businessId);
+    const { data: allReviews } = await supabase.from("reviews").select("rating,created_at").eq("business_id", businessId || userId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+    const { data: allPatients } = await supabase.from("patients").select("email_status").eq("business_id", businessId || userId);
 
     const newReviewsCount = allReviews?.length || 0;
     const avgRating = allReviews?.length ? (allReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / allReviews.length).toFixed(1) : "0.0";
