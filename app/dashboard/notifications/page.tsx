@@ -100,15 +100,15 @@ export default function NotificationsPage() {
 
   const handleTest = async (webhook: WebhookConfig) => {
     try {
+      // 修复: 使用普通字符串避免模板字符串嵌套问题
       const payload = {
-        text: "🔔 Test notification from ReviewFlow",
+        text: "ReviewFlow Test Notification",
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: "*ReviewFlow Test Notification*
-This is a test message to confirm your webhook is working correctly.",
+              text: "*ReviewFlow Test Notification*\nThis is a test message to confirm your webhook is working correctly.",
             },
           },
         ],
@@ -184,7 +184,7 @@ This is a test message to confirm your webhook is working correctly.",
                 <p className="text-xs text-brand-muted leading-relaxed">
                   A webhook URL is a special address that ReviewFlow uses to send instant notifications to your team chat. 
                   When a patient leaves a review (especially a negative one), we immediately push a message to your Slack channel, 
-                  Teams chat, or Discord server. You don&apos;t need to keep checking the dashboard — reviews come to you automatically.
+                  Teams chat, or Discord server. You do not need to keep checking the dashboard — reviews come to you automatically.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-md font-medium">
