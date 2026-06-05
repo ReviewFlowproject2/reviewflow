@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import {
-  ArrowLeft, Save, CheckCircle, AlertTriangle, Slack, MessageSquare,
-  Trash2, TestTube, Bell
+  ArrowLeft, Save, CheckCircle, AlertTriangle, MessageSquare,
+  Trash2, FlaskConical, Bell
 } from "lucide-react";
 
 interface WebhookConfig {
@@ -130,7 +130,7 @@ export default function NotificationsPage() {
   };
 
   const typeLabels = {
-    slack: { name: "Slack", icon: Slack, color: "bg-purple-50 text-purple-600" },
+    slack: { name: "Slack", icon: MessageSquare, color: "bg-purple-50 text-purple-600" },
     teams: { name: "Microsoft Teams", icon: MessageSquare, color: "bg-blue-50 text-blue-600" },
     discord: { name: "Discord", icon: MessageSquare, color: "bg-indigo-50 text-indigo-600" },
   };
@@ -291,7 +291,7 @@ export default function NotificationsPage() {
                       onClick={() => handleTest(wh)}
                       className="text-xs text-brand-blue font-semibold hover:underline inline-flex items-center gap-1"
                     >
-                      <TestTube size={12} />Send Test
+                      <FlaskConical size={12} />Send Test
                     </button>
                     <button
                       onClick={() => handleDelete(wh.id)}
