@@ -17,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 // ==================== FAQ 数据 ====================
 const FAQS = [
   { q: "Will my patients feel annoyed by the email?", a: "ReviewFlow only sends one polite follow-up email to patients who visited that day, with a clear opt-out option. This is standard patient care follow-up, not bulk marketing. Most patients appreciate the reminder." },
-  { q: "Do I need a credit card to start the free trial?", a: "No credit card required. You get full access for 7 days. We only ask for payment details when you decide to continue after the trial." },
+  { q: "Do I need a credit card to start the free trial?", a: "No credit card required. You get full access for 30 days. We only ask for payment details when you decide to continue after the trial." },
   { q: "Is my patient data secure?", a: "All data is stored on HIPAA-compliant cloud infrastructure with end-to-end encryption. We never sell or share your patient information." },
   { q: "What happens when a negative review comes in?", a: "You get an instant alert via email within 15 minutes, along with a suggested reply template. This gives you the critical window to respond before the review damages your reputation." },
   { q: "How many patients can I import?", a: "Unlimited. Import via CSV bulk upload or add manually one by one. There are no patient count limits on the Pro plan." },
@@ -454,9 +454,9 @@ function Navbar() {
       <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
         <Link href="/" className="font-outfit font-bold text-xl text-brand-blue">ReviewFlow</Link>
         <div className="hidden md:flex items-center gap-8 text-sm text-brand-muted">
-          <Link href="/dashboard/support" className="hover:text-brand-blue transition-colors">Features</Link>
-          <Link href="/dashboard/support" className="hover:text-brand-blue transition-colors">Pricing</Link>
-          <Link href="/dashboard/support" className="hover:text-brand-blue transition-colors">FAQ</Link>
+          <a href="#features" className="hover:text-brand-blue transition-colors">Features</a>
+          <a href="#pricing" className="hover:text-brand-blue transition-colors">Pricing</a>
+          <a href="#faq" className="hover:text-brand-blue transition-colors">FAQ</a>
         </div>
         <div className="flex items-center gap-4">
           {user ? (

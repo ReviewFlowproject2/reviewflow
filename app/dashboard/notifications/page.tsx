@@ -170,8 +170,14 @@ export default function NotificationsPage() {
             </div>
             <div>
               <h3 className="font-semibold text-brand-dark text-sm">Add Webhook</h3>
-              <p className="text-xs text-brand-muted">Get notified when new reviews come in</p>
+              <p className="text-xs text-brand-muted">Get instant alerts in Slack/Teams when patients leave reviews</p>
             </div>
+          </div>
+
+          <div className="mb-4 p-3 bg-brand-soft rounded-xl">
+            <p className="text-xs font-semibold text-brand-dark mb-2">What is a Webhook URL?</p>
+            <p className="text-xs text-brand-muted mb-2">A webhook URL is like a "delivery address" where ReviewFlow sends instant notifications. When a patient leaves a review, we immediately push a message to your Slack channel or Teams chat.</p>
+            <p className="text-xs text-brand-muted">You don&apos;t need to keep checking the dashboard — reviews come to you automatically.</p>
           </div>
 
           {!showAddForm ? (
@@ -212,11 +218,38 @@ export default function NotificationsPage() {
                   placeholder={newType === "slack" ? "https://hooks.slack.com/services/..." : newType === "teams" ? "https://outlook.office.com/webhook/..." : "https://discord.com/api/webhooks/..."}
                   className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                 />
-                <p className="text-xs text-brand-muted mt-1">
-                  {newType === "slack" && "Get this from your Slack app's Incoming Webhooks settings"}
-                  {newType === "teams" && "Get this from your Teams channel connectors"}
-                  {newType === "discord" && "Get this from your Discord channel Integrations > Webhooks"}
-                </p>
+                <div className="mt-2 p-2 bg-brand-soft rounded-lg">
+                  <p className="text-xs font-semibold text-brand-dark mb-1">
+                    {newType === "slack" && "How to get Slack Webhook URL:"}
+                    {newType === "teams" && "How to get Teams Webhook URL:"}
+                    {newType === "discord" && "How to get Discord Webhook URL:"}
+                  </p>
+                  <ol className="text-xs text-brand-muted space-y-1 list-decimal list-inside">
+                    {newType === "slack" && (
+                      <>
+                        <li>Open your Slack workspace</li>
+                        <li>Go to Settings → Apps → Incoming Webhooks</li>
+                        <li>Click "Add to Slack" → Choose a channel</li>
+                        <li>Copy the Webhook URL (starts with https://hooks.slack.com/...)</li>
+                      </>
+                    )}
+                    {newType === "teams" && (
+                      <>
+                        <li>Open Microsoft Teams</li>
+                        <li>Go to your channel → ... → Connectors</li>
+                        <li>Search "Incoming Webhook" → Add</li>
+                        <li>Copy the URL (starts with https://outlook.office.com/...)</li>
+                      </>
+                    )}
+                    {newType === "discord" && (
+                      <>
+                        <li>Open Discord → Server Settings</li>
+                        <li>Integrations → Webhooks → New Webhook</li>
+                        <li>Choose channel → Copy Webhook URL</li>
+                      </>
+                    )}
+                  </ol>
+                </div>
               </div>
 
               <div>

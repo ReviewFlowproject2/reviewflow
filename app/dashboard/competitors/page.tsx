@@ -28,6 +28,7 @@ export default function CompetitorTrackingPage() {
   const [newAddress, setNewAddress] = useState("");
   const [newRating, setNewRating] = useState("");
   const [newReviews, setNewReviews] = useState("");
+  const [newGoogleLink, setNewGoogleLink] = useState("");
   const [saving, setSaving] = useState(false);
 
   const supabase = createBrowserClient(
@@ -63,6 +64,7 @@ export default function CompetitorTrackingPage() {
       user_id: user.id,
       name: newName.trim(),
       address: newAddress.trim() || null,
+      google_link: newGoogleLink.trim() || null,
       rating: parseFloat(newRating),
       review_count: parseInt(newReviews),
       platform: "Google",
@@ -73,6 +75,7 @@ export default function CompetitorTrackingPage() {
       setNewAddress("");
       setNewRating("");
       setNewReviews("");
+      setNewGoogleLink("");
       setShowAddForm(false);
       loadCompetitors();
     }
@@ -161,6 +164,10 @@ export default function CompetitorTrackingPage() {
                 <label className="block text-sm font-semibold text-brand-dark mb-1.5">Review Count *</label>
                 <input type="number" min="0" value={newReviews} onChange={(e) => setNewReviews(e.target.value)} placeholder="e.g. 127" className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
               </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-semibold text-brand-dark mb-1.5">Google Maps Link <span className="text-brand-muted font-normal">(optional, click to check their latest reviews)</span></label>
+                <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)} placeholder="https://www.google.com/maps/place/..." className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
+              </div>
             </div>
             <button onClick={handleAdd} disabled={saving || !newName.trim() || !newRating || !newReviews} className="px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center gap-2">
               <Plus size={16} />{saving ? "Saving..." : "Add Competitor"}
@@ -209,7 +216,14 @@ export default function CompetitorTrackingPage() {
                         </div>
                       </td>
                       <td className="px-5 py-4 text-sm text-brand-dark">{c.review_count.toLocaleString()}</td>
-                      <td className="px-5 py-4 text-sm text-brand-muted">{c.address || "—"}</td>
+                      <td className="px-5 py-4 text-sm text-brand-muted">
+                        {c.address || "—"}
+                        {c.google_link && (
+                          <a href={c.google_link} target="_blank" rel="noopener noreferrer" className="text-brand-blue hover:underline text-xs block mt-1">
+                            View on Google Maps →
+                          </a>
+                        )}
+                      </td>
                       <td className="px-5 py-4 text-right">
                         <button onClick={() => handleDelete(c.id)} className="text-brand-muted hover:text-red-500 transition-colors p-1" title="Delete">
                           <Trash2 size={14} />

@@ -314,10 +314,20 @@ export default function DashboardPage() {
       <Sidebar business={business} />
       <main className="flex-1 ml-[260px] p-6 lg:p-8 max-w-7xl">
         <ToastContainer toasts={toasts} onRemove={removeToast} />
-        {showTopBanner && (
+        {showTopBanner && !bannerDismissed && (
           <div className={`${bannerColor} rounded-2xl p-4 mb-6 flex items-center justify-between gap-4`}>
-            <div className="flex items-center gap-3"><Zap className="w-5 h-5 text-white shrink-0" /><p className="text-white text-sm font-medium">{bannerText}</p></div>
-            <Link href="/dashboard/support" className="shrink-0 px-4 py-2 bg-white text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors" style={{ color: bannerColor === "bg-brand-blue" ? "#2563eb" : "#d97706" }}>Upgrade to {upgradeTarget}</Link>
+            <div className="flex items-center gap-3">
+              <Zap className="w-5 h-5 text-white shrink-0" />
+              <p className="text-white text-sm font-medium">{bannerText}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link href="/dashboard/support" className="px-4 py-2 bg-white text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors" style={{ color: bannerColor === "bg-brand-blue" ? "#2563eb" : "#d97706" }}>
+                Upgrade to {upgradeTarget}
+              </Link>
+              <button onClick={dismissBanner} className="p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded-lg transition-colors" title="Dismiss">
+                <X size={16} />
+              </button>
+            </div>
           </div>
         )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
