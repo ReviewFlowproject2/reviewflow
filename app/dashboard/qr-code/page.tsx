@@ -4,27 +4,18 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { ArrowLeft, Download, QrCode, Copy, Check } from "lucide-react";
-
-const templates = [
-  { id: 'classic-blue', name: 'Classic Blue', color: '#0A2463', desc: 'General Practice · Dental · Orthopedic', preview: 'preview_style_01_classic_blue.jpg' },
-  { id: 'mint-green', name: 'Mint Green', color: '#2E7D32', desc: 'Pediatrics · Aesthetics · TCM', preview: 'preview_style_02_mint_green.jpg' },
-  { id: 'elegant-violet', name: 'Elegant Violet', color: '#4A148C', desc: 'Luxury Aesthetics · Plastic Surgery', preview: 'preview_style_03_violet.jpg' },
-  { id: 'coral-orange', name: 'Coral Orange', color: '#E64A19', desc: 'Family Clinic · Physical Therapy', preview: 'preview_style_04_coral.jpg' },
-  { id: 'professional-gray', name: 'Pro Gray', color: '#37474F', desc: 'Tech Clinic · Lab · Specialist', preview: 'preview_style_05_gray.jpg' },
-  { id: 'forest-green', name: 'Forest Green', color: '#33691E', desc: 'TCM · Wellness · Organic', preview: 'preview_style_06_forest.jpg' },
-  { id: 'luxury-blue-gold', name: 'Luxury Gold', color: '#051C3A', desc: 'Premium Private · VIP', preview: 'preview_style_07_luxury.jpg' },
-];
+import {
+  ArrowLeft, Download, Printer, QrCode, Copy, CheckCircle,
+  Link as LinkIcon, AlertTriangle
+} from "lucide-react";
 
 export default function QRCodePage() {
   const router = useRouter();
-  const [business, setBusiness] = useState<any>(null);
+  const [googleLink, setGoogleLink] = useState("");
+  const [clinicName, setClinicName] = useState("");
   const [loading, setLoading] = useState(true);
-  const [placeId, setPlaceId] = useState("");
-  const [qrUrl, setQrUrl] = useState("");
   const [copied, setCopied] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState('classic-blue');
-  const [generating, setGenerating] = useState(false);
+  const [qrSize, setQrSize] = useState<"small" | "medium" | "large">("medium");
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,194 +23,185 @@ export default function QRCodePage() {
   );
 
   useEffect(() => {
-    const loadBusiness = async () => {
+    const loadData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
-      const { data: biz } = await supabase.from("businesses").select("*").eq("user_id", user.id).single();
-      if (biz) { setBusiness(biz); setPlaceId(biz.google_place_id || ""); }
+
+      const { data: biz } = await supabase
+        .from("businesses")
+        .select("name, google_review_link")
+        .eq("user_id", user.id)
+        .single();
+
+      if (biz) {
+        setClinicName(biz.name || "My Clinic");
+        setGoogleLink(biz.google_review_link || "");
+      }
       setLoading(false);
     };
-    loadBusiness();
+    loadData();
   }, []);
 
-  const generateQR = async () => {
-    if (!placeId.trim()) { alert("Please enter your Google Place ID"); return; }
-    setGenerating(true);
-    const reviewUrl = `https://search.google.com/local/writereview?placeid=${placeId}`;
-    try {
-      const res = await fetch('/api/qr-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: reviewUrl, template: selectedTemplate, size: 400 }),
-      });
-      const data = await res.json();
-      if (data.qrCodeUrl) setQrUrl(data.qrCodeUrl);
-      else alert('Failed to generate QR code');
-    } catch (err) { alert('Error generating QR code'); }
-    setGenerating(false);
+  // 使用 Google Chart API 生成 QR 码
+  const getQRUrl = () => {
+    if (!googleLink) return "";
+    const size = qrSize === "small" ? "200x200" : qrSize === "medium" ? "300x300" : "400x400";
+    return `https://chart.googleapis.com/chart?cht=qr&chs=${size}&chld=H|0&chl=${encodeURIComponent(googleLink)}`;
   };
 
-  const handleSavePlaceId = async () => {
-    if (!placeId.trim() || !business) return;
-    const { error } = await supabase.from("businesses").update({ google_place_id: placeId }).eq("id", business.id);
-    if (error) alert("Failed to save: " + error.message);
-    else { alert("Google Place ID saved!"); generateQR(); }
+  const handleDownload = () => {
+    const url = getQRUrl();
+    if (!url) return;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `reviewflow_qr_${clinicName.replace(/\s+/g, "_").toLowerCase()}.png`;
+    a.click();
   };
 
-  const handleDownload = (size: number, label: string) => {
-    if (!qrUrl) return;
-    const link = document.createElement("a");
-    link.href = qrUrl;
-    link.download = `reviewflow-qr-${selectedTemplate}-${label}-${size}x${size}.png`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handlePrint = () => {
+    const url = getQRUrl();
+    if (!url) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head><title>Print QR Code - ${clinicName}</title></head>
+        <body style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0;font-family:Arial;">
+          <h2 style="color:#1a3a5c;margin-bottom:10px;">${clinicName}</h2>
+          <p style="color:#666;margin-bottom:30px;">Scan to leave a review on Google</p>
+          <img src="${url}" style="max-width:300px;" />
+          <p style="color:#888;margin-top:30px;font-size:12px;">Powered by ReviewFlow</p>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   const handleCopyLink = () => {
-    if (!placeId) return;
-    navigator.clipboard.writeText(`https://search.google.com/local/writereview?placeid=${placeId}`);
+    if (!googleLink) return;
+    navigator.clipboard.writeText(googleLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const selectedTemplateData = templates.find(t => t.id === selectedTemplate);
-
-  if (loading) return <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center"><div className="text-brand-muted">Loading...</div></div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center">
+        <div className="text-brand-muted">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFF]">
-      <div className="bg-white border-b border-[#E9F1FA]">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-1 text-sm text-brand-muted hover:text-brand-blue transition-colors">
-            <ArrowLeft size={16} /> Back to Dashboard
+    <div className="min-h-screen bg-[#F8FAFF] p-6">
+      <div className="max-w-3xl mx-auto">
+        <div className="mb-6">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors">
+            <ArrowLeft size={16} />Back to Dashboard
           </Link>
-          <h1 className="font-outfit font-bold text-lg text-brand-dark">QR Code Generator</h1>
-          <div className="w-20" />
-        </div>
-      </div>
-
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-[16px] p-6 shadow-card mb-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-brand-soft flex items-center justify-center flex-shrink-0">
-              <QrCode className="w-6 h-6 text-brand-blue" />
-            </div>
-            <div>
-              <h2 className="font-outfit font-bold text-xl text-brand-dark mb-2">Google Review QR Code</h2>
-              <p className="text-brand-muted text-sm leading-relaxed">Generate a QR code that takes patients directly to your Google Review page. Choose from 7 professional templates.</p>
-            </div>
-          </div>
         </div>
 
-        <div className="bg-white rounded-[16px] p-6 shadow-card mb-6">
-          <h3 className="font-semibold text-brand-dark mb-4">1. Enter Your Google Place ID</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-brand-muted mb-1.5 block">Google Place ID</label>
-              <input type="text" placeholder="ChIJ... (find it in your Google Business Profile)" value={placeId} onChange={(e) => setPlaceId(e.target.value)}
-                className="w-full h-12 rounded-[10px] border border-[#E0E7F1] px-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
-              <p className="text-xs text-brand-muted mt-2">Find your Place ID in <a href="https://developers.google.com/maps/documentation/places/web-service/place-id" target="_blank" rel="noopener noreferrer" className="text-brand-blue hover:underline">Google Place ID Finder</a></p>
-            </div>
-            <button onClick={handleSavePlaceId} className="px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors">Save & Generate</button>
-          </div>
-        </div>
+        <h1 className="font-outfit font-bold text-2xl text-brand-dark mb-2">QR Code Generator</h1>
+        <p className="text-brand-muted text-sm mb-8">Generate a QR code that takes patients directly to your Google Review page.</p>
 
-        <div className="bg-white rounded-[16px] p-6 shadow-card mb-6">
-          <h3 className="font-semibold text-brand-dark mb-4">2. Choose Template Style</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {templates.map((t) => (
-              <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
-                className={`p-3 rounded-[12px] border-2 text-left transition-all ${selectedTemplate === t.id ? 'border-brand-blue bg-brand-soft' : 'border-[#E0E7F1] hover:border-brand-blue/50'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-6 h-6 rounded-full border border-gray-200" style={{ backgroundColor: t.color }} />
-                  <span className="font-medium text-sm text-brand-dark">{t.name}</span>
-                </div>
-                <p className="text-xs text-brand-muted">{t.desc}</p>
-              </button>
-            ))}
-          </div>
-
-          {/* 预览图 */}
-          {selectedTemplateData && (
-            <div className="mt-6 p-4 rounded-[12px] border border-[#E0E7F1] bg-gray-50">
-              <p className="text-sm font-medium text-brand-dark mb-3">
-                Preview: {selectedTemplateData.name}
-              </p>
-              <img 
-                src={`/images/qr-previews/${selectedTemplateData.preview}`}
-                alt={`${selectedTemplateData.name} preview`}
-                className="w-full max-w-lg rounded-lg shadow-sm mx-auto"
-              />
-              <p className="text-xs text-brand-muted mt-2 text-center">
-                Desktop stand + Business card preview
-              </p>
-            </div>
-          )}
-
-          <div className="mt-4 flex justify-center">
-            <button onClick={generateQR} disabled={generating || !placeId}
-              className="px-8 py-3 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors disabled:opacity-50">
-              {generating ? 'Generating...' : 'Generate QR Code'}
-            </button>
-          </div>
-        </div>
-
-        {qrUrl && (
-          <div className="bg-white rounded-[16px] p-6 shadow-card mb-6">
-            <h3 className="font-semibold text-brand-dark mb-4">3. Your QR Code</h3>
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              <div className="flex-1 flex flex-col items-center">
-                <div className="bg-white p-4 rounded-[16px] border-2 border-brand-soft shadow-sm">
-                  <img src={qrUrl} alt="QR Code" className="w-64 h-64" />
-                  <div className="text-center mt-3">
-                    <p className="font-outfit font-bold text-brand-dark text-sm">{business?.name || "Your Clinic"}</p>
-                    <p className="text-xs text-brand-muted mt-1">Scan to leave a Google Review</p>
-                  </div>
-                </div>
+        {!googleLink ? (
+          <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-6 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-yellow-800 text-sm mb-1">Google Review Link Not Set</h3>
+                <p className="text-sm text-yellow-700 mb-3">You need to add your Google Review link in Settings before generating a QR code.</p>
+                <Link href="/settings" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors">
+                  Go to Settings
+                </Link>
               </div>
-
-              <div className="flex-1 space-y-4">
-                <h4 className="font-medium text-brand-dark text-sm">Download for Print</h4>
-                <div className="space-y-3">
-                  {[
-                    { size: 1500, label: 'desk-stand', name: 'Front Desk Stand (5\"×5\")', desc: 'High-res for professional printing' },
-                    { size: 1050, label: 'card-front', name: 'Business Card Front (3.5\"×2\")', desc: 'Doctor info & contact details' },
-                    { size: 1050, label: 'card-back', name: 'Business Card Back (3.5\"×2\")', desc: 'QR code with review prompt' },
-                    { size: 600, label: 'receipt', name: 'Receipt Sticker (2\"×2\")', desc: 'Small sticker for receipts' },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between p-4 rounded-[12px] border border-[#E0E7F1]">
-                      <div>
-                        <p className="font-medium text-brand-dark text-sm">{item.name}</p>
-                        <p className="text-xs text-brand-muted">{item.desc}</p>
-                      </div>
-                      <button onClick={() => handleDownload(item.size, item.label)}
-                        className="flex items-center gap-2 px-4 py-2 bg-brand-blue text-white text-sm font-medium rounded-[8px] hover:bg-brand-dark transition-colors">
-                        <Download size={14} /> Download
-                      </button>
-                    </div>
-                  ))}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Google Link Display */}
+            <div className="bg-white rounded-2xl border border-brand-soft/50 p-5 mb-6">
+              <label className="block text-sm font-semibold text-brand-dark mb-2">Your Google Review Link</label>
+              <div className="flex gap-2">
+                <div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-brand-soft rounded-xl text-sm text-brand-dark overflow-hidden">
+                  <LinkIcon size={14} className="text-brand-muted shrink-0" />
+                  <span className="truncate">{googleLink}</span>
                 </div>
-                <div className="pt-4 border-t border-[#E0E7F1]">
-                  <button onClick={handleCopyLink} className="flex items-center gap-2 text-sm text-brand-blue hover:underline">
-                    {copied ? <Check size={14} /> : <Copy size={14} />}
-                    {copied ? "Link copied!" : "Copy review link"}
+                <button
+                  onClick={handleCopyLink}
+                  className="px-4 py-2.5 bg-brand-blue text-white rounded-xl text-sm font-semibold hover:bg-brand-dark transition-colors inline-flex items-center gap-2 shrink-0"
+                >
+                  {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                  {copied ? "Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+
+            {/* Size Selector */}
+            <div className="bg-white rounded-2xl border border-brand-soft/50 p-5 mb-6">
+              <label className="block text-sm font-semibold text-brand-dark mb-3">QR Code Size</label>
+              <div className="flex gap-2">
+                {(["small", "medium", "large"] as const).map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setQrSize(size)}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      qrSize === size
+                        ? "bg-brand-blue text-white"
+                        : "bg-brand-soft text-brand-muted hover:text-brand-dark"
+                    }`}
+                  >
+                    {size.charAt(0).toUpperCase() + size.slice(1)}
+                    <span className="block text-xs font-normal opacity-70">
+                      {size === "small" ? "200px" : size === "medium" ? "300px" : "400px"}
+                    </span>
                   </button>
-                </div>
+                ))}
               </div>
             </div>
-          </div>
-        )}
 
-        <div className="bg-brand-soft rounded-[16px] p-6">
-          <h3 className="font-semibold text-brand-dark mb-3">💡 Placement Tips</h3>
-          <ul className="space-y-2 text-sm text-brand-muted">
-            <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Place the stand where patients pay — right after a positive experience</li>
-            <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Train front desk to say: "If you had a great visit, we\'d love your feedback on Google"</li>
-            <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Include the card with receipts for patients who might review later</li>
-            <li className="flex items-start gap-2"><span className="text-brand-blue">•</span> Pro tip: Ask for reviews from patients who complimented your service</li>
-          </ul>
-        </div>
+            {/* QR Code Display */}
+            <div className="bg-white rounded-2xl border border-brand-soft/50 p-8 text-center">
+              <div className="inline-block p-6 bg-white rounded-2xl border-2 border-brand-soft shadow-lg mb-6">
+                <img
+                  src={getQRUrl()}
+                  alt="QR Code"
+                  className="mx-auto"
+                  style={{ width: qrSize === "small" ? 200 : qrSize === "medium" ? 300 : 400 }}
+                />
+                <p className="text-sm font-semibold text-brand-dark mt-4">{clinicName}</p>
+                <p className="text-xs text-brand-muted">Scan to leave a Google review</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  onClick={handleDownload}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors"
+                >
+                  <Download size={16} />Download PNG
+                </button>
+                <button
+                  onClick={handlePrint}
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-xl text-sm hover:bg-brand-blue hover:text-white transition-colors"
+                >
+                  <Printer size={16} />Print
+                </button>
+              </div>
+            </div>
+
+            {/* Usage Tips */}
+            <div className="mt-6 bg-brand-soft rounded-2xl p-5">
+              <h3 className="font-semibold text-brand-dark text-sm mb-3">Where to place your QR code:</h3>
+              <ul className="space-y-2 text-sm text-brand-muted">
+                <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />Front desk counter (patients see it while checking out)</li>
+                <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />Treatment room door or wall</li>
+                <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />Receipts and appointment cards</li>
+                <li className="flex items-center gap-2"><CheckCircle size={14} className="text-green-500 shrink-0" />Waiting room table tents</li>
+              </ul>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

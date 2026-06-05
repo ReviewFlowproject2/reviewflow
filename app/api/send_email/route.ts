@@ -1,129 +1,106 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { patientId } = await req.json();
-    console.log("Received patientId:", patientId);
-
+    const { patientId } = await request.json();
     if (!patientId) {
-      return NextResponse.json({ error: "Patient ID required" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Patient ID is required" }, { status: 400 });
     }
 
-    const supabase = createClient(
+    const cookieStore = cookies();
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { cookies: { get: (name) => cookieStore.get(name)?.value } }
     );
 
-    // 第一步：查患者（不关联任何表）
-    const { data: patient, error: patientError } = await supabase
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    // 获取患者信息
+    const { data: patient } = await supabase
       .from("patients")
       .select("*")
       .eq("id", patientId)
+      .eq("business_id", user.id)
       .single();
 
-    console.log("Patient result:", patient);
-    console.log("Patient error:", patientError);
-
-    if (patientError) {
-      console.error("Patient query error:", patientError);
-      return NextResponse.json({ error: "Patient not found: " + patientError.message }, { status: 404 });
-    }
-
     if (!patient) {
-      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+      return NextResponse.json({ success: false, error: "Patient not found" }, { status: 404 });
     }
 
     if (!patient.email) {
-      return NextResponse.json({ error: "Patient has no email" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Patient has no email address" }, { status: 400 });
     }
 
-    // 第二步：单独查 business（如果有 business_id）
-    let clinicName = "Your Dental Office";
-    let reviewLink = "https://google.com";
+    // 获取诊所信息
+    const { data: business } = await supabase
+      .from("businesses")
+      .select("name, google_review_link")
+      .eq("user_id", user.id)
+      .single();
 
-    if (patient.business_id) {
-      const { data: business, error: businessError } = await supabase
-        .from("businesses")
-        .select("name, google_review_url")
-        .eq("id", patient.business_id)
-        .single();
+    const clinicName = business?.name || "Your Dental Clinic";
+    const reviewLink = business?.google_review_link || "https://www.google.com/search?q=review";
 
-      console.log("Business result:", business);
-      console.log("Business error:", businessError);
-
-      if (business) {
-        clinicName = business.name || clinicName;
-        reviewLink = business.google_review_url || reviewLink;
-      }
-    }
-
-    console.log("Final clinicName:", clinicName);
-    console.log("Final reviewLink:", reviewLink);
-
-    // 发送邮件
-    const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "ReviewFlow <noreply@reviewflowdental.com>",
-      to: patient.email,
-      subject: `How was your visit to ${clinicName}?`,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #023A78;">Hi ${patient.name},</h2>
-          <p>Thank you for visiting ${clinicName} today.</p>
-          <p>If you had a great experience, we would greatly appreciate your feedback on Google.</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${reviewLink}"
-               style="background: #FEDB01; color: #023A78; padding: 15px 30px;
-                      text-decoration: none; border-radius: 8px; font-weight: bold;
-                      display: inline-block;">
-              Leave a Google Review
-            </a>
-          </div>
-          <p style="font-size: 12px; color: #666;">
-            This is a one-time request. If you prefer not to leave a review, no further emails will be sent.
-          </p>
+    // 通过 FormSubmit 发送邮件
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #1a3a5c;">Hi ${patient.name},</h2>
+        <p>Thank you for visiting <strong>${clinicName}</strong> today!</p>
+        <p>We hope you had a great experience. If you have a moment, we'd really appreciate your feedback on Google.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${reviewLink}" style="background: #2563eb; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Leave a Review on Google</a>
         </div>
-      `,
+        <p style="font-size: 12px; color: #888;">This is a one-time request. If you prefer not to receive these, please ignore this email.</p>
+        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #888;">${clinicName}</p>
+      </div>
+    `;
+
+    const formData = new FormData();
+    formData.append("_subject", `How was your visit to ${clinicName}?`);
+    formData.append("_replyto", patient.email);
+    formData.append("_captcha", "false");
+    formData.append("email", patient.email);
+    formData.append("name", patient.name);
+    formData.append("message", `Review request sent for ${patient.name} (${patient.email})`);
+    formData.append("_html", emailHtml);
+
+    // 使用 FormSubmit 发送
+    const res = await fetch("https://formsubmit.co/ajax/dengxiaofeng880914@gmail.com", {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: formData,
     });
 
-    if (emailError) {
-      console.error("Email send error:", emailError);
+    const result = await res.json();
 
-      await supabase
+    if (result.success === "true" || result.success === true) {
+      // 更新患者状态
+      const { error: updateError } = await supabase
         .from("patients")
-        .update({ email_status: "failed" })
+        .update({
+          email_status: "sent",
+          email_sent_at: new Date().toISOString(),
+          email_sent_count: (patient.email_sent_count || 0) + 1,
+        })
         .eq("id", patientId);
 
-      return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+      if (updateError) {
+        console.error("Update error:", updateError);
+      }
+
+      return NextResponse.json({ success: true, status: "sent" });
+    } else {
+      return NextResponse.json({ success: false, error: "Failed to send email via FormSubmit" }, { status: 500 });
     }
-
-    // 更新患者状态、计数和时间
-    const currentCount = patient.email_sent_count || 0;
-    const { error: updateError } = await supabase
-      .from("patients")
-      .update({
-        email_status: "sent",
-        email_sent_count: currentCount + 1,
-        email_sent_at: new Date().toISOString()
-      })
-      .eq("id", patientId);
-
-    if (updateError) {
-      console.error("Update status error:", updateError);
-      return NextResponse.json({ error: "Failed to update status: " + updateError.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      status: "sent",
-      emailId: emailData?.id
-    });
-
-  } catch (err: any) {
-    console.error("Send email error:", err);
-    return NextResponse.json({ error: err.message || "Internal error" }, { status: 500 });
+  } catch (error: any) {
+    console.error("Send email error:", error);
+    return NextResponse.json({ success: false, error: error.message || "Internal server error" }, { status: 500 });
   }
 }
