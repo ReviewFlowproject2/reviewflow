@@ -66,18 +66,15 @@ function Sidebar({ business }: { business: Business | null }) {
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
-  // 修复: 从 business.trial_ends_at 动态计算
   const getTrialInfo = () => {
     if (!business?.trial_ends_at) return { daysLeft: 0, dateRange: "—", isExpired: true };
     const endDate = new Date(business.trial_ends_at);
     const now = new Date();
-    const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000); // 假设试用期7天
+    const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
     const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
     const isExpired = daysLeft <= 0;
-
     const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
     const dateRange = `${fmt(startDate)} - ${fmt(endDate)}`;
-
     return { daysLeft, dateRange, isExpired };
   };
 
@@ -102,7 +99,6 @@ function Sidebar({ business }: { business: Business | null }) {
         })}
       </nav>
       <div className="px-4 pb-4 space-y-3">
-        {/* 修复: 显示日期区间 */}
         <div className="bg-brand-soft rounded-xl p-4">
           <p className="text-xs text-brand-muted mb-1">Trial period</p>
           <p className="font-outfit font-bold text-lg text-brand-blue">{trialInfo.dateRange}</p>
@@ -211,91 +207,124 @@ export default function DashboardPage() {
 
   const loadData = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/login"); return; }
 
-    // 修复: 先获取 business，再用正确的 business_id 查询 patients
-    const { data: biz } = await supabase.from("businesses").select("*").eq("user_id", user.id).single();
-    if (biz) setBusiness(biz);
-
-    // 修复: 使用 business_id 或 user_id 查询 patients，确保数据关联正确
-    const businessId = biz?.id;
-    const userId = user.id;
-
-    let pts: Patient[] | null = null;
-
-    if (businessId) {
-      // 优先用 business_id 查询
-      const { data } = await supabase
-        .from("patients")
+      // 获取 business
+      const { data: biz, error: bizError } = await supabase
+        .from("businesses")
         .select("*")
-        .eq("business_id", businessId)
-        .order("created_at", { ascending: false })
-        .limit(50);
-      pts = data;
+        .eq("user_id", user.id)
+        .single();
 
-      // 如果 business_id 查询不到数据，尝试用 user_id（兼容旧数据）
-      if (!pts || pts.length === 0) {
-        const { data: ptsByUser } = await supabase
+      if (bizError) {
+        console.error("Business fetch error:", bizError);
+      }
+
+      if (biz) setBusiness(biz);
+      const businessId = biz?.id;
+
+      // 修复: 只使用 business_id 查询 patients，不使用 user_id
+      // 因为 patients 表结构只有 business_id，没有 user_id
+      let pts: Patient[] | null = null;
+
+      if (businessId) {
+        const { data, error } = await supabase
           .from("patients")
           .select("*")
-          .eq("user_id", userId)
+          .eq("business_id", businessId)
           .order("created_at", { ascending: false })
           .limit(50);
-        if (ptsByUser && ptsByUser.length > 0) {
-          pts = ptsByUser;
-          // 如果有 user_id 数据但没有 business_id，更新这些数据
-          // 注意：这里不自动更新，避免意外修改
+
+        if (error) {
+          console.error("Patients fetch error:", error);
+          addToast(`Failed to load patients: ${error.message}`, "error");
+        } else {
+          pts = data;
         }
+      } else {
+        // 没有 business 记录，提示用户设置
+        addToast("Please set up your clinic in Settings first", "error");
       }
-    } else {
-      // 没有 business 记录，用 user_id 查询
-      const { data } = await supabase
-        .from("patients")
+
+      if (pts) setPatients(pts);
+
+      // 查询 reviews（用 business_id）
+      const { data: revs } = await supabase
+        .from("reviews")
         .select("*")
-        .eq("user_id", userId)
+        .eq("business_id", businessId || "")
+        .eq("resolved", false)
+        .lt("rating", 4)
         .order("created_at", { ascending: false })
-        .limit(50);
-      pts = data;
-    }
+        .limit(10);
 
-    if (pts) setPatients(pts);
-
-    const { data: revs } = await supabase.from("reviews").select("*").eq("business_id", businessId || userId).eq("resolved", false).lt("rating", 4).order("created_at", { ascending: false }).limit(10);
-    if (revs) setAlerts(revs.map((r: any) => ({ id: r.id, patient_name: r.patient_name || "Unknown", rating: r.rating, comment: r.comment || "No comment", created_at: r.created_at, is_new: true, resolved: r.resolved })));
-
-    const { data: allReviews } = await supabase.from("reviews").select("rating,created_at").eq("business_id", businessId || userId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-    const { data: allPatients } = await supabase.from("patients").select("email_status").eq("business_id", businessId || userId);
-
-    const newReviewsCount = allReviews?.length || 0;
-    const avgRating = allReviews?.length ? (allReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / allReviews.length).toFixed(1) : "0.0";
-    const pendingAlertsCount = revs?.length || 0;
-    const totalEmail = allPatients?.length || 0;
-    const successEmail = allPatients?.filter((p: any) => p.email_status === "delivered" || p.email_status === "opened").length || 0;
-    const emailRate = totalEmail > 0 ? Math.round((successEmail / totalEmail) * 100) : 0;
-    setStats({ newReviews: newReviewsCount, avgRating: parseFloat(avgRating as string), pendingAlerts: pendingAlertsCount, emailSuccess: emailRate });
-
-    // 生成趋势数据
-    if (allReviews) {
-      const daysMap = new Map<string, number>();
-      const today = new Date();
-      for (let i = 0; i < trendDays; i++) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        const key = d.toISOString().split("T")[0];
-        daysMap.set(key, 0);
+      if (revs) {
+        setAlerts(revs.map((r: any) => ({
+          id: r.id,
+          patient_name: r.patient_name || "Unknown",
+          rating: r.rating,
+          comment: r.comment || "No comment",
+          created_at: r.created_at,
+          is_new: true,
+          resolved: r.resolved
+        })));
       }
-      allReviews.forEach((r: any) => {
-        const dateKey = r.created_at.split("T")[0];
-        if (daysMap.has(dateKey)) {
-          daysMap.set(dateKey, (daysMap.get(dateKey) || 0) + 1);
-        }
-      });
-      const sorted = Array.from(daysMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-      setTrendData(sorted.map(([date, count]) => ({ date, count })));
-    }
 
-    setLoading(false);
+      // 统计数据
+      const { data: allReviews } = await supabase
+        .from("reviews")
+        .select("rating,created_at")
+        .eq("business_id", businessId || "")
+        .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
+
+      const { data: allPatients } = await supabase
+        .from("patients")
+        .select("email_status")
+        .eq("business_id", businessId || "");
+
+      const newReviewsCount = allReviews?.length || 0;
+      const avgRating = allReviews?.length
+        ? (allReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / allReviews.length).toFixed(1)
+        : "0.0";
+      const pendingAlertsCount = revs?.length || 0;
+      const totalEmail = allPatients?.length || 0;
+      const successEmail = allPatients?.filter((p: any) => p.email_status === "delivered" || p.email_status === "opened").length || 0;
+      const emailRate = totalEmail > 0 ? Math.round((successEmail / totalEmail) * 100) : 0;
+
+      setStats({
+        newReviews: newReviewsCount,
+        avgRating: parseFloat(avgRating as string),
+        pendingAlerts: pendingAlertsCount,
+        emailSuccess: emailRate
+      });
+
+      // 生成趋势数据
+      if (allReviews) {
+        const daysMap = new Map<string, number>();
+        const today = new Date();
+        for (let i = 0; i < trendDays; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() - i);
+          const key = d.toISOString().split("T")[0];
+          daysMap.set(key, 0);
+        }
+        allReviews.forEach((r: any) => {
+          const dateKey = r.created_at.split("T")[0];
+          if (daysMap.has(dateKey)) {
+            daysMap.set(dateKey, (daysMap.get(dateKey) || 0) + 1);
+          }
+        });
+        const sorted = Array.from(daysMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        setTrendData(sorted.map(([date, count]) => ({ date, count })));
+      }
+    } catch (err: any) {
+      console.error("Load data error:", err);
+      addToast(err.message || "Failed to load dashboard data", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadData(); }, [trendDays]);
