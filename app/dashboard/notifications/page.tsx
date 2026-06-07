@@ -11,6 +11,7 @@ import {
 
 interface WebhookConfig {
   id: string;
+  user_id: string;  // 修复: 添加 user_id
   type: "slack" | "teams" | "discord";
   url: string;
   channel: string;
@@ -45,7 +46,7 @@ export default function NotificationsPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
-    if (data) setWebhooks(data);
+    if (data) setWebhooks(data as WebhookConfig[]);
     setLoading(false);
   };
 
@@ -98,10 +99,9 @@ export default function NotificationsPage() {
     loadWebhooks();
   };
 
-  // 修复: 调用 Edge Function 而不是直接 fetch Webhook URL
+  // 修复: 调用 Edge Function
   const handleTest = async (webhook: WebhookConfig) => {
     try {
-      // 调用 Edge Function 发送测试消息
       const { data, error } = await supabase.functions.invoke("webhook-trigger", {
         body: {
           record: {
