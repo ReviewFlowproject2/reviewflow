@@ -98,35 +98,37 @@ export default function NotificationsPage() {
     loadWebhooks();
   };
 
+  // 修复: 调用 Edge Function 而不是直接 fetch Webhook URL
   const handleTest = async (webhook: WebhookConfig) => {
     try {
-      // 修复: 使用普通字符串避免模板字符串嵌套问题
-      const payload = {
-        text: "ReviewFlow Test Notification",
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: "*ReviewFlow Test Notification*\nThis is a test message to confirm your webhook is working correctly.",
-            },
-          },
-        ],
-      };
-
-      const res = await fetch(webhook.url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      // 调用 Edge Function 发送测试消息
+      const { data, error } = await supabase.functions.invoke("webhook-trigger", {
+        body: {
+          record: {
+            user_id: webhook.user_id,
+            patient_name: "Test Patient",
+            rating: 3,
+            comment: "This is a test notification from ReviewFlow",
+            google_review_link: "https://www.google.com"
+          }
+        }
       });
 
-      if (res.ok) {
-        showToast("Test notification sent successfully", "success");
-      } else {
-        showToast("Failed to send test notification. Check your webhook URL.", "error");
+      if (error) {
+        showToast("Failed to send test: " + error.message, "error");
+        return;
       }
-    } catch (err) {
-      showToast("Network error. Check your webhook URL.", "error");
+
+      const results = data?.results || [];
+      const successCount = results.filter((r: any) => r.success).length;
+
+      if (successCount > 0) {
+        showToast(`Test sent successfully to ${successCount} webhook(s)`, "success");
+      } else {
+        showToast("Test failed. Check webhook URL.", "error");
+      }
+    } catch (err: any) {
+      showToast("Network error: " + err.message, "error");
     }
   };
 
@@ -175,7 +177,6 @@ export default function NotificationsPage() {
             </div>
           </div>
 
-          {/* 优化: 更清晰的 Webhook 说明 */}
           <div className="mb-4 p-4 bg-brand-soft rounded-xl border border-brand-soft/50">
             <div className="flex items-start gap-3">
               <Info size={16} className="text-brand-blue shrink-0 mt-0.5" />
