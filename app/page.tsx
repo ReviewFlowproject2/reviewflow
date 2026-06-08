@@ -187,7 +187,7 @@ function FeaturesSection() {
   ];
 
   return (
-    <section className="py-20 md:py-28 bg-brand-soft">
+    <section id="features" className="py-20 md:py-28 bg-brand-soft scroll-mt-20">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="font-outfit font-bold text-3xl md:text-4xl text-brand-blue mb-4">All-in-One Review Toolkit</h2>
@@ -312,7 +312,7 @@ function TestimonialsSection() {
 function PricingSection() {
   const router = useRouter();
   return (
-    <section className="py-20 md:py-28 bg-brand-soft">
+    <section id="pricing" className="py-20 md:py-28 bg-brand-soft scroll-mt-20">
       <div className="max-w-6xl mx-auto px-6">
         <div className="text-center mb-12">
           <h2 className="font-outfit font-bold text-3xl md:text-4xl text-brand-blue mb-3">Simple, Transparent Pricing</h2>
@@ -382,7 +382,7 @@ function PricingSection() {
 function FAQSection() {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
   return (
-    <section className="py-20 md:py-28 bg-white">
+    <section id="faq" className="py-20 md:py-28 bg-white scroll-mt-20">
       <div className="max-w-3xl mx-auto px-6">
         <h2 className="font-outfit font-bold text-3xl md:text-4xl text-brand-blue text-center mb-12">Frequently Asked Questions</h2>
         <div className="space-y-4">
@@ -449,14 +449,24 @@ function Navbar() {
 
   const handleLogout = async () => { await supabase.auth.signOut(); setUser(null); router.push("/"); router.refresh(); };
 
+  // 修复: 添加平滑滚动处理函数
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.pushState(null, "", `#${id}`);
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-20 bg-white/85 backdrop-blur-md border-b border-[#E9F1FA]">
       <div className="max-w-6xl mx-auto px-6 h-full flex items-center justify-between">
         <Link href="/" className="font-outfit font-bold text-xl text-brand-blue">ReviewFlow</Link>
         <div className="hidden md:flex items-center gap-8 text-sm text-brand-muted">
-          <a href="#features" className="hover:text-brand-blue transition-colors">Features</a>
-          <a href="#pricing" className="hover:text-brand-blue transition-colors">Pricing</a>
-          <a href="#faq" className="hover:text-brand-blue transition-colors">FAQ</a>
+          <a href="#features" onClick={(e) => scrollToSection(e, "features")} className="hover:text-brand-blue transition-colors cursor-pointer">Features</a>
+          <a href="#pricing" onClick={(e) => scrollToSection(e, "pricing")} className="hover:text-brand-blue transition-colors cursor-pointer">Pricing</a>
+          <a href="#faq" onClick={(e) => scrollToSection(e, "faq")} className="hover:text-brand-blue transition-colors cursor-pointer">FAQ</a>
         </div>
         <div className="flex items-center gap-4">
           {user ? (
@@ -486,6 +496,13 @@ function Navbar() {
 
 // ==================== Main Page ====================
 export default function HomePage() {
+  // 修复: 添加全局平滑滚动
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.style.scrollBehavior = "smooth";
+    }
+  }, []);
+
   return (
     <main className="min-h-screen">
       <Navbar />
