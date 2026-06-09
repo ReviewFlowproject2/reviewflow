@@ -14,23 +14,50 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isValidLink, setIsValidLink] = useState(false);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // 检查 URL 中是否有 access_token（Supabase 重置链接会带）
+  // 检查 URL 中是否有 code 参数（PKCE 模式）
   useEffect(() => {
-    const hash = window.location.hash;
-    if (!hash.includes("access_token") && !hash.includes("type=recovery")) {
-      setError("Invalid or expired reset link. Please request a new one.");
+    const url = new URL(window.location.href);
+    const code = url.searchParams.get("code");
+    const type = url.searchParams.get("type");
+
+    if (code && type === "recovery") {
+      // 有 code 且 type=recovery，说明是有效的重置链接
+      setIsValidLink(true);
+
+      // 交换 code 获取 session（这样 updateUser 才能工作）
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          console.error("Exchange code error:", error);
+          setError("Invalid or expired reset link. Please request a new one.");
+          setIsValidLink(false);
+        }
+      });
+    } else {
+      // 兼容旧版：检查 hash 中的 access_token
+      const hash = window.location.hash;
+      if (hash.includes("access_token") && hash.includes("type=recovery")) {
+        setIsValidLink(true);
+      } else {
+        setError("Invalid or expired reset link. Please request a new one.");
+      }
     }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!isValidLink) {
+      setError("Invalid or expired reset link. Please request a new one.");
+      return;
+    }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
@@ -54,7 +81,6 @@ export default function ResetPasswordPage() {
     setSuccess(true);
     setLoading(false);
 
-    // 3秒后自动跳转登录页
     setTimeout(() => {
       router.push("/login");
     }, 3000);
@@ -148,7 +174,7 @@ export default function ResetPasswordPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !isValidLink}
                   className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
                 >
                   {loading ? "Updating..." : "Reset Password"}
