@@ -44,9 +44,9 @@ export default function ForgotPasswordPage() {
       }
     }
 
-    // 关键修改：redirectTo 指向 /auth/callback，由 callback 处理后再跳转到 reset-password
+    // 直接跳转到 reset-password，由 Supabase 验证 token 后自动带上 code 参数
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {

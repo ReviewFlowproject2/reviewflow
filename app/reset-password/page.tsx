@@ -21,17 +21,22 @@ export default function ResetPasswordPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // 检查 URL 中是否有 code 参数（PKCE 模式）
   useEffect(() => {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
     const type = url.searchParams.get("type");
+    const errorParam = url.searchParams.get("error");
+    const errorDescription = url.searchParams.get("error_description");
+
+    if (errorParam) {
+      setError(decodeURIComponent(errorDescription || "Link expired or invalid"));
+      setIsValidLink(false);
+      return;
+    }
 
     if (code && type === "recovery") {
-      // 有 code 且 type=recovery，说明是有效的重置链接
       setIsValidLink(true);
-
-      // 交换 code 获取 session（这样 updateUser 才能工作）
+      // 交换 code 获取 session（updateUser 需要 session）
       supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
         if (error) {
           console.error("Exchange code error:", error);
@@ -40,13 +45,8 @@ export default function ResetPasswordPage() {
         }
       });
     } else {
-      // 兼容旧版：检查 hash 中的 access_token
-      const hash = window.location.hash;
-      if (hash.includes("access_token") && hash.includes("type=recovery")) {
-        setIsValidLink(true);
-      } else {
-        setError("Invalid or expired reset link. Please request a new one.");
-      }
+      setError("Invalid or expired reset link. Please request a new one.");
+      setIsValidLink(false);
     }
   }, []);
 
@@ -126,6 +126,13 @@ export default function ResetPasswordPage() {
               {error && (
                 <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
                   {error}
+                  {error.includes("expired") && (
+                    <div className="mt-2">
+                      <Link href="/forgot-password" className="text-brand-blue font-semibold hover:underline text-sm">
+                        Request new link &rarr;
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
 
