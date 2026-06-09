@@ -15,39 +15,30 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isValidLink, setIsValidLink] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  // 检查是否有 session（Supabase 密码重置流程会设置 session）
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const code = url.searchParams.get("code");
-    const type = url.searchParams.get("type");
-    const errorParam = url.searchParams.get("error");
-    const errorDescription = url.searchParams.get("error_description");
+    const checkSession = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-    if (errorParam) {
-      setError(decodeURIComponent(errorDescription || "Link expired or invalid"));
-      setIsValidLink(false);
-      return;
-    }
+      if (sessionError || !session) {
+        setError("Invalid or expired reset link. Please request a new one.");
+        setIsValidLink(false);
+      } else {
+        // 有 session，说明是有效的重置流程
+        setIsValidLink(true);
+      }
 
-    if (code && type === "recovery") {
-      setIsValidLink(true);
-      // 交换 code 获取 session（updateUser 需要 session）
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          console.error("Exchange code error:", error);
-          setError("Invalid or expired reset link. Please request a new one.");
-          setIsValidLink(false);
-        }
-      });
-    } else {
-      setError("Invalid or expired reset link. Please request a new one.");
-      setIsValidLink(false);
-    }
+      setChecking(false);
+    };
+
+    checkSession();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,6 +76,17 @@ export default function ResetPasswordPage() {
       router.push("/login");
     }, 3000);
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-brand-muted text-sm">Verifying link...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
