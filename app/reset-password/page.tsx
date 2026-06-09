@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -14,15 +14,45 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  // 检查是否有 session（Supabase recovery 流程会自动设置 session）
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        // 有 session，说明是有效的 recovery 流程
+        setHasSession(true);
+      } else {
+        // 没有 session，检查 URL 是否有 error
+        const url = new URL(window.location.href);
+        const errorParam = url.searchParams.get("error");
+        if (errorParam) {
+          setError("Invalid or expired reset link. Please request a new one.");
+        }
+      }
+
+      setChecking(false);
+    };
+
+    checkSession();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!hasSession) {
+      setError("Invalid or expired reset link. Please request a new one.");
+      return;
+    }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
@@ -35,28 +65,7 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    // 从 URL 获取 access_token
-    const url = new URL(window.location.href);
-    const accessToken = url.searchParams.get("access_token");
-
-    if (!accessToken) {
-      setError("Invalid or expired reset link. Please request a new one.");
-      setLoading(false);
-      return;
-    }
-
-    // 设置 session，然后更新密码
-    const { error: sessionError } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: "",
-    });
-
-    if (sessionError) {
-      setError(sessionError.message);
-      setLoading(false);
-      return;
-    }
-
+    // 直接更新密码（session 已存在）
     const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
@@ -67,11 +76,18 @@ export default function ResetPasswordPage() {
 
     setSuccess(true);
     setLoading(false);
-
-    setTimeout(() => {
-      router.push("/login");
-    }, 3000);
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-brand-muted text-sm">Verifying link...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
@@ -92,7 +108,7 @@ export default function ResetPasswordPage() {
                 Password Updated
               </h1>
               <p className="text-brand-muted text-sm mb-4">
-                Your password has been successfully reset. Redirecting to login...
+                Your password has been successfully reset.
               </p>
               <Link
                 href="/login"
@@ -168,7 +184,7 @@ export default function ResetPasswordPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !hasSession}
                   className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
                 >
                   {loading ? "Updating..." : "Reset Password"}
