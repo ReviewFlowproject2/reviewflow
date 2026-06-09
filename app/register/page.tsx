@@ -4,31 +4,53 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { Eye, EyeOff, CheckCircle, Star, Users, Shield } from "lucide-react";
+import { Eye, EyeOff, CheckCircle, Star, Users, Shield, Building2, Phone, User } from "lucide-react";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    clinicName: "",
+    doctorName: "",
+    phone: "",
+    email: "",
+    password: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
+    // 验证
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
+      email: formData.email,
+      password: formData.password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          full_name: formData.doctorName,
+          clinic_name: formData.clinicName,
+          phone: formData.phone,
+        },
       },
     });
 
@@ -42,26 +64,8 @@ export default function RegisterPage() {
       return;
     }
 
-    // 用户已存在（未验证邮箱）→ signUp 不报错，但无 session
-    if (data.user && !data.session) {
-      setError("This email is already registered. Please log in instead.");
-      setLoading(false);
-      return;
-    }
-
-    // 新用户注册成功
-    if (data.user) {
-      await supabase.from("businesses").insert({
-        user_id: data.user.id,
-        owner_email: email,
-        name: "My Clinic",
-        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        google_review_link: "",
-        plan: "free",
-      });
-      router.push("/verify-email");
-    }
-
+    // 注册成功，显示验证提示
+    setSuccess(true);
     setLoading(false);
   };
 
@@ -81,6 +85,48 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <Link href="/" className="font-outfit font-bold text-2xl text-brand-blue">
+              ReviewFlow
+            </Link>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-[#E0E7F1] p-8 shadow-card text-center">
+            <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <h1 className="font-outfit font-bold text-xl text-brand-dark mb-2">
+              Check Your Email
+            </h1>
+            <p className="text-brand-muted text-sm mb-4">
+              We sent a verification link to{" "}
+              <span className="font-semibold text-brand-dark">{formData.email}</span>.<br />
+              Click the link to activate your account and start using ReviewFlow.
+            </p>
+            <div className="bg-blue-50 rounded-lg p-4 mb-4 text-left">
+              <p className="text-sm text-blue-700 font-medium mb-1">What&apos;s next?</p>
+              <ul className="text-sm text-blue-600 space-y-1">
+                <li>1. Open your email inbox</li>
+                <li>2. Click the verification link</li>
+                <li>3. You&apos;ll be automatically logged in</li>
+              </ul>
+            </div>
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors"
+            >
+              Go to Log In
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
@@ -145,13 +191,59 @@ export default function RegisterPage() {
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
+              <label className="block text-sm font-semibold text-brand-dark mb-1.5">
+                <Building2 size={14} className="inline mr-1" />Clinic Name
+              </label>
+              <input
+                type="text"
+                name="clinicName"
+                required
+                placeholder="e.g., Smile Dental Care"
+                value={formData.clinicName}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-brand-dark mb-1.5">
+                <User size={14} className="inline mr-1" />Doctor / Owner Name
+              </label>
+              <input
+                type="text"
+                name="doctorName"
+                required
+                placeholder="Dr. John Smith"
+                value={formData.doctorName}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-brand-dark mb-1.5">
+                <Phone size={14} className="inline mr-1" />Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                required
+                placeholder="+1 (555) 123-4567"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-semibold text-brand-dark mb-1.5">Email</label>
               <input
                 type="email"
+                name="email"
                 required
                 placeholder="you@clinic.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
                 className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
               />
             </div>
@@ -161,11 +253,12 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   required
                   minLength={6}
                   placeholder="Create a password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleChange}
                   className="w-full rounded-xl border border-brand-soft p-3 pr-10 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                 />
                 <button
