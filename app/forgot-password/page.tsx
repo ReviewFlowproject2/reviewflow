@@ -35,8 +35,6 @@ export default function ForgotPasswordPage() {
         password: "dummy-check-password-12345",
       });
 
-      // 如果返回 "Invalid login credentials"，说明用户存在（只是密码错）
-      // 如果返回 "Invalid login credentials" 以外的错误，可能是用户不存在
       const userExists = signInError && signInError.message.includes("Invalid login credentials");
 
       if (!userExists) {
@@ -46,8 +44,9 @@ export default function ForgotPasswordPage() {
       }
     }
 
+    // 关键修改：redirectTo 指向 /auth/callback，由 callback 处理后再跳转到 reset-password
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/callback`,
     });
 
     if (error) {
