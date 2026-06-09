@@ -21,6 +21,31 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError("");
 
+    // 先检查邮箱是否已注册
+    const { data: existingUser, error: checkError } = await supabase
+      .from("businesses")
+      .select("id, owner_email")
+      .eq("owner_email", email)
+      .single();
+
+    if (!existingUser) {
+      // 再检查 auth.users
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: "dummy-check-password-12345",
+      });
+
+      // 如果返回 "Invalid login credentials"，说明用户存在（只是密码错）
+      // 如果返回 "Invalid login credentials" 以外的错误，可能是用户不存在
+      const userExists = signInError && signInError.message.includes("Invalid login credentials");
+
+      if (!userExists) {
+        setError("No account found with this email. Please check your email or sign up.");
+        setLoading(false);
+        return;
+      }
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -77,6 +102,13 @@ export default function ForgotPasswordPage() {
               {error && (
                 <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
                   {error}
+                  {error.includes("No account found") && (
+                    <div className="mt-2">
+                      <Link href="/register" className="text-brand-blue font-semibold hover:underline text-sm">
+                        Sign up here &rarr;
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
 
