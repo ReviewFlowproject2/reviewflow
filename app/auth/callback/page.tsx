@@ -14,7 +14,7 @@ export default function AuthCallbackPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      // 修复: 处理 URL 中的 code 参数（magic link / email confirmation）
+      // 处理 URL 中的 code 参数（magic link / email confirmation / recovery）
       const url = new URL(window.location.href);
       const code = url.searchParams.get("code");
       const type = url.searchParams.get("type");
@@ -47,6 +47,7 @@ export default function AuthCallbackPage() {
       if (!existingBiz) {
         await supabase.from("businesses").insert({
           user_id: session.user.id,
+          owner_email: session.user.email,
           name: session.user.user_metadata?.full_name || "My Clinic",
           trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
           google_review_link: "",
@@ -54,12 +55,12 @@ export default function AuthCallbackPage() {
         });
       }
 
-      // 修复: 根据 type 参数决定跳转目标
-      // type=recovery -> 重置密码页面
+      // 根据 type 参数决定跳转目标
+      // type=recovery -> 重置密码页面（带上 code 参数）
       // type=signup/invite -> 验证成功页面
       // 其他 -> Dashboard
-      if (type === "recovery") {
-        router.push("/reset-password");
+      if (type === "recovery" && code) {
+        router.push(`/reset-password?code=${code}&type=recovery`);
       } else {
         router.push("/dashboard");
       }
