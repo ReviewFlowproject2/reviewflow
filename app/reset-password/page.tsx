@@ -45,11 +45,19 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // 使用 access_token 更新密码
-    const { error: updateError } = await supabase.auth.updateUser(
-      { password },
-      { accessToken }
-    );
+    // 设置 session，然后更新密码
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: "",
+    });
+
+    if (sessionError) {
+      setError(sessionError.message);
+      setLoading(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
       setError(updateError.message);
