@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -14,41 +14,15 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [isValidLink, setIsValidLink] = useState(false);
-  const [checking, setChecking] = useState(true);
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
 
-  // 检查是否有 session（Supabase 密码重置流程会设置 session）
-  useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError || !session) {
-        setError("Invalid or expired reset link. Please request a new one.");
-        setIsValidLink(false);
-      } else {
-        // 有 session，说明是有效的重置流程
-        setIsValidLink(true);
-      }
-
-      setChecking(false);
-    };
-
-    checkSession();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    if (!isValidLink) {
-      setError("Invalid or expired reset link. Please request a new one.");
-      return;
-    }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters");
@@ -61,10 +35,24 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
 
-    const { error } = await supabase.auth.updateUser({ password });
+    // 从 URL 获取 access_token
+    const url = new URL(window.location.href);
+    const accessToken = url.searchParams.get("access_token");
 
-    if (error) {
-      setError(error.message);
+    if (!accessToken) {
+      setError("Invalid or expired reset link. Please request a new one.");
+      setLoading(false);
+      return;
+    }
+
+    // 使用 access_token 更新密码
+    const { error: updateError } = await supabase.auth.updateUser(
+      { password },
+      { accessToken }
+    );
+
+    if (updateError) {
+      setError(updateError.message);
       setLoading(false);
       return;
     }
@@ -76,17 +64,6 @@ export default function ResetPasswordPage() {
       router.push("/login");
     }, 3000);
   };
-
-  if (checking) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-brand-muted text-sm">Verifying link...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
@@ -183,7 +160,7 @@ export default function ResetPasswordPage() {
 
                 <button
                   type="submit"
-                  disabled={loading || !isValidLink}
+                  disabled={loading}
                   className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
                 >
                   {loading ? "Updating..." : "Reset Password"}
