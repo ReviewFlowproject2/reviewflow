@@ -24,33 +24,6 @@ export default function RegisterPage() {
     setLoading(true);
     setError("");
 
-    // 先检查邮箱是否已注册
-    const { data: existingUser, error: checkError } = await supabase
-      .from("businesses")
-      .select("id, owner_email")
-      .eq("owner_email", email)
-      .single();
-
-    if (existingUser) {
-      setError("This email is already registered. Please log in instead.");
-      setLoading(false);
-      return;
-    }
-
-    // 同时检查 auth.users（更可靠）
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password: "dummy-check-password-12345",
-    });
-
-    // 如果能登录（虽然密码错），说明用户存在
-    if (signInError && signInError.message.includes("Invalid login credentials")) {
-      // 用户存在，密码错误，说明已注册
-      setError("This email is already registered. Please log in instead.");
-      setLoading(false);
-      return;
-    }
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -60,7 +33,6 @@ export default function RegisterPage() {
     });
 
     if (error) {
-      // 处理 Supabase 返回的已注册错误
       if (error.message.includes("already registered") || error.message.includes("already exists")) {
         setError("This email is already registered. Please log in instead.");
       } else {
@@ -70,9 +42,15 @@ export default function RegisterPage() {
       return;
     }
 
-    // 检查是否已存在（signUp 有时不报错但返回已有用户）
-    if (data.user && data.session) {
-      // 新用户，有 session
+    // 用户已存在（未验证邮箱）→ signUp 不报错，但无 session
+    if (data.user && !data.session) {
+      setError("This email is already registered. Please log in instead.");
+      setLoading(false);
+      return;
+    }
+
+    // 新用户注册成功
+    if (data.user) {
       await supabase.from("businesses").insert({
         user_id: data.user.id,
         owner_email: email,
@@ -81,15 +59,10 @@ export default function RegisterPage() {
         google_review_link: "",
         plan: "free",
       });
-      router.push("/dashboard");
-    } else if (data.user && !data.session) {
-      // 用户已存在，需要验证邮箱
-      setError("This email is already registered. Please log in instead.");
-      setLoading(false);
-      return;
-    } else {
       router.push("/verify-email");
     }
+
+    setLoading(false);
   };
 
   const handleGoogleRegister = async () => {
