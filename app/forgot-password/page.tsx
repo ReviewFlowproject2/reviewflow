@@ -21,32 +21,27 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setError("");
 
-    // 先检查邮箱是否已注册
-    const { data: existingUser, error: checkError } = await supabase
-      .from("businesses")
-      .select("id, owner_email")
-      .eq("owner_email", email)
-      .single();
+    // 先检查用户是否存在且已验证
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password: "dummy-check-password-12345",
+    });
 
-    if (!existingUser) {
-      // 再检查 auth.users
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: "dummy-check-password-12345",
-      });
-
-      const userExists = signInError && signInError.message.includes("Invalid login credentials");
-
-      if (!userExists) {
-        setError("No account found with this email. Please check your email or sign up.");
-        setLoading(false);
-        return;
-      }
+    // 如果返回 "Invalid login credentials"，可能是用户不存在或密码错
+    // 我们无法区分，但如果是 "Email not confirmed"，说明用户存在但未验证
+    if (signInError?.message.includes("Email not confirmed")) {
+      setError("This email is registered but not verified. Please check your inbox for the verification email.");
+      setLoading(false);
+      return;
     }
 
-    // 直接跳转到 reset-password，由 Supabase 验证 token 后自动带上 code 参数
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    // 使用 Magic Link 代替重置密码
+    // 用户点击邮件后直接登录，然后可以修改密码
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard?action=reset-password`,
+      },
     });
 
     if (error) {
@@ -77,10 +72,19 @@ export default function ForgotPasswordPage() {
                 Check Your Email
               </h1>
               <p className="text-brand-muted text-sm mb-6">
-                We sent a password reset link to{" "}
+                We sent a secure login link to{" "}
                 <span className="font-semibold text-brand-dark">{email}</span>.<br />
-                Click the link in the email to set a new password.
+                Click the link to log in and reset your password from your account settings.
               </p>
+              <div className="bg-blue-50 rounded-lg p-4 mb-4 text-left">
+                <p className="text-sm text-blue-700 font-medium mb-1">What&apos;s next?</p>
+                <ul className="text-sm text-blue-600 space-y-1">
+                  <li>1. Open your email inbox</li>
+                  <li>2. Click the secure login link</li>
+                  <li>3. You&apos;ll be logged in automatically</li>
+                  <li>4. Go to Settings to change your password</li>
+                </ul>
+              </div>
               <Link
                 href="/login"
                 className="inline-flex items-center gap-2 text-sm text-brand-blue font-semibold hover:underline"
@@ -95,16 +99,16 @@ export default function ForgotPasswordPage() {
                 Reset Password
               </h1>
               <p className="text-brand-muted text-sm text-center mb-6">
-                Enter your email and we&apos;ll send you a link to reset your password.
+                Enter your email and we&apos;ll send you a secure login link to reset your password.
               </p>
 
               {error && (
                 <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
                   {error}
-                  {error.includes("No account found") && (
+                  {error.includes("not verified") && (
                     <div className="mt-2">
-                      <Link href="/register" className="text-brand-blue font-semibold hover:underline text-sm">
-                        Sign up here &rarr;
+                      <Link href="/login" className="text-brand-blue font-semibold hover:underline text-sm">
+                        Log in here &rarr;
                       </Link>
                     </div>
                   )}
@@ -132,7 +136,7 @@ export default function ForgotPasswordPage() {
                   disabled={loading}
                   className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
                 >
-                  {loading ? "Sending..." : "Send Reset Link"}
+                  {loading ? "Sending..." : "Send Login Link"}
                 </button>
               </form>
 
