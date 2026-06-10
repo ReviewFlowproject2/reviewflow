@@ -7,7 +7,7 @@ import {
   Star, MessageCircle, AlertTriangle, ShieldAlert, CheckCircle, Check,
   Search, Plus, LogOut, Settings, Users, Home, ExternalLink, QrCode, Mail,
   X, UserCheck, Stethoscope, RefreshCw, Clock, Zap, CheckSquare, MessageSquare,
-  TrendingUp, Calendar, BarChart3, Building2, Bell
+  TrendingUp, Calendar, BarChart3, Building2, Bell, Lock, Eye, EyeOff
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -184,11 +184,56 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ newReviews: 0, avgRating: 0, pendingAlerts: 0, emailSuccess: 0 });
   const [trendDays, setTrendDays] = useState<7 | 30>(7);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [trialExpired, setTrialExpired] = useState(false);
+
+  // ---- 密码重置对话框 ----
+  const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
+  const [recoveryPassword, setRecoveryPassword] = useState("");
+  const [recoveryConfirm, setRecoveryConfirm] = useState("");
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryDone, setRecoveryDone] = useState(false);
+  const [recoveryError, setRecoveryError] = useState("");
+  const [recoveryShowPw, setRecoveryShowPw] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem("reviewflow_banner_dismissed");
     if (dismissed) setBannerDismissed(true);
   }, []);
+
+  // 检测 URL 参数 type=recovery，弹出密码修改对话框
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("type") === "recovery") {
+        setShowRecoveryDialog(true);
+      }
+    }
+  }, []);
+
+  const handleRecoverySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRecoveryError("");
+    if (recoveryPassword.length < 6) {
+      setRecoveryError("Password must be at least 6 characters");
+      return;
+    }
+    if (recoveryPassword !== recoveryConfirm) {
+      setRecoveryError("Passwords do not match");
+      return;
+    }
+    setRecoveryLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: recoveryPassword });
+    if (error) {
+      setRecoveryError(error.message);
+    } else {
+      setRecoveryDone(true);
+      // 清除 URL 中的 type=recovery 参数
+      const url = new URL(window.location.href);
+      url.searchParams.delete("type");
+      window.history.replaceState({}, "", url.toString());
+    }
+    setRecoveryLoading(false);
+  };
 
   const dismissBanner = () => {
     setBannerDismissed(true);
@@ -222,7 +267,15 @@ export default function DashboardPage() {
         console.error("Business fetch error:", bizError);
       }
 
-      if (biz) setBusiness(biz);
+      if (biz) {
+        setBusiness(biz);
+        // 检查 trial 是否过期
+        if (biz.trial_ends_at) {
+          const endDate = new Date(biz.trial_ends_at);
+          const now = new Date();
+          setTrialExpired(endDate <= now);
+        }
+      }
       const businessId = biz?.id;
 
       // 修复: 只使用 business_id 查询 patients，不使用 user_id
@@ -244,8 +297,11 @@ export default function DashboardPage() {
           pts = data;
         }
       } else {
-        // 没有 business 记录，提示用户设置
-        addToast("Please set up your clinic in Settings first", "error");
+        // 没有 business 记录 — 使用 localStorage 避免每次都弹 toast
+        const dismissed = localStorage.getItem("reviewflow_clinic_banner_dismissed");
+        if (!dismissed) {
+          addToast("Please set up your clinic in Settings first", "error");
+        }
       }
 
       if (pts) setPatients(pts);
@@ -351,6 +407,7 @@ export default function DashboardPage() {
   };
 
   const handleSendEmail = async (patientId: string, hasEmail: boolean) => {
+    if (trialExpired) { addToast("Trial expired — please upgrade to send emails", "error"); return; }
     if (!hasEmail) { addToast("This patient has no email address. Please update patient info.", "error"); return; }
     setSendingId(patientId);
     try {
@@ -436,12 +493,29 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+        {/* Trial Expired Banner */}
+        {trialExpired && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+              <div>
+                <p className="text-red-700 text-sm font-semibold">Trial Expired</p>
+                <p className="text-red-600 text-xs">Your free trial has ended. Upgrade to continue using all features.</p>
+              </div>
+            </div>
+            <Link href="/dashboard/support" className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors shrink-0">
+              Upgrade Now
+            </Link>
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="font-outfit font-bold text-2xl text-brand-dark">Overview</h1>
             <p className="text-brand-muted text-sm mt-1">Welcome back, {business?.name || "Your Clinic"}</p>
           </div>
-          <Link href="/patients/import" className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-xl hover:bg-brand-dark transition-colors"><Plus size={16} />Import Patients</Link>
+          <Link href={trialExpired ? "/dashboard/support" : "/patients/import"} className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors ${trialExpired ? "bg-red-500 hover:bg-red-600" : "bg-brand-blue hover:bg-brand-dark"}`}>
+            {trialExpired ? <><AlertTriangle size={16} />Upgrade to Import</> : <><Plus size={16} />Import Patients</>}
+          </Link>
         </div>
 
         {/* Stats Cards */}
@@ -560,6 +634,83 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* ---- 密码重置对话框 ---- */}
+      {showRecoveryDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-8 w-full max-w-md mx-4">
+            {recoveryDone ? (
+              <div className="text-center">
+                <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-7 h-7 text-green-500" />
+                </div>
+                <h2 className="font-outfit font-bold text-xl text-brand-dark mb-2">Password Updated</h2>
+                <p className="text-brand-muted text-sm mb-4">Your password has been successfully reset.</p>
+                <button
+                  onClick={() => setShowRecoveryDialog(false)}
+                  className="px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors"
+                >
+                  Continue to Dashboard
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center">
+                    <Lock size={20} className="text-brand-blue" />
+                  </div>
+                  <div>
+                    <h2 className="font-outfit font-bold text-lg text-brand-dark">Set New Password</h2>
+                    <p className="text-xs text-brand-muted">Create a new password for your account</p>
+                  </div>
+                </div>
+                {recoveryError && (
+                  <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg flex items-center gap-2">
+                    <AlertTriangle size={14} />{recoveryError}
+                  </div>
+                )}
+                <form onSubmit={handleRecoverySubmit} className="space-y-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-brand-dark mb-1.5">New Password</label>
+                    <div className="relative">
+                      <input
+                        type={recoveryShowPw ? "text" : "password"}
+                        required
+                        minLength={6}
+                        placeholder="Enter new password"
+                        value={recoveryPassword}
+                        onChange={(e) => setRecoveryPassword(e.target.value)}
+                        className="w-full rounded-xl border border-brand-soft p-3 pr-10 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+                      />
+                      <button type="button" onClick={() => setRecoveryShowPw(!recoveryShowPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted">
+                        {recoveryShowPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-brand-dark mb-1.5">Confirm Password</label>
+                    <input
+                      type={recoveryShowPw ? "text" : "password"}
+                      required
+                      placeholder="Confirm new password"
+                      value={recoveryConfirm}
+                      onChange={(e) => setRecoveryConfirm(e.target.value)}
+                      className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={recoveryLoading}
+                    className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  >
+                    {recoveryLoading ? "Updating..." : "Reset Password"}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

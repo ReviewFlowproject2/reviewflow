@@ -72,10 +72,36 @@ export default function SettingsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
+    // 先查询是否存在 business 记录
+    const { data: existing } = await supabase
       .from("businesses")
-      .update({ name: clinicName, google_review_link: googleLink })
-      .eq("user_id", user.id);
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    let error: any = null;
+
+    if (existing) {
+      // 存在则更新
+      const res = await supabase
+        .from("businesses")
+        .update({ name: clinicName, google_review_link: googleLink })
+        .eq("user_id", user.id);
+      error = res.error;
+    } else {
+      // 不存在则插入新记录
+      const res = await supabase
+        .from("businesses")
+        .insert({
+          user_id: user.id,
+          name: clinicName,
+          owner_email: user.email,
+          google_review_link: googleLink,
+          plan: "free",
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+      error = res.error;
+    }
 
     if (error) {
       showToast(error.message, "error");
@@ -83,6 +109,8 @@ export default function SettingsPage() {
       setOriginalClinicName(clinicName);
       setOriginalGoogleLink(googleLink);
       showToast("Clinic info saved successfully", "success");
+      // 清除 dashboard 的 clinic 提示
+      localStorage.setItem("reviewflow_clinic_banner_dismissed", "true");
     }
     setSaving(false);
   };

@@ -37,12 +37,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Patient has no email address" }, { status: 400 });
     }
 
-    // 获取诊所信息
+    // 获取诊所信息（含 trial 状态）
     const { data: business } = await supabase
       .from("businesses")
-      .select("name, google_review_link")
+      .select("name, google_review_link, trial_ends_at, plan")
       .eq("user_id", user.id)
       .single();
+
+    // 检查 trial 是否过期（free 和 pro 用户）
+    if (business && business.plan !== "agency" && business.trial_ends_at) {
+      const trialEnd = new Date(business.trial_ends_at);
+      const now = new Date();
+      if (trialEnd <= now) {
+        return NextResponse.json(
+          { success: false, error: "Trial expired. Please upgrade your plan to send emails." },
+          { status: 403 }
+        );
+      }
+    }
 
     const clinicName = business?.name || "Your Dental Clinic";
     const reviewLink = business?.google_review_link || "https://www.google.com/search?q=review";

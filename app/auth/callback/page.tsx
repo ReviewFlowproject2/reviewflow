@@ -56,11 +56,11 @@ export default function AuthCallbackPage() {
       }
 
       // 根据 type 参数决定跳转目标
-      // type=recovery -> 重置密码页面（带上 code 参数）
+      // type=recovery -> Dashboard（密码重置对话框在 dashboard 中弹出）
       // type=signup/invite -> 验证成功页面
       // 其他 -> Dashboard
-      if (type === "recovery" && code) {
-        router.push(`/reset-password?code=${code}&type=recovery`);
+      if (type === "recovery") {
+        router.push("/dashboard?type=recovery");
       } else {
         router.push("/dashboard");
       }
