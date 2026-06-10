@@ -283,7 +283,7 @@ export default function QRCodePage(){
         </button>))}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {[{l:"Clinic Name",v:cname,s:setCname},{l:"Doctor Name",v:dr,s:setDr,ph:"Dr. Smith"},{l:"Title",v:title,s:setTitle,ph:"Dentist"},{l:"Phone",v:phone,s:setPhone,ph:"555-123-4567"},{l:"Website",v:web,s:setWeb,ph:"clinic.com"}].map(f=>(<div key={f.l}><label className="text-xs text-brand-muted mb-1 block">{f.l}</label><input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.ph||""} className="w-full rounded-lg border px-2 py-1.5 text-sm"/></div>))}
+        {[{l:"Clinic Name",v:cname,s:setCname},{l:"Doctor Name",v:dr,s:setDr,ph:"Dr. Smith"},{l:"Card Tagline",v:title,s:setTitle,ph:"Your smile is our priority"},{l:"Phone",v:phone,s:setPhone,ph:"555-123-4567"},{l:"Website",v:web,s:setWeb,ph:"clinic.com"}].map(f=>(<div key={f.l}><label className="text-xs text-brand-muted mb-1 block">{f.l}</label><input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.ph||""} className="w-full rounded-lg border px-2 py-1.5 text-sm"/></div>))}
       </div>
     </div>
 
@@ -350,8 +350,10 @@ export default function QRCodePage(){
             {t.cf_contact&&<p className="text-center mt-[6%] px-3 leading-relaxed" style={{fontFamily:t.cf_contactFont,fontSize:10,color:t.cf_contactColor}}>
               {phone||"555-123-4567"}<br/>{web||"www.clinic.com"}
             </p>}
-            {/* Script / Thank you */}
-            {t.cf_script&&<p className="text-center mt-auto mb-[6%] px-3" style={{fontFamily:t.cf_scriptFont,fontSize:14,color:t.cf_scriptColor}}>{t.cf_script}</p>}
+            {/* Custom tagline from Title field — replaces hardcoded script text */}
+            {title&&<p className="text-center mt-auto mb-[8%] px-3" style={{fontFamily:t.cf_scriptFont||"'Dancing Script',cursive",fontSize:14,color:t.cf_scriptColor||t.cf_nameColor}}>{title}</p>}
+            {/* Fallback: show default script text if no custom title */}
+            {!title&&t.cf_script&&<p className="text-center mt-auto mb-[8%] px-3" style={{fontFamily:t.cf_scriptFont,fontSize:14,color:t.cf_scriptColor}}>{t.cf_script}</p>}
           </div>
           <button onClick={()=>dl(fRef.current,`card-front-${sel}.png`)} className="mt-3 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-dark inline-flex items-center gap-2"><Download size={14}/>Download</button>
         </div>
