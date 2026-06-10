@@ -260,33 +260,25 @@ export default function DashboardPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/login"); return; }
 
-      // 获取 business
-      const { data: biz, error: bizError } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      let bizData = biz;
-      // 如果没有 business 记录，通过服务端 API 自动创建（绕过 RLS）
-      if (!bizData || bizError) {
-        if (bizError) console.error("Business fetch error:", bizError);
-        try {
-          const res = await fetch("/api/business/ensure", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: user.user_metadata?.clinic_name || user.user_metadata?.full_name || "" }),
-          });
-          const result = await res.json();
-          if (result.success && result.business) {
-            bizData = result.business;
-            if (result.created) {
-              addToast("Welcome! Your clinic has been set up.", "success");
-            }
+      // 始终通过服务端 API 获取/创建 business（绕过 RLS）
+      let bizData: any = null;
+      try {
+        const res = await fetch("/api/business/ensure", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const result = await res.json();
+        if (result.success && result.business) {
+          bizData = result.business;
+          if (result.created) {
+            addToast("Welcome! Your clinic has been set up.", "success");
           }
-        } catch (e) {
-          console.error("Failed to ensure business:", e);
+        } else {
+          console.error("Business ensure failed:", result.error);
         }
+      } catch (e) {
+        console.error("Failed to ensure business:", e);
       }
 
       if (bizData) {
@@ -296,10 +288,7 @@ export default function DashboardPage() {
       }
       const businessId = bizData?.id;
 
-      // 修复: 只使用 business_id 查询 patients，不使用 user_id
-      // 因为 patients 表结构只有 business_id，没有 user_id
       let pts: Patient[] | null = null;
-
       if (businessId) {
         const { data, error } = await supabase
           .from("patients")
@@ -310,15 +299,8 @@ export default function DashboardPage() {
 
         if (error) {
           console.error("Patients fetch error:", error);
-          addToast(`Failed to load patients: ${error.message}`, "error");
         } else {
           pts = data;
-        }
-      } else {
-        // 即使 API 创建失败，也只显示一次
-        const dismissed = localStorage.getItem("reviewflow_clinic_banner_dismissed");
-        if (!dismissed) {
-          addToast("Please set up your clinic in Settings first", "error");
         }
       }
 

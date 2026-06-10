@@ -26,12 +26,13 @@ export async function POST(req: NextRequest) {
     const supabaseAdmin = getSupabaseAdmin();
 
     // 2. 用 service role 查询是否已有 business 记录
-    const { data: existing } = await (supabaseAdmin as any)
+    const { data: existingRows } = await (supabaseAdmin as any)
       .from("businesses")
-      .select("id, name, plan, trial_ends_at, google_review_link, subscription_status, subscription_tier")
+      .select("*")
       .eq("user_id", user.id)
-      .maybeSingle();
+      .limit(1);
 
+    const existing = existingRows?.[0];
     if (existing) {
       return NextResponse.json({ success: true, business: existing, created: false });
     }
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
       "My Clinic";
     const reviewLink = googleLink || "";
 
-    const { data: newBiz, error: insertErr } = await (supabaseAdmin as any)
+    const { data: newBizRows, error: insertErr } = await (supabaseAdmin as any)
       .from("businesses")
       .insert({
         user_id: user.id,
@@ -56,12 +57,13 @@ export async function POST(req: NextRequest) {
         trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         subscription_status: "trial",
       })
-      .select("id, name, plan, trial_ends_at, google_review_link, subscription_status, subscription_tier")
-      .single();
+      .select("*");
 
-    if (insertErr) {
+    const newBiz = newBizRows?.[0];
+
+    if (insertErr || !newBiz) {
       console.error("Business insert error:", insertErr);
-      return NextResponse.json({ error: insertErr.message }, { status: 500 });
+      return NextResponse.json({ error: insertErr?.message || "Failed to create business record" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, business: newBiz, created: true });
