@@ -89,8 +89,8 @@ const TPL:TData[]=[
   cb_bg:"#FFFFFF",cb_bgIsGrad:false,cb_bg1:"#FFFFFF",cb_bg2:"#FFFFFF",
   cb_qrDark:"#2F855A",cb_qrLight:"transparent",
   cb_qrWrapBg:"transparent",cb_qrWrapRadius:6,cb_qrBorder:"none",
-  cb_tagline:"Thank you for trusting us with your smile",cb_taglineColor:"#2F855A",cb_taglineFont:"'Montserrat',sans-serif",
-  cb_stars:"",cb_starsColor:"",cb_corner:"",
+  cb_tagline:"",cb_taglineColor:"",cb_taglineFont:"",
+  cb_stars:"★★★★★",cb_starsColor:"#6BC4B0",cb_corner:"",
 },
 {// 03 Elegant Violet — 👑皇冠 + Great Vibes + 深紫渐变
   id:"elegant-violet",name:"Elegant Violet",desc:"高端医美 · 整形",preview:"/images/qr-previews/preview_style_03_violet.jpg",
@@ -114,7 +114,7 @@ const TPL:TData[]=[
   cb_qrDark:"#1A0B2E",cb_qrLight:"#FFFFFF",
   cb_qrWrapBg:"#FFFFFF",cb_qrWrapRadius:6,cb_qrBorder:"2px solid #D4AF37",
   cb_tagline:"",cb_taglineColor:"",cb_taglineFont:"",
-  cb_stars:"★★★",cb_starsColor:"#D4AF37",cb_corner:"",
+  cb_stars:"★★★★★",cb_starsColor:"#D4AF37",cb_corner:"",
 },
 {// 04 Coral Orange — 圆形QR容器 + 白标签 + Dancing Script
   id:"coral-orange",name:"Coral Orange",desc:"家庭诊所 · 理疗",preview:"/images/qr-previews/preview_style_04_coral.jpg",
@@ -138,7 +138,7 @@ const TPL:TData[]=[
   cb_qrDark:"#E07A5F",cb_qrLight:"#FFFFFF",
   cb_qrWrapBg:"#FFFFFF",cb_qrWrapRadius:6,cb_qrBorder:"none",
   cb_tagline:"We'd love your feedback",cb_taglineColor:"#E07A5F",cb_taglineFont:"'Montserrat',sans-serif",
-  cb_stars:"★★",cb_starsColor:"#E07A5F",cb_corner:"",
+  cb_stars:"★★★★★",cb_starsColor:"#E07A5F",cb_corner:"",
 },
 {// 05 Pro Gray — 极简深灰 + Dancing Script + ☆☆ outline
   id:"professional-gray",name:"Pro Gray",desc:"科技诊所 · 专科",preview:"/images/qr-previews/preview_style_05_gray.jpg",
@@ -162,7 +162,7 @@ const TPL:TData[]=[
   cb_qrDark:"#2D2D2D",cb_qrLight:"#FFFFFF",
   cb_qrWrapBg:"#FFFFFF",cb_qrWrapRadius:6,cb_qrBorder:"none",
   cb_tagline:"",cb_taglineColor:"",cb_taglineFont:"",
-  cb_stars:"",cb_starsColor:"",cb_corner:"",
+  cb_stars:"★★★★★",cb_starsColor:"#9CA3AF",cb_corner:"",
 },
 {// 06 Forest Green — 🍃叶子 + Dancing Script + 木质边框
   id:"forest-green",name:"Forest Green",desc:"中医 · 养生",preview:"/images/qr-previews/preview_style_06_forest.jpg",
@@ -186,7 +186,7 @@ const TPL:TData[]=[
   cb_qrDark:"#1B5E20",cb_qrLight:"#FFFFFF",
   cb_qrWrapBg:"#FFFFFF",cb_qrWrapRadius:6,cb_qrBorder:"2px solid #3D7A4F",
   cb_tagline:"",cb_taglineColor:"",cb_taglineFont:"",
-  cb_stars:"",cb_starsColor:"",cb_corner:"",
+  cb_stars:"★★★★★",cb_starsColor:"#3D7A4F",cb_corner:"",
 },
 {// 07 Luxury Gold — ❦四角金花 + 👑皇冠 + Great Vibes + 金边框
   id:"luxury-blue-gold",name:"Luxury Gold",desc:"高端私立 · VIP",preview:"/images/qr-previews/preview_style_07_luxury.jpg",
@@ -210,7 +210,7 @@ const TPL:TData[]=[
   cb_qrDark:"#0F172A",cb_qrLight:"#FFFFFF",
   cb_qrWrapBg:"#FFFFFF",cb_qrWrapRadius:6,cb_qrBorder:"1px solid #D4AF37",
   cb_tagline:"",cb_taglineColor:"",cb_taglineFont:"",
-  cb_stars:"★★★",cb_starsColor:"#D4AF37",cb_corner:"",
+  cb_stars:"★★★★★",cb_starsColor:"#D4AF37",cb_corner:"",
 },
 ];
 
