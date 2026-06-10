@@ -196,27 +196,29 @@ export function getEffectivePlan(business: {
     };
   }
 
-  // 用户手动设置了 plan（pro/agency）但 subscription_status 未配置 → 尊重 plan
+  // 核心逻辑：plan 字段是权威来源
+  // 如果 plan 设为 pro/agency，就按那个来。只有 plan 明确是 free 时才按 trial 判断
   const dbPlan = (business.plan as PlanTier) || "free";
-  if (dbPlan !== "free" && !business.subscription_status) {
+
+  if (dbPlan !== "free") {
+    // plan 被设为 pro 或 agency → 直接使用，不管 trial 状态
     return {
       tier: dbPlan,
       limits: PLAN_LIMITS[dbPlan],
       info: PLAN_INFO[dbPlan],
       isTrialActive: isTrialActive,
       isTrialExpired: isTrialExpired,
-      isPaid: false,
+      isPaid: isPaid,
       trialEndsAt: business.trial_ends_at || null,
     };
   }
 
-  // Trial 未过期 → 使用当前 plan
+  // plan 是 free → 看 trial 状态
   if (isTrialActive) {
-    const tier = (business.plan as PlanTier) || "free";
     return {
-      tier,
-      limits: PLAN_LIMITS[tier],
-      info: PLAN_INFO[tier],
+      tier: "free",
+      limits: PLAN_LIMITS.free,
+      info: PLAN_INFO.free,
       isTrialActive: true,
       isTrialExpired: false,
       isPaid: false,
@@ -224,7 +226,7 @@ export function getEffectivePlan(business: {
     };
   }
 
-  // Trial 已过期 → 退回到 Free
+  // Free + trial 过期
   return {
     tier: "free",
     limits: PLAN_LIMITS.free,

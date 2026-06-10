@@ -409,7 +409,8 @@ export default function SettingsPage() {
                 {[
                   { label: "Email Automation", ok: effectivePlan.limits.emailAutomation },
                   { label: "Review Alerts", ok: effectivePlan.limits.reviewAlerts },
-                  { label: "Competitor Tracking", ok: effectivePlan.tier === "agency" },
+                  { label: `Competitor Tracking (${getLimit(effectivePlan, "maxCompetitors")})`, ok: getLimit(effectivePlan, "maxCompetitors") > 1 },
+                  { label: `Patients (${getLimit(effectivePlan, "maxPatients").toLocaleString()})`, ok: true },
                   { label: "Multi-Clinic", ok: effectivePlan.limits.multiClinic },
                   { label: "White-Label", ok: effectivePlan.limits.whiteLabel },
                   { label: "API Access", ok: effectivePlan.limits.apiAccess },

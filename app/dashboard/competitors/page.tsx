@@ -227,12 +227,12 @@ export default function CompetitorTrackingPage() {
   };
 
   // ==================== Computed ====================
-  const isAgency = effectivePlan.tier === "agency";
   const competitorLimit = getLimit(effectivePlan, "maxCompetitors");
   const atCompetitorLimit = competitors.length >= competitorLimit;
+  const canAccess = effectivePlan.tier !== "free"; // Pro 和 Agency 可进
 
-  // Free/Pro → 直接拦截，只显示升级提示
-  if (!isAgency) {
+  // Free → 拦截，显示升级提示
+  if (!canAccess) {
     return (
       <div className="min-h-screen bg-[#F8FAFF] p-6">
         <div className="max-w-3xl mx-auto">
