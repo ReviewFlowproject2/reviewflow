@@ -244,8 +244,7 @@ export default function QRCodePage(){
   // 生成QR
   useEffect(()=>{
     if(!link)return;
-    const dark=t.d_qrDark,light=t.d_qrLight==="transparent"?"#FFFFFF":t.d_qrLight;
-    QRCode.toDataURL(link,{width:400,margin:2,color:{dark,light},errorCorrectionLevel:"H"}).then(setQr).catch(()=>{});
+    QRCode.toDataURL(link,{width:400,margin:2,color:{dark:"#000000",light:"#FFFFFF"},errorCorrectionLevel:"H"}).then(setQr).catch(()=>{});
   },[link,t.d_qrDark,t.d_qrLight]);
 
   const save=async()=>{if(!link.trim())return;setSave(true);const{data:{user}}=await supabase.auth.getUser();if(user)await supabase.from("businesses").update({google_review_link:link.trim()}).eq("user_id",user.id);setSave(false)};
@@ -296,8 +295,8 @@ export default function QRCodePage(){
         {/* === DESK STAND === */}
         <div className="text-center w-full max-w-[260px]">
           <h3 className="font-semibold text-sm text-brand-dark mb-3">Desk Stand <span className="text-xs text-brand-muted font-normal">5"×5"</span></h3>
-          <div ref={dRef} className="w-full aspect-[45/52] rounded-[16px] overflow-hidden relative shadow-xl flex flex-col items-center"
-            style={{background:bgStyle(t.d_bgIsGrad,t.d_bg1,t.d_bg2),border:t.d_border,boxShadow:`0 8px 20px ${t.d_bg1}30`}}>
+          <div ref={dRef} className="w-full rounded-[16px] relative shadow-xl flex flex-col items-center"
+            style={{aspectRatio:"45/52",background:bgStyle(t.d_bgIsGrad,t.d_bg1,t.d_bg2),border:t.d_border,boxShadow:`0 8px 20px ${t.d_bg1}30`,overflow:"visible"}}>
             {/* Four corner ornaments for 01 & 07 */}
             {t.d_corner&&(<>
               <span className="absolute top-[3%] left-[4%] text-[20px]" style={{color:t.d_starsColor}}>{t.d_corner}</span>
@@ -330,7 +329,7 @@ export default function QRCodePage(){
         {/* === CARD FRONT === */}
         <div className="text-center w-full max-w-[260px]">
           <h3 className="font-semibold text-sm text-brand-dark mb-3">Card Front <span className="text-xs text-brand-muted font-normal">3.5"×2"</span></h3>
-          <div ref={fRef} className="w-full aspect-[3.5/2] rounded-xl overflow-hidden relative shadow-lg flex flex-col" style={{background:bgStyle(t.cf_bgIsGrad,t.cf_bg1,t.cf_bg2)}}>
+          <div ref={fRef} className="w-full rounded-xl overflow-visible relative shadow-lg flex flex-col" style={{aspectRatio:"3.5/2.3",background:bgStyle(t.cf_bgIsGrad,t.cf_bg1,t.cf_bg2)}}>
             {/* Corner ornaments */}
             {t.cf_corner&&(<>
               <span className="absolute top-[3%] left-[2%] text-[12px]" style={{color:t.cf_scriptColor||t.cf_nameColor}}>{t.cf_corner}</span>
@@ -360,7 +359,7 @@ export default function QRCodePage(){
         {/* === CARD BACK === */}
         <div className="text-center w-full max-w-[260px]">
           <h3 className="font-semibold text-sm text-brand-dark mb-3">Card Back <span className="text-xs text-brand-muted font-normal">3.5"×2"</span></h3>
-          <div ref={bRef} className="w-full aspect-[3.5/2.8] rounded-xl overflow-hidden relative shadow-lg flex flex-col items-center" style={{background:bgStyle(t.cb_bgIsGrad,t.cb_bg1,t.cb_bg2)}}>
+          <div ref={bRef} className="w-full rounded-xl overflow-visible relative shadow-lg flex flex-col items-center" style={{aspectRatio:"3.5/2.5",background:bgStyle(t.cb_bgIsGrad,t.cb_bg1,t.cb_bg2)}}>
             {/* QR */}
             <div className="mt-[8%]" style={{background:t.cb_qrWrapBg,borderRadius:`${t.cb_qrWrapRadius*2}px`,border:t.cb_qrBorder,padding:t.cb_qrWrapBg==="transparent"?0:6}}>
               <img src={qrDataUrl} alt="QR" style={{width:70,height:70,borderRadius:`${t.cb_qrWrapRadius}px`}}/>
