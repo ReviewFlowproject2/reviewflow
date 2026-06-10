@@ -72,12 +72,12 @@ export default function CompetitorTrackingPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    const { data: biz } = await supabase
-      .from("businesses")
-      .select("plan, trial_ends_at, subscription_status, subscription_tier")
-      .eq("user_id", user.id)
-      .single();
-    setEffectivePlan(getEffectivePlan(biz));
+    // 通过 API 获取 business（绕过 RLS）
+    try {
+      const res = await fetch("/api/business/ensure", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const data = await res.json();
+      if (data.success) setEffectivePlan(getEffectivePlan(data.business));
+    } catch (e) { console.error(e); }
 
     const { data } = await supabase
       .from("competitors")

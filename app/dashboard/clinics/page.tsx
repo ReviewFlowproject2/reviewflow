@@ -42,13 +42,12 @@ export default function MultiClinicPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    const { data: biz } = await supabase
-      .from("businesses")
-      .select("plan, trial_ends_at, subscription_status, subscription_tier")
-      .eq("user_id", user.id)
-      .single();
-
-    setEffectivePlan(getEffectivePlan(biz));
+    // 通过 API 获取 business（绕过 RLS）
+    try {
+      const res = await fetch("/api/business/ensure", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      const data = await res.json();
+      if (data.success) setEffectivePlan(getEffectivePlan(data.business));
+    } catch (e) { console.error(e); }
 
     // 获取所有关联的诊所
     const { data } = await supabase
@@ -140,18 +139,6 @@ export default function MultiClinicPage() {
               <ArrowLeft size={16} />Back to Dashboard
             </Link>
           </div>
-          {effectivePlan.isTrialExpired && effectivePlan.tier === "free" && (
-            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                <div>
-                  <p className="text-red-700 text-sm font-semibold">Trial Expired</p>
-                  <p className="text-red-600 text-xs">Upgrade to Agency to unlock multi-clinic management.</p>
-                </div>
-              </div>
-              <Link href="/dashboard/support" className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors shrink-0">Upgrade Now</Link>
-            </div>
-          )}
           <div className="bg-white rounded-2xl border border-brand-soft/50 p-10 text-center">
             <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-amber-500" />
