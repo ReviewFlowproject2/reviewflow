@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { getEffectivePlan, PLAN_INFO, type EffectivePlan, type PlanTier } from "@/lib/plan-config";
+import { getEffectivePlan, PLAN_INFO, PLAN_LIMITS, getLimit, type EffectivePlan, type PlanTier } from "@/lib/plan-config";
 import {
   ArrowLeft, Save, CheckCircle, AlertTriangle, Eye, EyeOff,
-  Building2, Link as LinkIcon, Lock, CreditCard, Zap, Star,
-  LogOut, ChevronRight
+  Building2, Link as LinkIcon, Lock, CreditCard, Zap,
+  LogOut, ChevronRight, X, BarChart3, Users
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -33,6 +33,9 @@ export default function SettingsPage() {
   // Billing
   const [plan, setPlan] = useState("free");
   const [trialEnds, setTrialEnds] = useState("");
+  const [effectivePlan, setEffectivePlan] = useState<EffectivePlan>(getEffectivePlan(null));
+  // 用量统计
+  const [usage, setUsage] = useState({ patients: 0, competitors: 0, clinics: 0 });
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -57,7 +60,18 @@ export default function SettingsPage() {
         setOriginalGoogleLink(biz.google_review_link || "");
         setPlan(biz.plan || "free");
         setTrialEnds(biz.trial_ends_at ? new Date(biz.trial_ends_at).toLocaleDateString() : "");
+        setEffectivePlan(getEffectivePlan(biz));
       }
+
+      // 拉取用量统计
+      const bizId = biz?.id || user.id;
+      const [{ count: pCount }, { count: cCount }, { count: clCount }] = await Promise.all([
+        supabase.from("patients").select("*", { count: "exact", head: true }).eq("business_id", bizId),
+        supabase.from("competitors").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("clinics").select("*", { count: "exact", head: true }).eq("owner_id", user.id),
+      ]);
+      setUsage({ patients: pCount || 0, competitors: cCount || 0, clinics: clCount || 0 });
+
       setLoading(false);
     };
     loadData();
@@ -322,7 +336,7 @@ export default function SettingsPage() {
         {/* Billing Tab */}
         {activeTab === "billing" && (
           <div className="space-y-6">
-            {/* Current Plan */}
+            {/* Current Plan Card */}
             <div className={`bg-white rounded-2xl border-2 p-6 ${plan === "agency" ? "border-amber-400" : plan === "pro" ? "border-brand-blue" : "border-gray-200"}`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -331,49 +345,84 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <h2 className="font-semibold text-brand-dark">Current Plan</h2>
-                    <p className="text-xs text-brand-muted">{trialEnds ? `Trial ends: ${trialEnds}` : "Active subscription"}</p>
+                    <p className="text-xs text-brand-muted">
+                      {effectivePlan.isPaid ? "Active subscription" :
+                       effectivePlan.isTrialActive ? `Trial: ${effectivePlan.trialEndsAt ? new Date(effectivePlan.trialEndsAt).toLocaleDateString() : ""}` :
+                       trialEnds ? `Trial ended: ${trialEnds}` : "Free plan"}
+                    </p>
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${currentPlan.bg} ${currentPlan.color}`}>
                   {currentPlan.name}
                 </span>
               </div>
-
               <div className="mb-4">
                 <span className="font-outfit font-bold text-3xl text-brand-dark">{currentPlan.price}</span>
                 {plan !== "free" && <span className="text-brand-muted text-sm"> /month</span>}
               </div>
-
-              <ul className="space-y-2 mb-6">
-                {currentPlan.features.map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-sm text-brand-dark">
-                    <CheckCircle size={14} className="text-green-500 shrink-0" />{f}
-                  </li>
-                ))}
-              </ul>
-
               {plan !== "agency" && (
-                <Link
-                  href="/dashboard/support"
-                  className={`block w-full text-center py-2.5 font-semibold rounded-xl text-sm transition-colors inline-flex items-center justify-center gap-2 ${
-                    plan === "free"
-                      ? "bg-brand-blue text-white hover:bg-brand-dark"
-                      : "bg-amber-500 text-white hover:bg-amber-600"
-                  }`}
-                >
-                  <Zap size={16} />
-                  Upgrade to {plan === "free" ? "Pro" : "Agency"}
-                  <ChevronRight size={16} />
+                <Link href="/dashboard/support"
+                  className={`block w-full text-center py-2.5 font-semibold rounded-xl text-sm transition-colors inline-flex items-center justify-center gap-2 ${plan === "free" ? "bg-brand-blue text-white hover:bg-brand-dark" : "bg-amber-500 text-white hover:bg-amber-600"}`}>
+                  <Zap size={16} />Upgrade to {plan === "free" ? "Pro" : "Agency"}<ChevronRight size={16} />
                 </Link>
               )}
             </div>
 
-            {/* Billing History Placeholder */}
+            {/* Usage Meters */}
             <div className="bg-white rounded-2xl border border-brand-soft/50 p-6">
-              <h3 className="font-semibold text-brand-dark text-sm mb-4">Billing History</h3>
-              <div className="text-center py-8">
-                <p className="text-sm text-brand-muted">No billing history yet.</p>
-                <p className="text-xs text-brand-muted/60 mt-1">Invoices will appear here after your first payment.</p>
+              <h3 className="font-semibold text-brand-dark text-sm mb-5">Plan Usage</h3>
+              <div className="space-y-5">
+                {[
+                  { label: "Patients", used: usage.patients, max: getLimit(effectivePlan, "maxPatients"), icon: Users },
+                  { label: "Competitors", used: usage.competitors, max: getLimit(effectivePlan, "maxCompetitors"), icon: BarChart3 },
+                  { label: "Clinics", used: usage.clinics, max: getLimit(effectivePlan, "maxClinics"), icon: Building2 },
+                ].map((item) => {
+                  const pct = item.max > 0 ? Math.min(100, Math.round((item.used / item.max) * 100)) : 0;
+                  const full = item.used >= item.max;
+                  const warn = pct >= 90;
+                  return (
+                    <div key={item.label}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <item.icon size={14} className={full ? "text-red-500" : warn ? "text-amber-500" : "text-brand-muted"} />
+                          <span className="text-sm font-medium text-brand-dark">{item.label}</span>
+                        </div>
+                        <span className={`text-xs font-semibold ${full ? "text-red-500" : warn ? "text-amber-500" : "text-brand-muted"}`}>
+                          {item.used} / {item.max === Infinity ? "∞" : item.max}
+                          {full && " · Limit reached"}
+                        </span>
+                      </div>
+                      <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${full ? "bg-red-500" : warn ? "bg-amber-500" : "bg-brand-blue"}`}
+                          style={{ width: `${item.max === Infinity ? 0 : pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Feature checklist */}
+              <h3 className="font-semibold text-brand-dark text-sm mt-7 mb-4">Plan Features</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { label: "Email Automation", ok: effectivePlan.limits.emailAutomation },
+                  { label: "Review Alerts", ok: effectivePlan.limits.reviewAlerts },
+                  { label: "Competitor Tracking", ok: effectivePlan.tier === "agency" },
+                  { label: "Multi-Clinic", ok: effectivePlan.limits.multiClinic },
+                  { label: "White-Label", ok: effectivePlan.limits.whiteLabel },
+                  { label: "API Access", ok: effectivePlan.limits.apiAccess },
+                  { label: "Daily Digest", ok: effectivePlan.limits.dailyDigest },
+                  { label: "Priority Alerts", ok: effectivePlan.limits.priorityAlerts },
+                  { label: "Export Reports", ok: effectivePlan.limits.exportReports },
+                  { label: "Remove Branding", ok: effectivePlan.limits.removeBranding },
+                ].map((f) => (
+                  <div key={f.label} className="flex items-center gap-2 py-1">
+                    {f.ok ? <CheckCircle size={12} className="text-green-500 shrink-0" /> : <X size={12} className="text-gray-300 shrink-0" />}
+                    <span className={`text-xs ${f.ok ? "text-brand-dark" : "text-gray-400"}`}>{f.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

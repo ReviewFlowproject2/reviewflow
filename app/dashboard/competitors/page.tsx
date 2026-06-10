@@ -227,9 +227,39 @@ export default function CompetitorTrackingPage() {
   };
 
   // ==================== Computed ====================
+  const isAgency = effectivePlan.tier === "agency";
   const competitorLimit = getLimit(effectivePlan, "maxCompetitors");
   const atCompetitorLimit = competitors.length >= competitorLimit;
-  const trialExpired = effectivePlan.isTrialExpired && effectivePlan.tier === "free";
+
+  // Free/Pro → 直接拦截，只显示升级提示
+  if (!isAgency) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFF] p-6">
+        <div className="max-w-3xl mx-auto">
+          <div className="mb-6">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors">
+              <ArrowLeft size={16} />Back to Dashboard
+            </Link>
+          </div>
+          <div className="bg-white rounded-2xl border border-brand-soft/50 p-12 text-center">
+            <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-amber-500" />
+            </div>
+            <h1 className="font-outfit font-bold text-xl text-brand-dark mb-2">Agency Plan Required</h1>
+            <p className="text-brand-muted text-sm mb-6 max-w-md mx-auto">
+              Competitor Tracking with real-time Google data is an Agency-only feature. Upgrade to monitor nearby clinics, track their ratings, and stay ahead of the competition.
+            </p>
+            <Link
+              href="/dashboard/support"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl text-sm hover:bg-amber-600 transition-colors"
+            >
+              <Lock size={16} />Upgrade to Agency
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const avgRating = competitors.length > 0
     ? (competitors.reduce((sum, c) => sum + c.rating, 0) / competitors.length).toFixed(1)
@@ -262,22 +292,6 @@ export default function CompetitorTrackingPage() {
             <ArrowLeft size={16} />Back to Dashboard
           </Link>
         </div>
-
-        {/* Trial Expired Banner */}
-        {trialExpired && (
-          <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-              <div>
-                <p className="text-red-700 text-sm font-semibold">Trial Expired</p>
-                <p className="text-red-600 text-xs">Competitor data will not auto-refresh. Upgrade to continue.</p>
-              </div>
-            </div>
-            <Link href="/dashboard/support" className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors shrink-0">
-              Upgrade Now
-            </Link>
-          </div>
-        )}
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
