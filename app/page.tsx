@@ -8,7 +8,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   Star, MessageSquare, BarChart3, ChevronDown, Check, ArrowRight,
   Mail, Bell, QrCode, User, LogOut, Zap, Quote, TrendingUp,
-  Clock, Shield, ChevronLeft, ChevronRight
+  Clock, Shield, ChevronLeft, ChevronRight, Users, Headphones
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 
@@ -319,11 +319,14 @@ function PricingSection() {
           <p className="text-brand-muted">Start free. Upgrade when you&apos;re ready to automate.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+          {/* FREE */}
           <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
             <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
             <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
             <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
-            <button onClick={() => router.push("/register")} className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors">Get Started</button>
+            <Link href="/register" className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors">
+              Get Started
+            </Link>
             <ul className="mt-6 space-y-3 text-sm text-brand-dark">
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
@@ -332,13 +335,21 @@ function PricingSection() {
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email support</li>
             </ul>
           </div>
+
+          {/* PRO */}
           <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">Most Popular</div>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
+              Most Popular
+            </div>
             <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
             <p className="text-brand-muted text-sm mb-4">Automate your reputation growth</p>
-            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">$39<span className="text-lg text-brand-muted">/month</span></div>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+              $39<span className="text-lg text-brand-muted">/mo</span>
+            </div>
             <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
-            <button onClick={() => router.push("/dashboard/support")} className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors">Start 7-Day Free Trial</button>
+            <button onClick={() => router.push("/dashboard/support")} className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors">
+              Start 7-Day Free Trial
+            </button>
             <ul className="mt-6 space-y-3 text-sm text-brand-dark">
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
@@ -350,13 +361,21 @@ function PricingSection() {
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Priority email support</li>
             </ul>
           </div>
+
+          {/* AGENCY */}
           <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
-            <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1"><Zap size={12} /> Agency Only</div>
+            <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+              <Zap size={12} /> Agency Only
+            </div>
             <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
             <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
-            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">$69<span className="text-lg text-brand-muted">/month</span></div>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
+              $69<span className="text-lg text-brand-muted">/mo</span>
+            </div>
             <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
-            <button onClick={() => router.push("/dashboard/support")} className="block w-full text-center py-2.5 border-2 border-amber-500 text-amber-600 font-semibold rounded-[10px] text-sm hover:bg-amber-500 hover:text-white transition-colors">Contact Sales</button>
+            <button onClick={() => router.push("/dashboard/support")} className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors">
+              Start 7-Day Free Trial
+            </button>
             <ul className="mt-6 space-y-3 text-sm text-brand-dark">
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
@@ -368,8 +387,40 @@ function PricingSection() {
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
-              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Daily Reputation Digest</li>
-              <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1-on-1 Dedicated Support</li>
+
+              {/* Agency Exclusive Features */}
+              <li className="flex items-start gap-2">
+                <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">Daily Reputation Digest</span>
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">Agency Only</span>
+                  <span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Bell size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">Priority Email Alerts</span>
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">Agency Only</span>
+                  <span className="block text-xs text-brand-muted">1-2&#9733; reviews within 10 min via email</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">Multi-Recipient Alerts</span>
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">Agency Only</span>
+                  <span className="block text-xs text-brand-muted">Up to 5 staff members notified</span>
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Headphones size={14} className="text-amber-500 shrink-0 mt-0.5"/>
+                <span>
+                  <span className="font-semibold">1-on-1 Dedicated Support</span>
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">Agency Only</span>
+                  <span className="block text-xs text-brand-muted">Dedicated account manager + live chat</span>
+                </span>
+              </li>
             </ul>
           </div>
         </div>

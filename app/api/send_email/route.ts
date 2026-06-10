@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getEffectivePlan, canUseFeature } from "@/lib/plan-config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -44,16 +45,13 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    // 检查 trial 是否过期（free 和 pro 用户）
-    if (business && business.plan !== "agency" && business.trial_ends_at) {
-      const trialEnd = new Date(business.trial_ends_at);
-      const now = new Date();
-      if (trialEnd <= now) {
-        return NextResponse.json(
-          { success: false, error: "Trial expired. Please upgrade your plan to send emails." },
-          { status: 403 }
-        );
-      }
+    // 检查套餐权限：邮件自动化需要 Pro 或 Agency
+    const effectivePlan = getEffectivePlan(business);
+    if (!canUseFeature(effectivePlan, "emailAutomation")) {
+      return NextResponse.json(
+        { success: false, error: "Email automation requires Pro or Agency plan. Please upgrade." },
+        { status: 403 }
+      );
     }
 
     const clinicName = business?.name || "Your Dental Clinic";

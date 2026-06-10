@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { getEffectivePlan, getLimit, canUseFeature, type EffectivePlan } from "@/lib/plan-config";
 import {
   ArrowLeft, Plus, Building2, Star, Users, Trash2, CheckCircle,
-  AlertTriangle, ExternalLink
+  AlertTriangle, ExternalLink, Lock
 } from "lucide-react";
 
 interface Clinic {
@@ -29,7 +30,7 @@ export default function MultiClinicPage() {
   const [newAddress, setNewAddress] = useState("");
   const [newGoogleLink, setNewGoogleLink] = useState("");
   const [saving, setSaving] = useState(false);
-  const [plan, setPlan] = useState("free");
+  const [effectivePlan, setEffectivePlan] = useState<EffectivePlan>(getEffectivePlan(null));
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,11 +44,11 @@ export default function MultiClinicPage() {
 
     const { data: biz } = await supabase
       .from("businesses")
-      .select("plan")
+      .select("plan, trial_ends_at, subscription_status, subscription_tier")
       .eq("user_id", user.id)
       .single();
 
-    if (biz) setPlan(biz.plan || "free");
+    setEffectivePlan(getEffectivePlan(biz));
 
     // 获取所有关联的诊所
     const { data } = await supabase
@@ -130,7 +131,7 @@ export default function MultiClinicPage() {
     );
   }
 
-  if (plan !== "agency") {
+  if (!canUseFeature(effectivePlan, "multiClinic")) {
     return (
       <div className="min-h-screen bg-[#F8FAFF] p-6">
         <div className="max-w-3xl mx-auto">
@@ -139,6 +140,18 @@ export default function MultiClinicPage() {
               <ArrowLeft size={16} />Back to Dashboard
             </Link>
           </div>
+          {effectivePlan.isTrialExpired && effectivePlan.tier === "free" && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
+                <div>
+                  <p className="text-red-700 text-sm font-semibold">Trial Expired</p>
+                  <p className="text-red-600 text-xs">Upgrade to Agency to unlock multi-clinic management.</p>
+                </div>
+              </div>
+              <Link href="/dashboard/support" className="px-4 py-2 bg-red-600 text-white text-sm font-semibold rounded-xl hover:bg-red-700 transition-colors shrink-0">Upgrade Now</Link>
+            </div>
+          )}
           <div className="bg-white rounded-2xl border border-brand-soft/50 p-10 text-center">
             <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-amber-500" />
@@ -168,12 +181,18 @@ export default function MultiClinicPage() {
             <h1 className="font-outfit font-bold text-2xl text-brand-dark">Multi-Clinic Dashboard</h1>
             <p className="text-brand-muted text-sm mt-1">Manage all your dental offices in one place.</p>
           </div>
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-xl hover:bg-brand-dark transition-colors"
-          >
-            <Plus size={16} />{showAddForm ? "Cancel" : "Add Clinic"}
-          </button>
+          {clinics.length >= getLimit(effectivePlan, "maxClinics") ? (
+            <Link href="/dashboard/support" className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-600 transition-colors">
+              <Lock size={16} />Upgrade for More Clinics ({clinics.length}/{getLimit(effectivePlan, "maxClinics")})
+            </Link>
+          ) : (
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-xl hover:bg-brand-dark transition-colors"
+            >
+              <Plus size={16} />{showAddForm ? "Cancel" : "Add Clinic"}
+            </button>
+          )}
         </div>
 
         {/* Stats */}

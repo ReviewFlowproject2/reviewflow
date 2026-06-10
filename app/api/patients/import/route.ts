@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getEffectivePlan, getLimit } from '@/lib/plan-config'
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,27 +25,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
     }
 
-    // 检查 trial 是否过期
+    // 获取 business 信息
     const { data: business } = await supabase
       .from("businesses")
-      .select("trial_ends_at, plan")
+      .select("id, trial_ends_at, plan, subscription_status, subscription_tier")
       .eq("user_id", user.id)
       .single()
 
-    if (business && business.plan !== "agency" && business.trial_ends_at) {
-      const trialEnd = new Date(business.trial_ends_at)
-      const now = new Date()
-      if (trialEnd <= now) {
-        return NextResponse.json(
-          { success: false, error: "Trial expired. Please upgrade your plan to import patients." },
-          { status: 403 }
-        )
-      }
+    const effectivePlan = getEffectivePlan(business)
+    const maxPatients = getLimit(effectivePlan, "maxPatients")
+    const businessId = business?.id || user.id
+
+    // 检查当前患者数量
+    const { count: currentCount } = await supabase
+      .from("patients")
+      .select("*", { count: "exact", head: true })
+      .eq("business_id", businessId)
+
+    const remaining = maxPatients - (currentCount || 0)
+    if (remaining <= 0) {
+      return NextResponse.json(
+        { success: false, error: `Patient limit reached (${currentCount}/${maxPatients}). Please upgrade your plan to import more patients.` },
+        { status: 403 }
+      )
     }
 
     // 格式化数据
     const formatted = csvData.map((row: any) => ({
-      business_id: row.business_id,
+      business_id: businessId,
       name: row.name?.trim(),
       email: row.email?.trim().toLowerCase(),
       phone: row.phone || '',
@@ -56,12 +64,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No valid data found. Required: name, email, visit_date' }, { status: 400 })
     }
 
+    // 限制本次导入数量不超过剩余配额
+    const toImport = formatted.slice(0, remaining)
+    const skipped = formatted.length - toImport.length
+
     const supabaseAdmin = getSupabaseAdmin()
 
-    // 去掉 ON CONFLICT，直接插入（如果重复会报错，但刚加的字段不会有重复）
     const { data, error } = await (supabaseAdmin as any)
       .from('patients')
-      .insert(formatted)
+      .insert(toImport)
       .select()
 
     if (error) throw error
@@ -70,6 +81,8 @@ export async function POST(req: NextRequest) {
       success: true,
       imported: data?.length || 0,
       failed: csvData.length - (data?.length || 0),
+      skipped: skipped > 0 ? skipped : undefined,
+      limit: { current: (currentCount || 0) + (data?.length || 0), max: maxPatients },
     })
   } catch (err: any) {
     console.error('Import error:', err)

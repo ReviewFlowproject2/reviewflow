@@ -10,6 +10,7 @@ import {
   TrendingUp, Calendar, BarChart3, Building2, Bell, Lock, Eye, EyeOff
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
+import { getEffectivePlan, getTrialInfo, canUseFeature, getLimit, type EffectivePlan } from "@/lib/plan-config";
 
 // ==================== Types ====================
 interface Patient {
@@ -49,7 +50,7 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
 }
 
 // ==================== Sidebar ====================
-function Sidebar({ business }: { business: Business | null }) {
+function Sidebar({ business, effectivePlan }: { business: Business | null; effectivePlan: EffectivePlan }) {
   const router = useRouter(); const pathname = usePathname();
   const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
   const handleLogout = async () => { await supabase.auth.signOut(); router.push("/login"); router.refresh(); };
@@ -66,22 +67,10 @@ function Sidebar({ business }: { business: Business | null }) {
     { icon: Settings, label: "Settings", href: "/settings" },
   ];
 
-  const getTrialInfo = () => {
-    if (!business?.trial_ends_at) return { daysLeft: 0, dateRange: "—", isExpired: true };
-    const endDate = new Date(business.trial_ends_at);
-    const now = new Date();
-    const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
-    const isExpired = daysLeft <= 0;
-    const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
-    const dateRange = `${fmt(startDate)} - ${fmt(endDate)}`;
-    return { daysLeft, dateRange, isExpired };
-  };
-
-  const trialInfo = getTrialInfo();
-  const currentPlan = business?.plan || "free";
-  const planLabel = { free: "Free", pro: "Pro", agency: "Agency" }[currentPlan];
-  const planColor = { free: "text-gray-500", pro: "text-brand-blue", agency: "text-amber-600" }[currentPlan];
+  const trialInfo = getTrialInfo(business?.trial_ends_at);
+  const planLabel = effectivePlan.info.name;
+  const planColor = effectivePlan.info.color;
+  const currentPlan = effectivePlan.tier;
 
   return (
     <aside className="w-[260px] min-h-screen bg-white border-r border-[#E9F1FA] fixed left-0 top-0 flex flex-col z-40">
@@ -100,23 +89,37 @@ function Sidebar({ business }: { business: Business | null }) {
       </nav>
       <div className="px-4 pb-4 space-y-3">
         <div className="bg-brand-soft rounded-xl p-4">
-          <p className="text-xs text-brand-muted mb-1">Trial period</p>
-          <p className="font-outfit font-bold text-lg text-brand-blue">{trialInfo.dateRange}</p>
-          <p className="text-xs text-brand-muted mt-1">
-            {trialInfo.isExpired ? (
-              <span className="text-red-500 font-medium">Trial expired</span>
-            ) : (
-              <span>{trialInfo.daysLeft} days remaining</span>
-            )}
-          </p>
+          {effectivePlan.isPaid ? (
+            <>
+              <p className="text-xs text-brand-muted mb-1">Subscription</p>
+              <p className="font-outfit font-bold text-sm text-green-600">Active</p>
+              {business?.trial_ends_at && (
+                <p className="text-xs text-brand-muted mt-1">
+                  Next billing: {new Date(business.trial_ends_at).toLocaleDateString()}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-brand-muted mb-1">Trial period</p>
+              <p className="font-outfit font-bold text-lg text-brand-blue">{trialInfo.dateRange}</p>
+              <p className="text-xs text-brand-muted mt-1">
+                {trialInfo.isExpired ? (
+                  <span className="text-red-500 font-medium">Trial expired</span>
+                ) : (
+                  <span>{trialInfo.daysLeft} days remaining</span>
+                )}
+              </p>
+            </>
+          )}
           <p className="text-xs text-brand-muted/70 mt-1">{business?.name || "Your Clinic"}</p>
         </div>
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
           <p className="text-xs text-brand-muted mb-1">Current Plan</p>
           <p className={`font-outfit font-bold text-sm ${planColor}`}>{planLabel}</p>
-          {currentPlan !== "agency" && (
-            <Link href="/dashboard/support" className={`mt-2 block w-full text-center py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${currentPlan === "free" ? "bg-brand-blue hover:bg-brand-dark" : "bg-amber-500 hover:bg-amber-600"}`}>
-              Upgrade to {currentPlan === "free" ? "Pro" : "Agency"}
+          {effectivePlan.tier !== "agency" && (
+            <Link href="/dashboard/support" className={`mt-2 block w-full text-center py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${effectivePlan.tier === "free" ? "bg-brand-blue hover:bg-brand-dark" : "bg-amber-500 hover:bg-amber-600"}`}>
+              Upgrade to {effectivePlan.tier === "free" ? "Pro" : "Agency"}
             </Link>
           )}
         </div>
@@ -184,7 +187,8 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ newReviews: 0, avgRating: 0, pendingAlerts: 0, emailSuccess: 0 });
   const [trendDays, setTrendDays] = useState<7 | 30>(7);
   const [bannerDismissed, setBannerDismissed] = useState(false);
-  const [trialExpired, setTrialExpired] = useState(false);
+  const [effectivePlan, setEffectivePlan] = useState<EffectivePlan>(getEffectivePlan(null));
+  const trialExpired = effectivePlan.isTrialExpired;
 
   // ---- 密码重置对话框 ----
   const [showRecoveryDialog, setShowRecoveryDialog] = useState(false);
@@ -269,12 +273,9 @@ export default function DashboardPage() {
 
       if (biz) {
         setBusiness(biz);
-        // 检查 trial 是否过期
-        if (biz.trial_ends_at) {
-          const endDate = new Date(biz.trial_ends_at);
-          const now = new Date();
-          setTrialExpired(endDate <= now);
-        }
+        // 使用集中化套餐权限系统
+        const plan = getEffectivePlan(biz);
+        setEffectivePlan(plan);
       }
       const businessId = biz?.id;
 
@@ -407,7 +408,10 @@ export default function DashboardPage() {
   };
 
   const handleSendEmail = async (patientId: string, hasEmail: boolean) => {
-    if (trialExpired) { addToast("Trial expired — please upgrade to send emails", "error"); return; }
+    if (!canUseFeature(effectivePlan, "emailAutomation")) {
+      addToast("Email automation requires Pro or Agency plan. Please upgrade.", "error");
+      return;
+    }
     if (!hasEmail) { addToast("This patient has no email address. Please update patient info.", "error"); return; }
     setSendingId(patientId);
     try {
@@ -464,17 +468,20 @@ export default function DashboardPage() {
   };
 
   const filteredPatients = patients.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.phone.includes(searchTerm));
-  const currentPlan = business?.plan || "free";
-  const showTopBanner = currentPlan !== "agency";
-  const upgradeTarget = currentPlan === "free" ? "Pro" : "Agency";
-  const bannerColor = currentPlan === "free" ? "bg-brand-blue" : "bg-amber-500";
-  const bannerText = currentPlan === "free" ? "You're on the Free plan. Upgrade to Pro to automate review requests and monitor your reputation." : "You're on Pro. Upgrade to Agency to unlock Daily Digest, multi-clinic management, and team collaboration.";
+  const showTopBanner = effectivePlan.tier !== "agency";
+  const upgradeTarget = effectivePlan.tier === "free" ? "Pro" : "Agency";
+  const bannerColor = effectivePlan.tier === "free" ? "bg-brand-blue" : "bg-amber-500";
+  const bannerText = effectivePlan.tier === "free"
+    ? "You're on the Free plan. Upgrade to Pro to automate review requests and monitor your reputation."
+    : "You're on Pro. Upgrade to Agency to unlock Daily Digest, multi-clinic management, and team collaboration.";
+  const patientLimit = getLimit(effectivePlan, "maxPatients");
+  const isNearPatientLimit = patients.length >= patientLimit * 0.9;
 
   if (loading) return <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center"><div className="text-brand-muted">Loading dashboard...</div></div>;
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex">
-      <Sidebar business={business} />
+      <Sidebar business={business} effectivePlan={effectivePlan} />
       <main className="flex-1 ml-[260px] p-6 lg:p-8 max-w-7xl">
         <ToastContainer toasts={toasts} onRemove={removeToast} />
         {showTopBanner && !bannerDismissed && (
@@ -513,8 +520,8 @@ export default function DashboardPage() {
             <h1 className="font-outfit font-bold text-2xl text-brand-dark">Overview</h1>
             <p className="text-brand-muted text-sm mt-1">Welcome back, {business?.name || "Your Clinic"}</p>
           </div>
-          <Link href={trialExpired ? "/dashboard/support" : "/patients/import"} className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors ${trialExpired ? "bg-red-500 hover:bg-red-600" : "bg-brand-blue hover:bg-brand-dark"}`}>
-            {trialExpired ? <><AlertTriangle size={16} />Upgrade to Import</> : <><Plus size={16} />Import Patients</>}
+          <Link href={trialExpired && effectivePlan.tier === "free" ? "/dashboard/support" : "/patients/import"} className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors ${trialExpired && effectivePlan.tier === "free" ? "bg-red-500 hover:bg-red-600" : "bg-brand-blue hover:bg-brand-dark"}`}>
+            {trialExpired && effectivePlan.tier === "free" ? <><AlertTriangle size={16} />Upgrade to Import</> : <><Plus size={16} />Import Patients</>}
           </Link>
         </div>
 
@@ -580,7 +587,15 @@ export default function DashboardPage() {
         {/* Patient List */}
         <div className="bg-white rounded-2xl border border-brand-soft/50 overflow-hidden">
           <div className="p-5 border-b border-brand-soft/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h2 className="font-outfit font-semibold text-lg text-brand-dark">Recent Patients</h2>
+            <div className="flex items-center gap-3">
+              <h2 className="font-outfit font-semibold text-lg text-brand-dark">Recent Patients</h2>
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                patients.length >= patientLimit ? "bg-red-50 text-red-600" :
+                isNearPatientLimit ? "bg-yellow-50 text-yellow-600" : "bg-brand-soft text-brand-muted"
+              }`}>
+                {patients.length}/{patientLimit} slots used
+              </span>
+            </div>
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
               <input placeholder="Search patients..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-3 w-full sm:w-64 h-10 rounded-xl border border-brand-soft text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />

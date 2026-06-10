@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
+import { getEffectivePlan, PLAN_INFO, type EffectivePlan, type PlanTier } from "@/lib/plan-config";
 import {
   ArrowLeft, Save, CheckCircle, AlertTriangle, Eye, EyeOff,
   Building2, Link as LinkIcon, Lock, CreditCard, Zap, Star,
@@ -146,13 +147,9 @@ export default function SettingsPage() {
 
   const hasChanges = clinicName !== originalClinicName || googleLink !== originalGoogleLink;
 
-  const planDetails = {
-    free: { name: "Free", price: "$0", color: "text-gray-500", bg: "bg-gray-50", features: ["QR code", "Basic dashboard", "50 patients"] },
-    pro: { name: "Pro", price: "$39/mo", color: "text-brand-blue", bg: "bg-brand-soft", features: ["Everything in Free", "Email automation", "1,000 patients", "Review alerts", "Competitor tracking"] },
-    agency: { name: "Agency", price: "$69/mo", color: "text-amber-600", bg: "bg-amber-50", features: ["Everything in Pro", "Multi-clinic", "White-label", "API access", "10,000 patients"] },
-  };
+  const planDetails = PLAN_INFO;
 
-  const currentPlan = planDetails[plan as keyof typeof planDetails] || planDetails.free;
+  const currentPlan = planDetails[plan as PlanTier] || planDetails.free;
 
   if (loading) {
     return (
