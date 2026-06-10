@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link"; import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import QRCode from "qrcode"; import { toPng } from "html-to-image";
-import { ArrowLeft, Download, Printer, QrCode, Copy, CheckCircle, AlertTriangle, HelpCircle, RefreshCw, Stethoscope, Crown, Leaf, Plus } from "lucide-react";
+import { ArrowLeft, Download, Printer, QrCode, Copy, CheckCircle, AlertTriangle, HelpCircle, RefreshCw, Stethoscope, Crown, Leaf, Plus, Lock } from "lucide-react";
+import { getEffectivePlan, type EffectivePlan } from "@/lib/plan-config";
 
 /* ====================================================================
    7 模板 — 严格按 style_0X_*_fixed.txt 设计规范
@@ -45,15 +46,15 @@ type TData = {
 const TPL:TData[]=[
 {// 01 Classic Blue — ✦四角金花 + 深蓝渐变 + Playfair Display
   id:"classic-blue",name:"Classic Blue",desc:"全科 · 牙科 · 骨科",preview:"/images/qr-previews/preview_style_01_classic_blue.jpg",
-  d_bg:"#1A3A5C",d_bgIsGrad:true,d_bg1:"#1A3A5C",d_bg2:"#2C5282",d_border:"none",d_corner:"✦",
+  d_bg:"#0A2463",d_bgIsGrad:true,d_bg1:"#0A2463",d_bg2:"#1A3A5C",d_border:"none",d_corner:"✦",
   d_icon:"stethoscope",d_iconColor:"#D4AF37",
-  d_clinic:"Playfair Display",d_clinicFont:"'Playfair Display',serif",d_clinicSize:26,d_clinicWeight:700,
+  d_clinic:"Dancing Script",d_clinicFont:"'Dancing Script',cursive",d_clinicSize:26,d_clinicWeight:700,
   d_invite:"",d_inviteFont:"'Lato',sans-serif",d_inviteSize:0,d_inviteColor:"#FFFFFF",
   d_qrWrapBg:"#FFFFFF",d_qrWrapRadius:6,d_qrBorder:"none",
-  d_qrDark:"#1A3A5C",d_qrLight:"#FFFFFF",
+  d_qrDark:"#0A2463",d_qrLight:"#FFFFFF",
   d_tagline:"Scan to leave a Google Review",d_taglineColor:"#FFFFFF",d_taglineFont:"'Lato',sans-serif",
   d_stars:"★★★★★",d_starsColor:"#D4AF37",
-  cf_bg:"#1A3A5C",cf_bgIsGrad:true,cf_bg1:"#1A3A5C",cf_bg2:"#2C5282",cf_isDark:true,
+  cf_bg:"#0A2463",cf_bgIsGrad:true,cf_bg1:"#0A2463",cf_bg2:"#1A3A5C",cf_isDark:true,
   cf_topBar:null,cf_topBarColor:"",
   cf_name:"Playfair Display",cf_nameFont:"'Playfair Display',serif",cf_nameColor:"#D4AF37",cf_nameSize:22,
   cf_title:"",cf_titleFont:"",cf_titleColor:"",
@@ -61,17 +62,17 @@ const TPL:TData[]=[
   cf_contact:"Phone • Website",cf_contactColor:"#D4AF37",cf_contactFont:"'Lato',sans-serif",
   cf_script:"Thank you for trusting us with your smile",cf_scriptFont:"'Dancing Script',cursive",cf_scriptColor:"#D4AF37",
   cf_corner:"✦",
-  cb_bg:"#1A3A5C",cb_bgIsGrad:true,cb_bg1:"#1A3A5C",cb_bg2:"#2C5282",
-  cb_qrDark:"#1A3A5C",cb_qrLight:"#FFFFFF",
+  cb_bg:"#0A2463",cb_bgIsGrad:true,cb_bg1:"#0A2463",cb_bg2:"#1A3A5C",
+  cb_qrDark:"#0A2463",cb_qrLight:"#FFFFFF",
   cb_qrWrapBg:"#FFFFFF",cb_qrWrapRadius:6,cb_qrBorder:"none",
   cb_tagline:"Scan for our social media",cb_taglineColor:"#FFFFFF",cb_taglineFont:"'Lato',sans-serif",
   cb_stars:"★★★★★",cb_starsColor:"#D4AF37",cb_corner:"",
 },
-{// 02 Mint Green — 薄荷绿QR无白底 + Montserrat + ☆☆ outline stars
+{// 02 Mint Green — 薄荷绿QR无白底 + Dancing Script + ☆☆ outline stars
   id:"mint-green",name:"Mint Green",desc:"儿科 · 医美 · 中医",preview:"/images/qr-previews/preview_style_02_mint_green.jpg",
   d_bg:"#FFFFFF",d_bgIsGrad:false,d_bg1:"#FFFFFF",d_bg2:"#FFFFFF",d_border:"6px solid #6BC4B0",d_corner:"",
   d_icon:"plus",d_iconColor:"#6BC4B0",
-  d_clinic:"Montserrat",d_clinicFont:"'Montserrat',sans-serif",d_clinicSize:24,d_clinicWeight:700,
+  d_clinic:"Dancing Script",d_clinicFont:"'Dancing Script',cursive",d_clinicSize:24,d_clinicWeight:700,
   d_invite:"We'd love your feedback",d_inviteFont:"'Montserrat',sans-serif",d_inviteSize:15,d_inviteColor:"#4CAF50",
   d_qrWrapBg:"transparent",d_qrWrapRadius:6,d_qrBorder:"none", // 透明背景！
   d_qrDark:"#2F855A",d_qrLight:"transparent", // 薄荷绿QR，透明背景
@@ -91,11 +92,11 @@ const TPL:TData[]=[
   cb_tagline:"Thank you for trusting us with your smile",cb_taglineColor:"#2F855A",cb_taglineFont:"'Montserrat',sans-serif",
   cb_stars:"",cb_starsColor:"",cb_corner:"",
 },
-{// 03 Elegant Violet — 👑皇冠 + Dancing Script + 深紫渐变
+{// 03 Elegant Violet — 👑皇冠 + Great Vibes + 深紫渐变
   id:"elegant-violet",name:"Elegant Violet",desc:"高端医美 · 整形",preview:"/images/qr-previews/preview_style_03_violet.jpg",
   d_bg:"#1A0B2E",d_bgIsGrad:true,d_bg1:"#1A0B2E",d_bg2:"#3D265E",d_border:"none",d_corner:"",
   d_icon:"crown",d_iconColor:"#D4AF37",
-  d_clinic:"Playfair Display",d_clinicFont:"'Playfair Display',serif",d_clinicSize:24,d_clinicWeight:400,
+  d_clinic:"Great Vibes",d_clinicFont:"'Great Vibes',cursive",d_clinicSize:24,d_clinicWeight:400,
   d_invite:"Scan to Rate",d_inviteFont:"'Dancing Script',cursive",d_inviteSize:18,d_inviteColor:"#D4AF37",
   d_qrWrapBg:"#FFFFFF",d_qrWrapRadius:6,d_qrBorder:"2px solid #D4AF37",
   d_qrDark:"#1A0B2E",d_qrLight:"#FFFFFF",
@@ -115,11 +116,11 @@ const TPL:TData[]=[
   cb_tagline:"",cb_taglineColor:"",cb_taglineFont:"",
   cb_stars:"★★★",cb_starsColor:"#D4AF37",cb_corner:"",
 },
-{// 04 Coral Orange — 圆形QR容器 + 白标签 + Montserrat
+{// 04 Coral Orange — 圆形QR容器 + 白标签 + Dancing Script
   id:"coral-orange",name:"Coral Orange",desc:"家庭诊所 · 理疗",preview:"/images/qr-previews/preview_style_04_coral.jpg",
   d_bg:"#E07A5F",d_bgIsGrad:false,d_bg1:"#E07A5F",d_bg2:"#E07A5F",d_border:"none",d_corner:"",
   d_icon:"stethoscope",d_iconColor:"#FFFFFF",
-  d_clinic:"Montserrat",d_clinicFont:"'Montserrat',sans-serif",d_clinicSize:16,d_clinicWeight:700,
+  d_clinic:"Dancing Script",d_clinicFont:"'Dancing Script',cursive",d_clinicSize:20,d_clinicWeight:700,
   d_invite:"We'd love your feedback",d_inviteFont:"'Montserrat',sans-serif",d_inviteSize:15,d_inviteColor:"#FFFFFF",
   d_qrWrapBg:"#FFFFFF",d_qrWrapRadius:9999,d_qrBorder:"none", // 圆形！
   d_qrDark:"#E07A5F",d_qrLight:"#FFFFFF",
@@ -139,11 +140,11 @@ const TPL:TData[]=[
   cb_tagline:"We'd love your feedback",cb_taglineColor:"#E07A5F",cb_taglineFont:"'Montserrat',sans-serif",
   cb_stars:"★★",cb_starsColor:"#E07A5F",cb_corner:"",
 },
-{// 05 Pro Gray — 极简深灰 + Montserrat + ☆☆ outline
+{// 05 Pro Gray — 极简深灰 + Dancing Script + ☆☆ outline
   id:"professional-gray",name:"Pro Gray",desc:"科技诊所 · 专科",preview:"/images/qr-previews/preview_style_05_gray.jpg",
   d_bg:"#2D2D2D",d_bgIsGrad:false,d_bg1:"#2D2D2D",d_bg2:"#2D2D2D",d_border:"none",d_corner:"",
   d_icon:null,d_iconColor:"",
-  d_clinic:"Montserrat",d_clinicFont:"'Montserrat',sans-serif",d_clinicSize:24,d_clinicWeight:700,
+  d_clinic:"Dancing Script",d_clinicFont:"'Dancing Script',cursive",d_clinicSize:26,d_clinicWeight:700,
   d_invite:"Scan to Review",d_inviteFont:"'Montserrat',sans-serif",d_inviteSize:13,d_inviteColor:"#9CA3AF",
   d_qrWrapBg:"#FFFFFF",d_qrWrapRadius:6,d_qrBorder:"1px solid #4B5563",
   d_qrDark:"#2D2D2D",d_qrLight:"#FFFFFF",
@@ -225,14 +226,18 @@ export default function QRCodePage(){
   const [dr,setDr]=useState(""),[title,setTitle]=useState("");
   const [phone,setPhone]=useState(""),[web,setWeb]=useState(""),[addr,setAddr]=useState("");
   const [qrDataUrl,setQr]=useState("");
+  const [effectivePlan,setEffectivePlan]=useState<EffectivePlan>(getEffectivePlan(null));
 
   const supabase=createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!,process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
   const t=TPL.find(x=>x.id===sel)||TPL[0];
+  const isFree=effectivePlan.tier==="free";
 
   useEffect(()=>{(async()=>{
     const{data:{user}}=await supabase.auth.getUser();if(!user){router.push("/login");return}
     const{data:biz}=await supabase.from("businesses").select("name,google_review_link,owner_name,owner_phone").eq("user_id",user.id).single();
     if(biz){setCname(biz.name||"My Clinic");setLink(biz.google_review_link||"");setDr(biz.owner_name||"");setPhone(biz.owner_phone||"")}
+    // 获取 plan（用 API 绕过 RLS）
+    try{const r=await fetch("/api/business/ensure",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});const d=await r.json();if(d.success)setEffectivePlan(getEffectivePlan(d.business))}catch(e){}
     setLoad(false);
   })()},[supabase,router]);
 
@@ -268,8 +273,11 @@ export default function QRCodePage(){
     <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
       <div className="flex items-center gap-3 mb-4"><span className="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center text-sm font-bold">2</span><h2 className="font-semibold text-brand-dark">Choose Template & Business Card Info</h2></div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        {TPL.map(tm=>(<button key={tm.id} onClick={()=>setSel(tm.id)} className={`p-3 rounded-xl border-2 text-left transition-all relative ${sel===tm.id?"border-brand-blue bg-brand-soft":"border-gray-100 hover:border-brand-blue/30"}`}>
-          <div className="relative w-full aspect-square rounded-lg mb-2 overflow-hidden bg-gray-50 cursor-pointer" onClick={e=>{e.stopPropagation();setPreview(preview===tm.id?null:tm.id)}}><img src={tm.preview} alt={tm.name} className="w-full h-full object-cover"/></div>
+        {TPL.map(tm=>(<button key={tm.id} onClick={()=>{if(isFree&&tm.id==="luxury-blue-gold")return;setSel(tm.id)}} className={`p-3 rounded-xl border-2 text-left transition-all relative ${sel===tm.id?"border-brand-blue bg-brand-soft":isFree&&tm.id==="luxury-blue-gold"?"border-gray-100 opacity-50 cursor-not-allowed":"border-gray-100 hover:border-brand-blue/30"}`}>
+          <div className="relative w-full aspect-square rounded-lg mb-2 overflow-hidden bg-gray-50 cursor-pointer" onClick={e=>{e.stopPropagation();setPreview(preview===tm.id?null:tm.id)}}>
+            <img src={tm.preview} alt={tm.name} className="w-full h-full object-cover"/>
+            {isFree&&tm.id==="luxury-blue-gold"&&<div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Lock size={24} className="text-white"/></div>}
+          </div>
           <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full border" style={{background:tm.d_bgIsGrad?tm.d_bg1:tm.d_bg}}/><span className="font-medium text-xs">{tm.name}</span></div>
           <p className="text-[10px] text-brand-muted mt-1">{tm.desc}</p>
           {sel===tm.id&&<CheckCircle size={14} className="absolute top-2 right-2 text-brand-blue"/>}
@@ -288,7 +296,7 @@ export default function QRCodePage(){
         {/* === DESK STAND === */}
         <div className="text-center w-full max-w-[260px]">
           <h3 className="font-semibold text-sm text-brand-dark mb-3">Desk Stand <span className="text-xs text-brand-muted font-normal">5"×5"</span></h3>
-          <div ref={dRef} className="w-full aspect-[45/47] rounded-[16px] overflow-hidden relative shadow-xl flex flex-col items-center"
+          <div ref={dRef} className="w-full aspect-[45/52] rounded-[16px] overflow-hidden relative shadow-xl flex flex-col items-center"
             style={{background:bgStyle(t.d_bgIsGrad,t.d_bg1,t.d_bg2),border:t.d_border,boxShadow:`0 8px 20px ${t.d_bg1}30`}}>
             {/* Four corner ornaments for 01 & 07 */}
             {t.d_corner&&(<>
@@ -352,7 +360,7 @@ export default function QRCodePage(){
         {/* === CARD BACK === */}
         <div className="text-center w-full max-w-[260px]">
           <h3 className="font-semibold text-sm text-brand-dark mb-3">Card Back <span className="text-xs text-brand-muted font-normal">3.5"×2"</span></h3>
-          <div ref={bRef} className="w-full aspect-[3.15/2.25] rounded-xl overflow-hidden relative shadow-lg flex flex-col items-center" style={{background:bgStyle(t.cb_bgIsGrad,t.cb_bg1,t.cb_bg2)}}>
+          <div ref={bRef} className="w-full aspect-[3.5/2.8] rounded-xl overflow-hidden relative shadow-lg flex flex-col items-center" style={{background:bgStyle(t.cb_bgIsGrad,t.cb_bg1,t.cb_bg2)}}>
             {/* QR */}
             <div className="mt-[8%]" style={{background:t.cb_qrWrapBg,borderRadius:`${t.cb_qrWrapRadius*2}px`,border:t.cb_qrBorder,padding:t.cb_qrWrapBg==="transparent"?0:6}}>
               <img src={qrDataUrl} alt="QR" style={{width:70,height:70,borderRadius:`${t.cb_qrWrapRadius}px`}}/>
