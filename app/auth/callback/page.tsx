@@ -37,22 +37,19 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      // 检查是否是新用户，如果是则创建 business 记录
-      const { data: existingBiz } = await supabase
-        .from("businesses")
-        .select("id")
-        .eq("user_id", session.user.id)
-        .single();
-
-      if (!existingBiz) {
-        await supabase.from("businesses").insert({
-          user_id: session.user.id,
-          owner_email: session.user.email,
-          name: session.user.user_metadata?.full_name || "My Clinic",
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          google_review_link: "",
-          plan: "free",
+      // 通过服务端 API 创建 business 记录（绕过 RLS）
+      try {
+        await fetch("/api/business/ensure", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: session.user.user_metadata?.clinic_name ||
+                  session.user.user_metadata?.full_name ||
+                  "My Clinic",
+          }),
         });
+      } catch (e) {
+        console.error("Failed to create business via API:", e);
       }
 
       // 根据 type 参数决定跳转目标

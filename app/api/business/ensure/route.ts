@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       "My Clinic";
     const reviewLink = googleLink || "";
 
+    // 仅用核心字段（避免 subscription_status 等可能不存在的列）
     const { data: newBizRows, error: insertErr } = await (supabaseAdmin as any)
       .from("businesses")
       .insert({
@@ -55,15 +56,33 @@ export async function POST(req: NextRequest) {
         google_review_link: reviewLink,
         plan: "free",
         trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        subscription_status: "trial",
       })
       .select("*");
 
-    const newBiz = newBizRows?.[0];
+    // 如果上面失败，尝试更少的字段
+    if (insertErr) {
+      console.warn("Business insert with full fields failed, trying minimal:", insertErr.message);
+      const { data: fallbackRows, error: fallbackErr } = await (supabaseAdmin as any)
+        .from("businesses")
+        .insert({
+          user_id: user.id,
+          name: clinicName,
+          plan: "free",
+          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .select("*");
 
-    if (insertErr || !newBiz) {
-      console.error("Business insert error:", insertErr);
-      return NextResponse.json({ error: insertErr?.message || "Failed to create business record" }, { status: 500 });
+      if (fallbackErr || !fallbackRows?.[0]) {
+        console.error("Business insert fallback also failed:", fallbackErr);
+        return NextResponse.json({ error: fallbackErr?.message || "Failed to create business" }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, business: fallbackRows[0], created: true });
+    }
+
+    const newBiz = newBizRows?.[0];
+    if (!newBiz) {
+      return NextResponse.json({ error: "No data returned after insert" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, business: newBiz, created: true });
