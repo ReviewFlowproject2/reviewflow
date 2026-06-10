@@ -196,6 +196,20 @@ export function getEffectivePlan(business: {
     };
   }
 
+  // 用户手动设置了 plan（pro/agency）但 subscription_status 未配置 → 尊重 plan
+  const dbPlan = (business.plan as PlanTier) || "free";
+  if (dbPlan !== "free" && !business.subscription_status) {
+    return {
+      tier: dbPlan,
+      limits: PLAN_LIMITS[dbPlan],
+      info: PLAN_INFO[dbPlan],
+      isTrialActive: isTrialActive,
+      isTrialExpired: isTrialExpired,
+      isPaid: false,
+      trialEndsAt: business.trial_ends_at || null,
+    };
+  }
+
   // Trial 未过期 → 使用当前 plan
   if (isTrialActive) {
     const tier = (business.plan as PlanTier) || "free";

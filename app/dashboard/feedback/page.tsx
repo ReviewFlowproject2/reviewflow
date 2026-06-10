@@ -70,11 +70,32 @@ export default function ReviewsPage() {
   const [replyDraft, setReplyDraft] = useState<Record<string, string>>({});
   const [showReplyForm, setShowReplyForm] = useState<string | null>(null);
   const [googleLink, setGoogleLink] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   );
+
+  // 从 Google 拉取真实评论
+  const fetchFromGoogle = async () => {
+    setSyncing(true); setSyncMsg("");
+    try {
+      const res = await fetch("/api/google/reviews");
+      const data = await res.json();
+      if (data.success) {
+        setSyncMsg(`Synced ${data.reviews?.length || 0} reviews from Google (${data.place_total_reviews || 0} total on Google)`);
+        loadReviews();
+      } else {
+        setSyncMsg(data.error || "Failed to fetch reviews");
+      }
+    } catch (e: any) {
+      setSyncMsg(e.message || "Network error");
+    }
+    setSyncing(false);
+    setTimeout(() => setSyncMsg(""), 5000);
+  };
 
   const quickTemplates = [
     "Thank you for your feedback. We sincerely apologize for the inconvenience and are looking into this matter.",
@@ -174,9 +195,18 @@ export default function ReviewsPage() {
           </Link>
         </div>
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Reviews</h1>
-          <p className="text-gray-600">Manage and respond to patient reviews across all platforms.</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Reviews</h1>
+            <p className="text-gray-600">Manage and respond to patient reviews across all platforms.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {syncMsg && <span className="text-xs text-green-600 bg-green-50 px-3 py-1.5 rounded-full">{syncMsg}</span>}
+            <button onClick={fetchFromGoogle} disabled={syncing}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white border-2 border-brand-blue text-brand-blue font-semibold rounded-xl text-sm hover:bg-brand-blue hover:text-white transition-colors disabled:opacity-50">
+              {syncing ? "Syncing..." : "Fetch from Google"}
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -236,8 +266,12 @@ export default function ReviewsPage() {
           {filteredReviews.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
               <MessageSquare className="mx-auto text-gray-300 mb-3" size={48} />
-              <h3 className="text-lg font-medium text-gray-900 mb-1">No reviews found</h3>
-              <p className="text-gray-500">Reviews will appear here when patients leave feedback on Google.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-1">No reviews yet</h3>
+              <p className="text-gray-500 mb-4">Click "Fetch from Google" to pull real reviews from your Google Business Profile.</p>
+              <button onClick={fetchFromGoogle} disabled={syncing}
+                className="px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-dark disabled:opacity-50 inline-flex items-center gap-2">
+                {syncing ? "Fetching..." : "Fetch from Google"}
+              </button>
             </div>
           ) : (
             filteredReviews.map((review) => (
