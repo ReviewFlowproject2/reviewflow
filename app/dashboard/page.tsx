@@ -267,17 +267,34 @@ export default function DashboardPage() {
         .eq("user_id", user.id)
         .single();
 
-      if (bizError) {
-        console.error("Business fetch error:", bizError);
+      let bizData = biz;
+      // 如果没有 business 记录，通过服务端 API 自动创建（绕过 RLS）
+      if (!bizData || bizError) {
+        if (bizError) console.error("Business fetch error:", bizError);
+        try {
+          const res = await fetch("/api/business/ensure", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: user.user_metadata?.clinic_name || user.user_metadata?.full_name || "" }),
+          });
+          const result = await res.json();
+          if (result.success && result.business) {
+            bizData = result.business;
+            if (result.created) {
+              addToast("Welcome! Your clinic has been set up.", "success");
+            }
+          }
+        } catch (e) {
+          console.error("Failed to ensure business:", e);
+        }
       }
 
-      if (biz) {
-        setBusiness(biz);
-        // 使用集中化套餐权限系统
-        const plan = getEffectivePlan(biz);
+      if (bizData) {
+        setBusiness(bizData);
+        const plan = getEffectivePlan(bizData);
         setEffectivePlan(plan);
       }
-      const businessId = biz?.id;
+      const businessId = bizData?.id;
 
       // 修复: 只使用 business_id 查询 patients，不使用 user_id
       // 因为 patients 表结构只有 business_id，没有 user_id
@@ -298,7 +315,7 @@ export default function DashboardPage() {
           pts = data;
         }
       } else {
-        // 没有 business 记录 — 使用 localStorage 避免每次都弹 toast
+        // 即使 API 创建失败，也只显示一次
         const dismissed = localStorage.getItem("reviewflow_clinic_banner_dismissed");
         if (!dismissed) {
           addToast("Please set up your clinic in Settings first", "error");

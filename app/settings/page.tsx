@@ -90,18 +90,20 @@ export default function SettingsPage() {
         .eq("user_id", user.id);
       error = res.error;
     } else {
-      // 不存在则插入新记录
-      const res = await supabase
-        .from("businesses")
-        .insert({
-          user_id: user.id,
-          name: clinicName,
-          owner_email: user.email,
-          google_review_link: googleLink,
-          plan: "free",
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      // 不存在 → 通过服务端 API 创建（绕过 RLS）
+      try {
+        const res = await fetch("/api/business/ensure", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: clinicName, googleLink }),
         });
-      error = res.error;
+        const result = await res.json();
+        if (!result.success) {
+          error = { message: result.error || "Failed to create clinic" };
+        }
+      } catch (e: any) {
+        error = { message: e.message || "Network error" };
+      }
     }
 
     if (error) {
