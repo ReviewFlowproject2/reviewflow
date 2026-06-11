@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS businesses (
   owner_name TEXT,
   paddle_customer_id TEXT,
   subscription_status TEXT NOT NULL DEFAULT 'trial', -- trial / active / cancelled
-  trial_ends_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '30 days'),
+  trial_ends_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '15 days'),
   current_rating NUMERIC(2,1),
   review_count INTEGER DEFAULT 0,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE

@@ -14,7 +14,7 @@ export default function RefundPage() {
         <div className="prose text-brand-muted">
           <p className="mb-4">Last updated: June 1, 2026</p>
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">1. Free Trial</h2>
-          <p className="mb-4">All paid plans include a 14-day free trial. No credit card required to start.</p>
+          <p className="mb-4">All paid plans include a 15-day free trial — first month free when you subscribe. No credit card required to start.</p>
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">2. Refund Eligibility</h2>
           <p className="mb-4">If you are not satisfied with our service, you can request a full refund within 14 days of your first payment.</p>
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">3. How to Request a Refund</h2>

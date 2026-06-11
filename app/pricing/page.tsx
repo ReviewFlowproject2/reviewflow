@@ -11,15 +11,15 @@ const PADDLE_CLIENT_TOKEN = "live_70c09ad4de252bfa5440b90a9ca";
 
 const PRICING = {
   monthly: {
-    pro: { priceId: "pri_01kt19xahgfjcw0hcmc9gkws26", price: 39, period: "/mo", save: "" },
+    pro: { priceId: "pri_01ktvfjxsdgfrc1407ha23vd91", price: 39, period: "/mo", save: "" },
     agency: { priceId: "pri_01kt1a0wwqa4nbny8d3ae0tben", price: 69, period: "/mo", save: "" },
   },
   quarterly: {
-    pro: { priceId: "pri_01kt4s6zamveeevqt9rv42e8z8", price: 105, period: "/3mo", save: "Save 10%" },
+    pro: { priceId: "pri_01ktvfpw9etktny986dgcy14rg", price: 105, period: "/3mo", save: "Save 10%" },
     agency: { priceId: "pri_01kt4s86yv5g5ty0epzr96g0cp", price: 189, period: "/3mo", save: "Save 9%" },
   },
   yearly: {
-    pro: { priceId: "pri_01kt4rxwhrsn4fep3shk2gjsbg", price: 390, period: "/yr", save: "Save 17%" },
+    pro: { priceId: "pri_01ktvfmezegrnq32wn5ynk3spm", price: 390, period: "/yr", save: "Save 17%" },
     agency: { priceId: "pri_01kt4s5kh3e7ft82grc8w5qzfc", price: 690, period: "/yr", save: "Save 17%" },
   },
 };
@@ -147,9 +147,10 @@ export default function PricingPage() {
             <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
               <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
               <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
-              <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
+              <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">$0</div>
+              <p className="text-xs text-brand-muted mb-6">15-day free trial, no credit card</p>
               <Link href="/register" className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors">
-                Get Started
+                Start Free Trial
               </Link>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
@@ -171,13 +172,13 @@ export default function PricingPage() {
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
                 ${PRICING[cycle].pro.price}<span className="text-lg text-brand-muted">{PRICING[cycle].pro.period}</span>
               </div>
-              <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+              <p className="text-xs text-brand-muted mb-6">1st month free, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].pro.priceId)}
                 className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
                 disabled={!paddleLoaded}
               >
-                {paddleLoaded ? "Start 7-Day Free Trial" : "Loading..."}
+                {paddleLoaded ? "Get 1st Month Free" : "Loading..."}
               </button>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
@@ -204,13 +205,13 @@ export default function PricingPage() {
               <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
                 ${PRICING[cycle].agency.price}<span className="text-lg text-brand-muted">{PRICING[cycle].agency.period}</span>
               </div>
-              <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+              <p className="text-xs text-brand-muted mb-6">1st month free, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].agency.priceId)}
                 className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
                 disabled={!paddleLoaded}
               >
-                {paddleLoaded ? "Start 7-Day Free Trial" : "Loading..."}
+                {paddleLoaded ? "Get 1st Month Free" : "Loading..."}
               </button>
               <ul className="mt-6 space-y-3 text-sm text-brand-dark">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
@@ -245,9 +246,9 @@ export default function PricingPage() {
             <h2 className="font-outfit font-bold text-2xl text-brand-dark text-center mb-8">Frequently Asked Questions</h2>
             <div className="space-y-4">
               {[
-                { q: "Do I need a credit card to start?", a: "No credit card required for the Free plan. Pro and Agency plans include a 7-day free trial — we only ask for payment details when you decide to continue after the trial." },
+                { q: "Do I need a credit card to start?", a: "No credit card required for the Free plan. Pro and Agency plans include a 15-day free trial — first month free when you subscribe. We only ask for payment details when you decide to continue after the trial." },
                 { q: "Can I cancel anytime?", a: "Yes, you can cancel your subscription at any time from your account settings. No questions asked, no hidden fees." },
-                { q: "What happens after the 7-day trial?", a: "If you don't subscribe, your account automatically downgrades to the Free plan. You keep all your data and can upgrade again anytime." },
+                { q: "What happens after the 15-day trial?", a: "You get 15 days of full access. If you subscribe to Pro or Agency, your first month is free. If you don't subscribe, your account automatically downgrades to the Free plan. You keep all your data and can upgrade again anytime." },
                 { q: "Is my patient data secure?", a: "Absolutely. We use bank-level encryption (AES-256) and never share your patient data with third parties. We are HIPAA-compliant and GDPR-ready." },
                 { q: "Can I switch plans later?", a: "Yes, you can upgrade or downgrade at any time. When upgrading, you only pay the prorated difference. When downgrading, the new rate applies at the next billing cycle." },
                 { q: "Do you offer refunds?", a: "If you are not satisfied within the first 14 days of your paid subscription, contact us for a full refund — no questions asked." },

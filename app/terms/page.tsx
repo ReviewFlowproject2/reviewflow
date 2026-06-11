@@ -18,7 +18,7 @@ export default function TermsPage() {
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">2. Service Description</h2>
           <p className="mb-4">ReviewFlow provides automated email follow-up services and QR code generation to help dental clinics collect patient reviews.</p>
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">3. Subscription Plans</h2>
-          <p className="mb-4">We offer three tiers: Free, Pro ($39/month), and Agency ($69/month). Subscriptions auto-renew unless cancelled. All paid plans include a 7-day free trial.</p>
+          <p className="mb-4">We offer three tiers: Free, Pro ($39/month), and Agency ($69/month). Subscriptions auto-renew unless cancelled. All paid plans include a 15-day free trial — first month free when you subscribe.</p>
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">4. User Responsibilities</h2>
           <p className="mb-4">You are responsible for maintaining accurate patient data and complying with all applicable laws including HIPAA.</p>
           <h2 className="text-xl font-semibold text-brand-dark mt-8 mb-4">5. Refund Policy</h2>

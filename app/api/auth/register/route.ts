@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       owner_phone: phone || '',
       user_id: userId,
       subscription_status: 'trial',
-      trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      trial_ends_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
     }
 
     const { data: bizData, error: bizError } = await (supabaseAdmin as any)
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       success: true,
       businessId: biz?.id,
       userId: userId,
-      message: 'Registration successful. Start your 30-day free trial.',
+      message: 'Registration successful. Start your 15-day free trial.',
     })
   } catch (err: any) {
     console.error('Register error:', err)

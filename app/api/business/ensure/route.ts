@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         name: clinicName,
         google_review_link: reviewLink,
         plan: "free",
-        trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        trial_ends_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
       })
       .select("*");
 
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
           user_id: user.id,
           name: clinicName,
           plan: "free",
-          trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
         })
         .select("*");
 

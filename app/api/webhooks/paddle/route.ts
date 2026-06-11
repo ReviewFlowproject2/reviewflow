@@ -116,13 +116,41 @@ async function handleSubscriptionCreated(event: any) {
     return
   }
 
-  // Determine tier based on price ID
-  let tier = 'pro'
-  if (priceId === process.env.PADDLE_AGENCY_PRICE_ID) {
-    tier = 'agency'
+  // ============================================================
+  // Paddle Price ID → plan tier 映射（最新 2026-06）
+  // Old/archived IDs intentionally NOT mapped — ignore or alert.
+  // ============================================================
+  const PRICE_TO_PLAN: Record<string, string> = {
+    // Pro
+    'pri_01ktvfjxsdgfrc1407ha23vd91': 'pro',   // monthly
+    'pri_01ktvfpw9etktny986dgcy14rg': 'pro',   // quarterly
+    'pri_01ktvfmezegrnq32wn5ynk3spm': 'pro',   // yearly
+    // Agency
+    'pri_01kt1a0wwqa4nbny8d3ae0tben': 'agency', // monthly
+    'pri_01kt4s86yv5g5ty0epzr96g0cp': 'agency',// quarterly
+    'pri_01kt4s5kh3e7ft82grc8w5qzfc': 'agency',// yearly
+  }
+
+  // Archived / unknown price IDs — log and skip, don't update DB
+  const OLD_PRICE_IDS = [
+    'pri_01kt19xahgfjcw0hcmc9gkws26', // old Pro monthly
+    'pri_01kt4s6zamveeevqt9rv42e8z8', // old Pro quarterly
+    'pri_01kt4rxwhrsn4fep3shk2gjsbg', // old Pro yearly
+  ]
+
+  if (OLD_PRICE_IDS.includes(priceId)) {
+    console.error(`[Paddle] Archived price ID received: ${priceId}. Customer: ${customerEmail}. Tell them to contact support.`)
+    return
+  }
+
+  const tier = PRICE_TO_PLAN[priceId]
+  if (!tier) {
+    console.error(`[Paddle] Unknown price ID: ${priceId}. Customer: ${customerEmail}`)
+    return
   }
 
   // Update business in database
+  // Also sync `plan` so getEffectivePlan() grants correct features during trial
   const { error } = await supabaseAdmin
     .from('businesses')
     .update({
@@ -130,6 +158,7 @@ async function handleSubscriptionCreated(event: any) {
       paddle_subscription_id: subscriptionId,
       paddle_customer_id: subscription.customer_id,
       subscription_tier: tier,
+      plan: tier,
       trial_ends_at: subscription.current_billing_period?.ends_at || null,
     })
     .eq('owner_email', customerEmail)
@@ -170,6 +199,7 @@ async function handleSubscriptionCancelled(event: any) {
     .update({
       subscription_status: 'cancelled',
       subscription_tier: 'free',
+      plan: 'free',
     })
     .eq('paddle_subscription_id', subscriptionId)
 

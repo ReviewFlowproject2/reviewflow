@@ -247,7 +247,7 @@ export function getTrialInfo(trialEndsAt: string | null | undefined) {
   }
   const endDate = new Date(trialEndsAt);
   const now = new Date();
-  const startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const startDate = new Date(endDate.getTime() - 15 * 24 * 60 * 60 * 1000);
   const daysLeft = Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
   const isExpired = daysLeft <= 0;
   const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;

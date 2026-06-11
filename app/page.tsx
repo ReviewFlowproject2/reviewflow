@@ -17,7 +17,7 @@ gsap.registerPlugin(ScrollTrigger);
 // ==================== FAQ 数据 ====================
 const FAQS = [
   { q: "Will my patients feel annoyed by the email?", a: "ReviewFlow only sends one polite follow-up email to patients who visited that day, with a clear opt-out option. This is standard patient care follow-up, not bulk marketing. Most patients appreciate the reminder." },
-  { q: "Do I need a credit card to start the free trial?", a: "No credit card required. You get full access for 30 days. We only ask for payment details when you decide to continue after the trial." },
+  { q: "Do I need a credit card to start the free trial?", a: "No credit card required. You get full access for 15 days. We only ask for payment details when you decide to continue after the trial." },
   { q: "Is my patient data secure?", a: "All data is stored on HIPAA-compliant cloud infrastructure with end-to-end encryption. We never sell or share your patient information." },
   { q: "What happens when a negative review comes in?", a: "You get an instant alert via email within 15 minutes, along with a suggested reply template. This gives you the critical window to respond before the review damages your reputation." },
   { q: "How many patients can I import?", a: "Unlimited. Import via CSV bulk upload or add manually one by one. There are no patient count limits on the Pro plan." },
@@ -323,9 +323,10 @@ function PricingSection() {
           <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
             <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
             <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
-            <div className="font-outfit font-bold text-3xl text-brand-dark mb-6">$0</div>
+            <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">$0</div>
+            <p className="text-xs text-brand-muted mb-6">15-day free trial, no credit card</p>
             <Link href="/register" className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors">
-              Get Started
+              Start Free Trial
             </Link>
             <ul className="mt-6 space-y-3 text-sm text-brand-dark">
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
@@ -346,9 +347,9 @@ function PricingSection() {
             <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
               $39<span className="text-lg text-brand-muted">/mo</span>
             </div>
-            <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+            <p className="text-xs text-brand-muted mb-6">1st month free, cancel anytime</p>
             <button onClick={() => router.push("/dashboard/support")} className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors">
-              Start 7-Day Free Trial
+              Get 1st Month Free
             </button>
             <ul className="mt-6 space-y-3 text-sm text-brand-dark">
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
@@ -372,9 +373,9 @@ function PricingSection() {
             <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
               $69<span className="text-lg text-brand-muted">/mo</span>
             </div>
-            <p className="text-xs text-brand-muted mb-6">7-day free trial, cancel anytime</p>
+            <p className="text-xs text-brand-muted mb-6">1st month free, cancel anytime</p>
             <button onClick={() => router.push("/dashboard/support")} className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors">
-              Start 7-Day Free Trial
+              Get 1st Month Free
             </button>
             <ul className="mt-6 space-y-3 text-sm text-brand-dark">
               <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
