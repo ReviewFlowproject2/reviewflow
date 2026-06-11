@@ -38,20 +38,23 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. 不存在 → 使用 service role 创建（绕过 RLS）
-    const { name, googleLink } = await req.json().catch(() => ({}));
+    const { name, googleLink, phone } = await req.json().catch(() => ({}));
     const clinicName =
       name ||
       user.user_metadata?.clinic_name ||
       user.user_metadata?.full_name ||
       "My Clinic";
     const reviewLink = googleLink || "";
+    const ownerPhone = phone || user.user_metadata?.phone || "";
+    const ownerName = user.user_metadata?.full_name || user.user_metadata?.owner_name || "";
 
-    // 仅用核心字段（避免 subscription_status 等可能不存在的列）
     const { data: newBizRows, error: insertErr } = await (supabaseAdmin as any)
       .from("businesses")
       .insert({
         user_id: user.id,
         owner_email: user.email,
+        owner_name: ownerName,
+        owner_phone: ownerPhone,
         name: clinicName,
         google_review_link: reviewLink,
         plan: "free",

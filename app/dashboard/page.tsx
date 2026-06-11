@@ -288,92 +288,64 @@ export default function DashboardPage() {
       }
       const businessId = bizData?.id;
 
-      let pts: Patient[] | null = null;
+      // 并行加载：patients + reviews + 统计 → 一次往返
       if (businessId) {
-        const { data, error } = await supabase
-          .from("patients")
-          .select("*")
-          .eq("business_id", businessId)
-          .order("created_at", { ascending: false })
-          .limit(50);
+        const [ptsResult, revsResult, allReviewsResult, allPatientsResult] = await Promise.all([
+          supabase.from("patients").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(50),
+          supabase.from("reviews").select("*").eq("business_id", businessId).eq("resolved", false).lt("rating", 4).order("created_at", { ascending: false }).limit(10),
+          supabase.from("reviews").select("rating,created_at").eq("business_id", businessId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+          supabase.from("patients").select("email_status").eq("business_id", businessId),
+        ]);
 
-        if (error) {
-          console.error("Patients fetch error:", error);
-        } else {
-          pts = data;
+        if (ptsResult.error) console.error("Patients fetch error:", ptsResult.error);
+        else setPatients(ptsResult.data || []);
+
+        if (revsResult.data) {
+          setAlerts(revsResult.data.map((r: any) => ({
+            id: r.id, patient_name: r.patient_name || "Unknown",
+            rating: r.rating, comment: r.comment || "No comment",
+            created_at: r.created_at, is_new: true, resolved: r.resolved
+          })));
         }
-      }
 
-      if (pts) setPatients(pts);
+        const allReviews = allReviewsResult.data;
+        const allPatients = allPatientsResult.data;
 
-      // 查询 reviews（用 business_id）
-      const { data: revs } = await supabase
-        .from("reviews")
-        .select("*")
-        .eq("business_id", businessId || "")
-        .eq("resolved", false)
-        .lt("rating", 4)
-        .order("created_at", { ascending: false })
-        .limit(10);
+        const newReviewsCount = allReviews?.length || 0;
+        const avgRating = allReviews?.length
+          ? (allReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / allReviews.length).toFixed(1)
+          : "0.0";
+        const pendingAlertsCount = revsResult.data?.length || 0;
+        const totalEmail = allPatients?.length || 0;
+        const successEmail = allPatients?.filter((p: any) => p.email_status === "delivered" || p.email_status === "opened").length || 0;
+        const emailRate = totalEmail > 0 ? Math.round((successEmail / totalEmail) * 100) : 0;
 
-      if (revs) {
-        setAlerts(revs.map((r: any) => ({
-          id: r.id,
-          patient_name: r.patient_name || "Unknown",
-          rating: r.rating,
-          comment: r.comment || "No comment",
-          created_at: r.created_at,
-          is_new: true,
-          resolved: r.resolved
-        })));
-      }
-
-      // 统计数据
-      const { data: allReviews } = await supabase
-        .from("reviews")
-        .select("rating,created_at")
-        .eq("business_id", businessId || "")
-        .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-
-      const { data: allPatients } = await supabase
-        .from("patients")
-        .select("email_status")
-        .eq("business_id", businessId || "");
-
-      const newReviewsCount = allReviews?.length || 0;
-      const avgRating = allReviews?.length
-        ? (allReviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / allReviews.length).toFixed(1)
-        : "0.0";
-      const pendingAlertsCount = revs?.length || 0;
-      const totalEmail = allPatients?.length || 0;
-      const successEmail = allPatients?.filter((p: any) => p.email_status === "delivered" || p.email_status === "opened").length || 0;
-      const emailRate = totalEmail > 0 ? Math.round((successEmail / totalEmail) * 100) : 0;
-
-      setStats({
-        newReviews: newReviewsCount,
-        avgRating: parseFloat(avgRating as string),
-        pendingAlerts: pendingAlertsCount,
-        emailSuccess: emailRate
-      });
-
-      // 生成趋势数据
-      if (allReviews) {
-        const daysMap = new Map<string, number>();
-        const today = new Date();
-        for (let i = 0; i < trendDays; i++) {
-          const d = new Date(today);
-          d.setDate(d.getDate() - i);
-          const key = d.toISOString().split("T")[0];
-          daysMap.set(key, 0);
-        }
-        allReviews.forEach((r: any) => {
-          const dateKey = r.created_at.split("T")[0];
-          if (daysMap.has(dateKey)) {
-            daysMap.set(dateKey, (daysMap.get(dateKey) || 0) + 1);
-          }
+        setStats({
+          newReviews: newReviewsCount,
+          avgRating: parseFloat(avgRating as string),
+          pendingAlerts: pendingAlertsCount,
+          emailSuccess: emailRate
         });
-        const sorted = Array.from(daysMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-        setTrendData(sorted.map(([date, count]) => ({ date, count })));
+
+        // 生成趋势数据（放在 if 块内，复用已加载的 allReviews）
+        if (allReviews) {
+          const daysMap = new Map<string, number>();
+          const today = new Date();
+          for (let i = 0; i < trendDays; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().split("T")[0];
+            daysMap.set(key, 0);
+          }
+          allReviews.forEach((r: any) => {
+            const dateKey = r.created_at.split("T")[0];
+            if (daysMap.has(dateKey)) {
+              daysMap.set(dateKey, (daysMap.get(dateKey) || 0) + 1);
+            }
+          });
+          const sorted = Array.from(daysMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+          setTrendData(sorted.map(([date, count]) => ({ date, count })));
+        }
       }
     } catch (err: any) {
       console.error("Load data error:", err);
@@ -476,7 +448,26 @@ export default function DashboardPage() {
   const patientLimit = getLimit(effectivePlan, "maxPatients");
   const isNearPatientLimit = patients.length >= patientLimit * 0.9;
 
-  if (loading) return <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center"><div className="text-brand-muted">Loading dashboard...</div></div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#F8FAFF] flex">
+      <div className="w-[260px] min-h-screen bg-white border-r border-[#E9F1FA] fixed left-0 top-0 z-40 flex flex-col">
+        <div className="h-20 flex items-center px-6 border-b border-[#E9F1FA]">
+          <span className="font-outfit font-bold text-xl text-brand-blue">ReviewFlow</span>
+        </div>
+        <div className="flex-1 px-4 py-6 space-y-2">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="h-10 bg-brand-soft rounded-lg animate-pulse" />
+          ))}
+        </div>
+      </div>
+      <main className="flex-1 ml-[260px] p-6 lg:p-8 max-w-7xl flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
+          <p className="text-brand-muted text-sm">Loading dashboard...</p>
+        </div>
+      </main>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex">

@@ -21,8 +21,10 @@ export default function SettingsPage() {
   // Clinic info
   const [clinicName, setClinicName] = useState("");
   const [googleLink, setGoogleLink] = useState("");
+  const [phone, setPhone] = useState("");
   const [originalClinicName, setOriginalClinicName] = useState("");
   const [originalGoogleLink, setOriginalGoogleLink] = useState("");
+  const [originalPhone, setOriginalPhone] = useState("");
 
   // Password
   const [currentPassword, setCurrentPassword] = useState("");
@@ -58,6 +60,8 @@ export default function SettingsPage() {
         setOriginalClinicName(biz.name || "");
         setGoogleLink(biz.google_review_link || "");
         setOriginalGoogleLink(biz.google_review_link || "");
+        setPhone(biz.owner_phone || "");
+        setOriginalPhone(biz.owner_phone || "");
         setPlan(biz.plan || "free");
         setTrialEnds(biz.trial_ends_at ? new Date(biz.trial_ends_at).toLocaleDateString() : "");
         setEffectivePlan(getEffectivePlan(biz));
@@ -100,7 +104,7 @@ export default function SettingsPage() {
       // 存在则更新
       const res = await supabase
         .from("businesses")
-        .update({ name: clinicName, google_review_link: googleLink })
+        .update({ name: clinicName, google_review_link: googleLink, owner_phone: phone })
         .eq("user_id", user.id);
       error = res.error;
     } else {
@@ -109,7 +113,7 @@ export default function SettingsPage() {
         const res = await fetch("/api/business/ensure", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: clinicName, googleLink }),
+          body: JSON.stringify({ name: clinicName, googleLink, phone }),
         });
         const result = await res.json();
         if (!result.success) {
@@ -125,6 +129,7 @@ export default function SettingsPage() {
     } else {
       setOriginalClinicName(clinicName);
       setOriginalGoogleLink(googleLink);
+      setOriginalPhone(phone);
       showToast("Clinic info saved successfully", "success");
       // 清除 dashboard 的 clinic 提示
       localStorage.setItem("reviewflow_clinic_banner_dismissed", "true");
@@ -161,7 +166,7 @@ export default function SettingsPage() {
     router.refresh();
   };
 
-  const hasChanges = clinicName !== originalClinicName || googleLink !== originalGoogleLink;
+  const hasChanges = clinicName !== originalClinicName || googleLink !== originalGoogleLink || phone !== originalPhone;
 
   const planDetails = PLAN_INFO;
 
@@ -220,7 +225,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="font-semibold text-brand-dark">Clinic Information</h2>
-                <p className="text-xs text-brand-muted">Update your clinic name and Google Review link</p>
+                <p className="text-xs text-brand-muted">Update your clinic info, phone number, and Google Review link</p>
               </div>
             </div>
 
@@ -234,6 +239,22 @@ export default function SettingsPage() {
                   placeholder="e.g. Smile Bright Dental"
                   className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-brand-dark mb-1.5">Phone Number</label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                  className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+                />
+                {!phone && (
+                  <p className="text-xs text-amber-600 mt-1.5 flex items-center gap-1">
+                    <AlertTriangle size={12} /> Add your phone — used for SMS alerts and support
+                  </p>
+                )}
               </div>
 
               <div>

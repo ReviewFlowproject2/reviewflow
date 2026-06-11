@@ -41,32 +41,51 @@ export default function RegisterPage() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: {
-          full_name: formData.doctorName,
-          clinic_name: formData.clinicName,
+    // 通过服务端 API 注册（跳过邮件验证，直接创建用户+Business）
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          clinic: formData.clinicName,
+          name: formData.doctorName,
           phone: formData.phone,
-        },
-      },
-    });
+        }),
+      });
+      const result = await res.json();
 
-    if (error) {
-      if (error.message.includes("already registered") || error.message.includes("already exists")) {
-        setError("This email is already registered. Please log in instead.");
-      } else {
-        setError(error.message);
+      if (!res.ok || result.error) {
+        if (result.error?.includes("already") || result.error?.includes("exists")) {
+          setError("This email is already registered. Please log in instead.");
+        } else {
+          setError(result.error || "Registration failed");
+        }
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-      return;
-    }
 
-    // 注册成功，显示验证提示
-    setSuccess(true);
-    setLoading(false);
+      // 注册成功 → 自动登录
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (loginError) {
+        // 登录失败但注册成功 → 提示用户手动登录
+        setSuccess(true);
+        setLoading(false);
+        return;
+      }
+
+      // 成功 → 直接进 Dashboard
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || "Network error, please try again");
+      setLoading(false);
+    }
   };
 
   const handleGoogleRegister = async () => {
@@ -101,21 +120,12 @@ export default function RegisterPage() {
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
             <h1 className="font-outfit font-bold text-xl text-brand-dark mb-2">
-              Check Your Email
+              Registration Successful
             </h1>
             <p className="text-brand-muted text-sm mb-4">
-              We sent a verification link to{" "}
-              <span className="font-semibold text-brand-dark">{formData.email}</span>.<br />
-              Click the link to activate your account and start using ReviewFlow.
+              Your account <span className="font-semibold text-brand-dark">{formData.email}</span> has been created.<br />
+              Log in to start your 15-day free trial.
             </p>
-            <div className="bg-blue-50 rounded-lg p-4 mb-4 text-left">
-              <p className="text-sm text-blue-700 font-medium mb-1">What&apos;s next?</p>
-              <ul className="text-sm text-blue-600 space-y-1">
-                <li>1. Open your email inbox</li>
-                <li>2. Click the verification link</li>
-                <li>3. You&apos;ll be automatically logged in</li>
-              </ul>
-            </div>
             <Link
               href="/login"
               className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors"
