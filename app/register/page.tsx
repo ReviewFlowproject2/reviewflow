@@ -41,38 +41,33 @@ export default function RegisterPage() {
       return;
     }
 
-    // 通过服务端 API 注册（跳过邮件验证，直接创建用户+Business）
-    try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          clinic: formData.clinicName,
-          name: formData.doctorName,
+    // 使用 signUp() — Supabase 自动发验证邮件（Resend SMTP）
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        data: {
+          full_name: formData.doctorName,
+          clinic_name: formData.clinicName,
           phone: formData.phone,
-        }),
-      });
-      const result = await res.json();
+        },
+      },
+    });
 
-      if (!res.ok || result.error) {
-        if (result.error?.includes("already") || result.error?.includes("exists")) {
-          setError("This email is already registered. Please log in instead.");
-        } else {
-          setError(result.error || "Registration failed");
-        }
-        setLoading(false);
-        return;
+    if (error) {
+      if (error.message.includes("already") || error.message.includes("exists")) {
+        setError("This email is already registered. Please log in instead.");
+      } else {
+        setError(error.message);
       }
-
-      // 注册成功 → 提示验证邮箱
-      setSuccess(true);
       setLoading(false);
-    } catch (err: any) {
-      setError(err.message || "Network error, please try again");
-      setLoading(false);
+      return;
     }
+
+    // 注册成功 → 提示验证邮箱
+    setSuccess(true);
+    setLoading(false);
   };
 
   const handleGoogleRegister = async () => {
