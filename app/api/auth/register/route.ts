@@ -16,10 +16,12 @@ export async function POST(req: NextRequest) {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,  // 发送验证邮件
       user_metadata: {
         clinic_name: clinic,
-        owner_name: name,
+        owner_name: name || '',
+        full_name: name || '',
+        phone: phone || '',
       }
     })
 

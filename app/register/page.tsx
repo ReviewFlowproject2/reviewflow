@@ -66,22 +66,9 @@ export default function RegisterPage() {
         return;
       }
 
-      // 注册成功 → 自动登录
-      const { error: loginError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (loginError) {
-        // 登录失败但注册成功 → 提示用户手动登录
-        setSuccess(true);
-        setLoading(false);
-        return;
-      }
-
-      // 成功 → 直接进 Dashboard
-      router.push("/dashboard");
-      router.refresh();
+      // 注册成功 → 提示验证邮箱
+      setSuccess(true);
+      setLoading(false);
     } catch (err: any) {
       setError(err.message || "Network error, please try again");
       setLoading(false);
@@ -120,18 +107,21 @@ export default function RegisterPage() {
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
             <h1 className="font-outfit font-bold text-xl text-brand-dark mb-2">
-              Registration Successful
+              Check Your Email
             </h1>
             <p className="text-brand-muted text-sm mb-4">
-              Your account <span className="font-semibold text-brand-dark">{formData.email}</span> has been created.<br />
-              Log in to start your 15-day free trial.
+              We sent a verification link to{" "}
+              <span className="font-semibold text-brand-dark">{formData.email}</span>.<br />
+              Click the link to activate your account and start your 15-day free trial.
             </p>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors"
-            >
-              Go to Log In
-            </Link>
+            <div className="bg-blue-50 rounded-lg p-4 mb-4 text-left">
+              <p className="text-sm text-blue-700 font-medium mb-1">Didn&apos;t get the email?</p>
+              <ul className="text-sm text-blue-600 space-y-1">
+                <li>• Check your spam / junk folder</li>
+                <li>• Wait 1-2 minutes and refresh</li>
+                <li>• Still nothing? <Link href="/login" className="underline font-medium">Try logging in</Link> — your account may already be active</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
