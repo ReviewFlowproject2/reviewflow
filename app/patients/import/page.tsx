@@ -4,19 +4,9 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import {
-  ArrowLeft, Upload, Download, CheckCircle, AlertTriangle,
-  FileSpreadsheet, X, ChevronDown, ChevronUp
-} from "lucide-react";
+import { ArrowLeft, Upload, Download, CheckCircle, AlertTriangle, FileSpreadsheet, X, ChevronDown, ChevronUp } from "lucide-react";
 
-interface CsvRow {
-  name: string;
-  phone: string;
-  email: string;
-  visit_date: string;
-  rowNumber: number;
-  errors: string[];
-}
+interface CsvRow { name: string; phone: string; email: string; visit_date: string; rowNumber: number; errors: string[]; }
 
 export default function ImportPatientsPage() {
   const router = useRouter();
@@ -27,214 +17,111 @@ export default function ImportPatientsPage() {
   const [importedCount, setImportedCount] = useState(0);
   const [showErrors, setShowErrors] = useState(true);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!);
 
-  // 下载 CSV 模板
   const downloadTemplate = () => {
     const template = "name,phone,email,visit_date\nJohn Doe,+1-555-0101,john@example.com,2026-06-01\nJane Smith,+1-555-0102,jane@example.com,2026-06-02\nRobert Brown,+1-555-0103,,2026-06-03";
     const blob = new Blob([template], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "reviewflow_patients_template.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    const a = document.createElement("a"); a.href = url; a.download = "reviewflow_patients_template.csv"; a.click(); URL.revokeObjectURL(url);
   };
 
-  // 解析 CSV
   const parseCSV = (text: string): CsvRow[] => {
     const lines = text.trim().split("\n");
     if (lines.length < 2) return [];
-
     const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
-    const nameIdx = headers.indexOf("name");
-    const phoneIdx = headers.indexOf("phone");
-    const emailIdx = headers.indexOf("email");
-    const dateIdx = headers.indexOf("visit_date");
-
     const rows: CsvRow[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(",").map((c) => c.trim());
+      const values = lines[i].split(",").map((v) => v.trim());
+      const obj: any = {};
+      headers.forEach((h, j) => { obj[h] = values[j] || ""; });
       const errors: string[] = [];
-
-      if (nameIdx === -1 || !cols[nameIdx]) errors.push("Name is required");
-      if (phoneIdx === -1 || !cols[phoneIdx]) errors.push("Phone is required");
-      if (dateIdx === -1 || !cols[dateIdx]) errors.push("Visit date is required");
-      else {
-        const d = new Date(cols[dateIdx]);
-        if (isNaN(d.getTime())) errors.push("Invalid date format (use YYYY-MM-DD)");
-      }
-
-      rows.push({
-        name: cols[nameIdx] || "",
-        phone: cols[phoneIdx] || "",
-        email: emailIdx >= 0 ? cols[emailIdx] : "",
-        visit_date: cols[dateIdx] || "",
-        rowNumber: i + 1,
-        errors,
-      });
+      if (!obj.name) errors.push("Name is required");
+      if (!obj.phone) errors.push("Phone is required");
+      if (obj.visit_date && !/^\d{4}-\d{2}-\d{2}$/.test(obj.visit_date)) errors.push("Invalid date format (YYYY-MM-DD)");
+      rows.push({ name: obj.name || "", phone: obj.phone || "", email: obj.email || "", visit_date: obj.visit_date || "", rowNumber: i + 1, errors });
     }
     return rows;
   };
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setFile(f);
-    setImportedCount(0);
-
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
       const rows = parseCSV(text);
-      const valid = rows.filter((r) => r.errors.length === 0);
-      const invalid = rows.filter((r) => r.errors.length > 0);
-      setPreview(valid);
-      setErrorRows(invalid);
+      setPreview(rows.filter((r) => r.errors.length === 0));
+      setErrorRows(rows.filter((r) => r.errors.length > 0));
+      setImportedCount(0);
     };
     reader.readAsText(f);
-  }, []);
+  };
 
   const handleImport = async () => {
     if (preview.length === 0) return;
     setImporting(true);
-
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push("/login"); return; }
-
+    if (!user) { setImporting(false); return; }
     const { data: biz } = await supabase.from("businesses").select("id").eq("user_id", user.id).single();
-    const businessId = biz?.id || user.id;
+    if (!biz) { setImporting(false); return; }
 
-    let successCount = 0;
-    for (const row of preview) {
-      const { error } = await supabase.from("patients").insert({
-        business_id: businessId,
-        name: row.name,
-        phone: row.phone,
-        email: row.email || null,
-        visit_date: row.visit_date,
-        email_status: "pending",
-      });
-      if (!error) successCount++;
-    }
-
-    setImportedCount(successCount);
-    setPreview([]);
-    setFile(null);
+    const toInsert = preview.map((r) => ({ business_id: biz.id, name: r.name, phone: r.phone, visit_date: r.visit_date || new Date().toISOString().split("T")[0] }));
+    const { error } = await supabase.from("patients").upsert(toInsert, { onConflict: "business_id, phone", ignoreDuplicates: true });
+    if (error) { alert(error.message); } else { setImportedCount(toInsert.length); setPreview([]); setFile(null); }
     setImporting(false);
   };
 
-  const clearFile = () => {
-    setFile(null);
-    setPreview([]);
-    setErrorRows([]);
-    setImportedCount(0);
-  };
+  const inputClass = "w-full rounded-xl border border-slate-300 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500";
 
   return (
-    <div className="min-h-screen bg-[#F8FAFF] p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Back */}
-        <div className="mb-6">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors">
-            <ArrowLeft size={16} />Back to Dashboard
-          </Link>
-        </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-6"><ArrowLeft size={14} /> Back to Dashboard</Link>
+        <h1 className="font-extrabold text-3xl text-slate-900 tracking-tight mb-2">Import Patients</h1>
+        <p className="text-slate-500 mb-8">Upload a CSV with patient data to send review requests.</p>
 
-        <h1 className="font-outfit font-bold text-2xl text-brand-dark mb-2">Import Patients</h1>
-        <p className="text-brand-muted text-sm mb-8">Upload a CSV file to bulk import patients. Download the template below to get started.</p>
-
-        {/* Template Download */}
-        <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-brand-blue">
-                <FileSpreadsheet size={20} />
-              </div>
-              <div>
-                <h3 className="font-semibold text-brand-dark text-sm">CSV Template</h3>
-                <p className="text-xs text-brand-muted">Required columns: name, phone, email, visit_date</p>
-              </div>
-            </div>
-            <button
-              onClick={downloadTemplate}
-              className="inline-flex items-center gap-2 px-4 py-2 border border-brand-blue text-brand-blue font-semibold rounded-xl text-sm hover:bg-brand-blue hover:text-white transition-colors"
-            >
-              <Download size={16} />Download Template
-            </button>
-          </div>
-        </div>
-
-        {/* Upload Area */}
-        {!file ? (
-          <div className="bg-white rounded-2xl border border-dashed border-brand-soft p-10 text-center">
-            <Upload className="mx-auto text-brand-muted mb-3" size={40} />
-            <h3 className="font-semibold text-brand-dark mb-1">Drop your CSV file here</h3>
-            <p className="text-sm text-brand-muted mb-4">or click to browse</p>
-            <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors cursor-pointer">
-              <Upload size={16} />Select File
-              <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-            </label>
+        {importedCount > 0 ? (
+          <div className="bg-white rounded-2xl border border-emerald-200 p-8 text-center shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><CheckCircle className="w-7 h-7 text-emerald-500" /></div>
+            <h2 className="font-bold text-xl text-slate-900 mb-2">Import Complete</h2>
+            <p className="text-slate-500 mb-6">{importedCount} patients imported successfully.</p>
+            <button onClick={() => { setImportedCount(0); setFile(null); }} className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-full text-sm hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">Import Another File</button>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-brand-soft/50 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <FileSpreadsheet size={20} className="text-brand-blue" />
-                <div>
-                  <p className="font-semibold text-brand-dark text-sm">{file.name}</p>
-                  <p className="text-xs text-brand-muted">{(file.size / 1024).toFixed(1)} KB</p>
-                </div>
-              </div>
-              <button onClick={clearFile} className="text-brand-muted hover:text-red-500 transition-colors"><X size={18} /></button>
+          <>
+            {/* Template download */}
+            <div className="flex items-center justify-between mb-6">
+              <button onClick={downloadTemplate} className="text-sm text-emerald-600 font-semibold hover:text-emerald-700 flex items-center gap-1.5"><Download size={16} />Download CSV Template</button>
             </div>
 
-            {/* Preview Stats */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-brand-soft rounded-xl p-3 text-center">
-                <p className="font-outfit font-bold text-lg text-brand-blue">{preview.length + errorRows.length}</p>
-                <p className="text-xs text-brand-muted">Total Rows</p>
-              </div>
-              <div className="bg-green-50 rounded-xl p-3 text-center">
-                <p className="font-outfit font-bold text-lg text-green-600">{preview.length}</p>
-                <p className="text-xs text-brand-muted">Valid</p>
-              </div>
-              <div className="bg-red-50 rounded-xl p-3 text-center">
-                <p className="font-outfit font-bold text-lg text-red-600">{errorRows.length}</p>
-                <p className="text-xs text-brand-muted">Errors</p>
-              </div>
-            </div>
+            {/* Upload area */}
+            <label className="block w-full border-2 border-dashed border-slate-300 rounded-2xl p-10 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors bg-white mb-6">
+              <Upload size={32} className="text-slate-400 mx-auto mb-3" />
+              <p className="font-semibold text-slate-700 mb-1">{file ? file.name : "Drop your CSV here or click to browse"}</p>
+              <p className="text-sm text-slate-400">CSV format: name, phone, email, visit_date</p>
+              <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+            </label>
 
-            {/* Error Rows */}
+            {/* Error rows */}
             {errorRows.length > 0 && (
-              <div className="mb-4">
-                <button
-                  onClick={() => setShowErrors(!showErrors)}
-                  className="flex items-center gap-2 text-sm text-red-600 font-semibold mb-2"
-                >
-                  <AlertTriangle size={16} />
-                  {errorRows.length} row(s) have errors
-                  {showErrors ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              <div className="bg-white rounded-2xl border border-red-200 shadow-sm mb-6 overflow-hidden">
+                <button onClick={() => setShowErrors(!showErrors)} className="w-full flex items-center justify-between p-4 text-left">
+                  <span className="font-semibold text-red-700 flex items-center gap-2"><AlertTriangle size={16} />{errorRows.length} rows with errors</span>
+                  {showErrors ? <ChevronUp size={18} className="text-red-400" /> : <ChevronDown size={18} className="text-red-400" />}
                 </button>
                 {showErrors && (
-                  <div className="bg-red-50 rounded-xl border border-red-100 overflow-hidden">
+                  <div className="px-4 pb-4">
                     <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-red-100">
-                          <th className="text-left px-4 py-2 text-xs font-semibold text-red-700">Row</th>
-                          <th className="text-left px-4 py-2 text-xs font-semibold text-red-700">Name</th>
-                          <th className="text-left px-4 py-2 text-xs font-semibold text-red-700">Error</th>
-                        </tr>
-                      </thead>
+                      <thead><tr className="text-left text-xs text-slate-400 border-b border-slate-100"><th className="py-2 pr-4">Row</th><th className="py-2 pr-4">Name</th><th className="py-2 pr-4">Phone</th><th className="py-2">Errors</th></tr></thead>
                       <tbody>
-                        {errorRows.map((row) => (
-                          <tr key={row.rowNumber} className="border-b border-red-100/50">
-                            <td className="px-4 py-2 text-red-600 font-medium">#{row.rowNumber}</td>
-                            <td className="px-4 py-2 text-brand-dark">{row.name || "—"}</td>
-                            <td className="px-4 py-2 text-red-600">{row.errors.join("; ")}</td>
+                        {errorRows.map((r) => (
+                          <tr key={r.rowNumber} className="border-b border-red-50">
+                            <td className="py-2 pr-4 text-slate-500">#{r.rowNumber}</td>
+                            <td className="py-2 pr-4 text-slate-700">{r.name || "-"}</td>
+                            <td className="py-2 pr-4 text-slate-500">{r.phone || "-"}</td>
+                            <td className="py-2 text-red-600">{r.errors.join(", ")}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -244,59 +131,36 @@ export default function ImportPatientsPage() {
               </div>
             )}
 
-            {/* Valid Preview */}
+            {/* Preview table */}
             {preview.length > 0 && (
-              <div className="mb-4">
-                <p className="text-sm font-semibold text-brand-dark mb-2">Preview ({preview.length} valid rows)</p>
-                <div className="bg-brand-soft/50 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+                <div className="flex items-center justify-between p-4 border-b border-slate-100">
+                  <span className="font-semibold text-slate-900 flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" />{preview.length} valid rows</span>
+                  <button onClick={handleImport} disabled={importing}
+                    className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-full text-sm hover:bg-emerald-600 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-500/20">
+                    {importing ? "Importing..." : `Import ${preview.length} Patients`}
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-white sticky top-0">
-                      <tr className="border-b border-brand-soft">
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Name</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Phone</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Email</th>
-                        <th className="text-left px-4 py-2 text-xs font-semibold text-brand-muted">Visit Date</th>
-                      </tr>
-                    </thead>
+                    <thead><tr className="text-left text-xs text-slate-400 border-b border-slate-100"><th className="py-3 px-4">#</th><th className="py-3 px-4">Name</th><th className="py-3 px-4">Phone</th><th className="py-3 px-4">Email</th><th className="py-3 px-4">Visit Date</th></tr></thead>
                     <tbody>
-                      {preview.slice(0, 10).map((row, i) => (
-                        <tr key={i} className="border-b border-brand-soft/30">
-                          <td className="px-4 py-2 text-brand-dark">{row.name}</td>
-                          <td className="px-4 py-2 text-brand-muted">{row.phone}</td>
-                          <td className="px-4 py-2 text-brand-muted">{row.email || "—"}</td>
-                          <td className="px-4 py-2 text-brand-muted">{row.visit_date}</td>
+                      {preview.slice(0, 10).map((r) => (
+                        <tr key={r.rowNumber} className="border-b border-slate-50">
+                          <td className="py-2.5 px-4 text-slate-400">{r.rowNumber}</td>
+                          <td className="py-2.5 px-4 text-slate-700 font-medium">{r.name}</td>
+                          <td className="py-2.5 px-4 text-slate-500">{r.phone}</td>
+                          <td className="py-2.5 px-4 text-slate-500">{r.email || "-"}</td>
+                          <td className="py-2.5 px-4 text-slate-500">{r.visit_date || "-"}</td>
                         </tr>
                       ))}
-                      {preview.length > 10 && (
-                        <tr><td colSpan={4} className="px-4 py-2 text-xs text-brand-muted text-center">...and {preview.length - 10} more rows</td></tr>
-                      )}
                     </tbody>
                   </table>
+                  {preview.length > 10 && <p className="text-xs text-slate-400 p-4">Showing 10 of {preview.length} rows</p>}
                 </div>
               </div>
             )}
-
-            {/* Import Button */}
-            {preview.length > 0 && (
-              <button
-                onClick={handleImport}
-                disabled={importing}
-                className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
-              >
-                <Upload size={16} />
-                {importing ? "Importing..." : `Import ${preview.length} Patients`}
-              </button>
-            )}
-
-            {importedCount > 0 && (
-              <div className="mt-4 p-4 bg-green-50 rounded-xl flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-                <p className="text-sm text-green-700">
-                  Successfully imported <span className="font-semibold">{importedCount}</span> patients!
-                </p>
-              </div>
-            )}
-          </div>
+          </>
         )}
       </div>
     </div>

@@ -43,21 +43,23 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // OpenClaw 品牌色
+        // ReviewFlow brand colors (dark navy + emerald accent)
         brand: {
-          blue: "#023A78",
-          yellow: "#FEDB01",
-          soft: "#E9F1FA",
-          muted: "#546E8E",
-          dark: "#001B40",
+          blue: "#1E40AF",    // blue-800 — links / CTAs in light sections
+          yellow: "#10B981",  // emerald-500 — accent / buttons (renamed from yellow, kept key for compat)
+          soft: "#F1F5F9",    // slate-100 — light backgrounds
+          muted: "#64748B",   // slate-500 — body text
+          dark: "#0F172A",    // slate-900 — headings / dark sections
         },
       },
       fontFamily: {
         outfit: ["Outfit", "sans-serif"],
-        sans: ["Noto Sans SC", "sans-serif"],
+        sans: ["Inter", "Noto Sans SC", "sans-serif"],
       },
       boxShadow: {
-        card: "0 4px 24px rgba(2,58,120,0.06)",
+        card: "0 4px 24px rgba(15,23,42,0.06)",
+        "glow-green": "0 0 40px rgba(16,185,129,0.25)",
+        "glow-green-sm": "0 0 20px rgba(16,185,129,0.15)",
       },
       borderRadius: {
         lg: "var(--radius)",

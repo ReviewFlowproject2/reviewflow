@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { motion, useInView, useMotionValue, useTransform, animate } from "framer-motion";
 import {
   Search,
   Mail,
@@ -283,14 +284,24 @@ function HeroSection() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* LEFT — Text */}
             <div>
-              <h1 className="font-[Inter] font-extrabold text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-white mb-6">
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="font-[Inter] font-extrabold text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-white mb-6"
+              >
                 See How Your Clinic Compares
-              </h1>
-              <p className="text-lg text-slate-300 leading-relaxed mb-8 max-w-lg">
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.15, ease: "easeOut" }}
+                className="text-lg text-slate-300 leading-relaxed mb-8 max-w-lg"
+              >
                 Free Review Audit — Get a personalized report comparing your
                 Google &amp; Yelp reviews against local competitors. No credit
                 card required.
-              </p>
+              </motion.p>
 
               {/* Trust badges */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-slate-400">
@@ -310,7 +321,12 @@ function HeroSection() {
             </div>
 
             {/* RIGHT — Floating form card with green glow */}
-            <div className="relative">
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, delay: 0.3, ease: "easeOut" }}
+              className="relative"
+            >
               {/* Green glow behind card */}
               <div
                 className="absolute -inset-1 rounded-[28px] opacity-70 blur-xl pointer-events-none"
@@ -432,7 +448,7 @@ function HeroSection() {
                   </p>
                 </form>
               </div>
-            </div>
+            </motion.div>
           </div>
         )}
       </div>
@@ -443,7 +459,16 @@ function HeroSection() {
 // ==================== Dashboard Preview Section ====================
 
 function DashboardPreviewSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+
   return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={isInView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+    >
     <section className="py-20 md:py-28 bg-slate-50">
       <div className="max-w-5xl mx-auto px-6">
         {/* Section header */}
@@ -569,21 +594,44 @@ function DashboardPreviewSection() {
         </div>
       </div>
     </section>
+    </motion.div>
   );
 }
 
 // ==================== Social Proof — Glass Cards ====================
 
 function SocialProofSection() {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!isInView) return;
+    const controls = animate(0, 200, {
+      duration: 2,
+      ease: "easeOut",
+      onUpdate(v) { setCount(Math.round(v)); },
+    });
+    return () => controls.stop();
+  }, [isInView]);
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: (i: number) => ({
+      opacity: 1, y: 0,
+      transition: { duration: 0.5, delay: 0.1 * i, ease: "easeOut" as const },
+    }),
+  };
+
   return (
-    <section className="py-20 md:py-28 bg-slate-900 relative">
+    <section ref={ref} className="py-20 md:py-28 bg-slate-900 relative">
       {/* Subtle texture */}
       <GridTexture />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6">
         <div className="text-center mb-14">
           <h2 className="font-[Inter] font-extrabold text-3xl md:text-4xl text-white tracking-tight mb-3">
-            Trusted by 200+ Dental Clinics
+            Trusted by {count}+ Dental Clinics
           </h2>
           <p className="text-slate-400 text-lg">
             Real results from real practices across the US.
@@ -593,8 +641,12 @@ function SocialProofSection() {
         {/* 3 Glass Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {TESTIMONIALS.map((t, i) => (
-            <div
+            <motion.div
               key={i}
+              custom={i}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              variants={cardVariants}
               className="group bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6
                          hover:bg-slate-800/70 hover:-translate-y-1 transition-all duration-300"
             >
@@ -621,7 +673,7 @@ function SocialProofSection() {
                   <p className="text-xs text-slate-500">{t.role}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

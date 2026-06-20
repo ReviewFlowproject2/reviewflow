@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Star, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,15 +23,8 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
+    if (error) { setError(error.message); setLoading(false); return; }
     router.push("/dashboard");
     router.refresh();
   };
@@ -39,40 +32,36 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError("");
-
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    }
+    if (error) { setError(error.message); setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center p-6">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
+        {/* Brand */}
         <div className="text-center mb-8">
-          <Link href="/" className="font-outfit font-bold text-2xl text-brand-blue">
-            ReviewFlow
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+              <Star size={14} className="text-white" fill="white" />
+            </div>
+            <span className="font-bold text-2xl text-white tracking-tight">ReviewFlow</span>
           </Link>
-          <p className="text-brand-muted text-sm mt-2">Google Review Automation for Dental Offices</p>
+          <p className="text-slate-400 text-sm mt-2">Google Review Automation for Dental Offices</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#E0E7F1] p-8 shadow-card">
-          <h1 className="font-outfit font-bold text-xl text-brand-dark text-center mb-6">
-            Log In to Your Account
-          </h1>
+        {/* Card */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-8 shadow-xl">
+          <h1 className="font-bold text-xl text-slate-900 text-center mb-6">Log In to Your Account</h1>
 
-          {/* Google Login */}
+          {/* Google */}
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full py-3 border-2 border-[#E0E7F1] text-brand-dark font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-3 mb-4"
+            className="w-full py-3 border-2 border-slate-200 text-slate-700 font-semibold rounded-xl text-sm hover:bg-slate-50 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-3 mb-4"
           >
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" />
@@ -84,79 +73,50 @@ export default function LoginPage() {
           </button>
 
           <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-[#E0E7F1]" />
-            <span className="text-xs text-brand-muted">or</span>
-            <div className="flex-1 h-px bg-[#E0E7F1]" />
+            <div className="flex-1 h-px bg-slate-200" />
+            <span className="text-xs text-slate-400">or</span>
+            <div className="flex-1 h-px bg-slate-200" />
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">
-              {error}
-            </div>
-          )}
+          {error && <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg">{error}</div>}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-brand-dark mb-1.5">Email</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
               <div className="relative">
-                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
-                <input
-                  type="email"
-                  required
-                  placeholder="you@clinic.com"
-                  value={email}
+                <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type="email" required placeholder="you@clinic.com" value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl border border-brand-soft pl-10 pr-3 py-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                />
+                  className="w-full rounded-xl border border-slate-300 pl-10 pr-3 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-brand-dark mb-1.5">Password</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
               <div className="relative">
-                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  placeholder="Enter your password"
-                  value={password}
+                <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input type={showPassword ? "text" : "password"} required placeholder="Enter your password" value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl border border-brand-soft pl-10 pr-10 py-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted"
-                >
+                  className="w-full rounded-xl border border-slate-300 pl-10 pr-10 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
-
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-brand-muted cursor-pointer">
-                <input type="checkbox" className="rounded border-brand-soft" />
-                Remember me
+              <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
+                <input type="checkbox" className="rounded border-slate-300" /> Remember me
               </label>
-              <Link href="/forgot-password" className="text-sm text-brand-blue font-semibold hover:underline">
-                Forgot password?
-              </Link>
+              <Link href="/forgot-password" className="text-sm text-emerald-600 font-semibold hover:text-emerald-700">Forgot password?</Link>
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
-            >
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-emerald-500 text-white font-semibold rounded-full text-sm hover:bg-emerald-600 transition-colors disabled:opacity-50 shadow-lg shadow-emerald-500/20">
               {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-brand-muted">
+          <div className="mt-6 text-center text-sm text-slate-500">
             Don&apos;t have an account?{" "}
-            <Link href="/register" className="text-brand-blue font-semibold hover:underline">
-              Start Free Trial
-            </Link>
+            <Link href="/register" className="text-emerald-600 font-semibold hover:text-emerald-700">Start Free Trial</Link>
           </div>
         </div>
       </div>
