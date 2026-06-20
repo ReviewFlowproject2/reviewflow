@@ -7,7 +7,8 @@ import {
   Star, MessageCircle, AlertTriangle, ShieldAlert, CheckCircle, Check,
   Search, Plus, LogOut, Settings, Users, Home, ExternalLink, QrCode, Mail,
   X, UserCheck, Stethoscope, RefreshCw, Clock, Zap, CheckSquare, MessageSquare,
-  TrendingUp, Calendar, BarChart3, Building2, Bell, Lock, Eye, EyeOff
+  TrendingUp, Calendar, BarChart3, Building2, Bell, Lock, Eye, EyeOff,
+  ChevronRight, Pin, PinOff
 } from "lucide-react";
 import { createBrowserClient } from "@supabase/ssr";
 import { getEffectivePlan, getTrialInfo, canUseFeature, getLimit, type EffectivePlan } from "@/lib/plan-config";
@@ -133,9 +134,145 @@ function Sidebar({ business, effectivePlan }: { business: Business | null; effec
   );
 }
 
+// ==================== Empty State ====================
+function EmptyState({ icon: Icon, title, desc, action, actionLabel, href }: {
+  icon: any; title: string; desc: string; action?: () => void; actionLabel?: string; href?: string;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+        <Icon className="w-7 h-7 text-slate-400" />
+      </div>
+      <h3 className="font-semibold text-slate-700 mb-1">{title}</h3>
+      <p className="text-sm text-slate-500 max-w-xs mb-4">{desc}</p>
+      {href ? (
+        <Link href={href} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:text-brand-dark transition-colors">
+          {actionLabel || "Get started"} <ChevronRight size={14} />
+        </Link>
+      ) : action ? (
+        <button onClick={action} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:text-brand-dark transition-colors">
+          {actionLabel || "Get started"} <ChevronRight size={14} />
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
+// ==================== Onboarding Checklist ====================
+interface ChecklistItem {
+  id: string; label: string; done: boolean; href: string;
+}
+
+function OnboardingChecklist({ business, patients }: { business: Business | null; patients: Patient[] }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    const d = localStorage.getItem("rf_checklist_dismissed");
+    if (d) setDismissed(true);
+  }, []);
+
+  const items: ChecklistItem[] = [
+    { id: "clinic", label: "Set up your clinic profile", done: !!(business?.name), href: "/settings" },
+    { id: "qr", label: "Generate & print QR code", done: false, href: "/dashboard/qr-code" },
+    { id: "patients", label: "Import your patient list", done: patients.length > 0, href: "/patients/import" },
+    { id: "reviewlink", label: "Add Google Review link", done: !!(business?.google_review_link), href: "/settings" },
+    { id: "email", label: "Send first review request", done: patients.some(p => p.email_status !== "pending"), href: "/dashboard" },
+  ];
+
+  const incomplete = items.filter(i => !i.done);
+  const allDone = incomplete.length === 0;
+
+  const dismiss = () => {
+    setDismissed(true);
+    localStorage.setItem("rf_checklist_dismissed", "true");
+  };
+
+  if (dismissed || allDone) return null;
+
+  if (collapsed) {
+    return (
+      <div className="fixed right-4 bottom-8 z-50">
+        <button
+          onClick={() => setCollapsed(false)}
+          className="flex items-center gap-2 px-4 py-3 bg-white rounded-2xl shadow-lg border border-amber-200 hover:shadow-xl transition-all"
+        >
+          <AlertTriangle size={16} className="text-amber-500" />
+          <span className="text-sm font-semibold text-slate-700">{incomplete.length} steps left</span>
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <CheckSquare size={16} className="text-brand-blue" />
+          <h3 className="font-bold text-sm text-slate-900">Setup Progress</h3>
+          <span className="text-xs text-slate-400">{items.length - incomplete.length}/{items.length}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setCollapsed(true)} className="p-1 rounded hover:bg-slate-100 text-slate-400" title="Minimize">
+            <Pin size={14} />
+          </button>
+          <button onClick={dismiss} className="p-1 rounded hover:bg-slate-100 text-slate-400" title="Dismiss">
+            <X size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-1.5 bg-slate-100 rounded-full mb-4 overflow-hidden">
+        <div
+          className="h-full bg-brand-blue rounded-full transition-all duration-500"
+          style={{ width: `${((items.length - incomplete.length) / items.length) * 100}%` }}
+        />
+      </div>
+
+      {/* Items — only show incomplete */}
+      <div className="space-y-1">
+        {items.map((item) => (
+          <Link
+            key={item.id}
+            href={item.href}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+              item.done
+                ? "text-slate-400 line-through decoration-slate-300"
+                : "text-slate-700 hover:bg-slate-50 font-medium"
+            }`}
+          >
+            {item.done ? (
+              <CheckCircle size={16} className="text-green-500 shrink-0" />
+            ) : (
+              <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+            )}
+            <span className="flex-1">{item.label}</span>
+            {!item.done && <ChevronRight size={14} className="text-slate-400 shrink-0" />}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ==================== Trend Chart (CSS only) ====================
 function TrendChart({ data, days }: { data: TrendData[]; days: number }) {
-  if (data.length === 0) return null;
+  if (data.length === 0) return (
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <TrendingUp className="w-5 h-5 text-slate-400" />
+        <h2 className="font-semibold text-lg text-slate-500">Review Trends</h2>
+      </div>
+      <EmptyState
+        icon={BarChart3}
+        title="No review data yet"
+        desc="Your review trends will appear here once you connect Google and start collecting reviews."
+        href="/dashboard/qr-code"
+        actionLabel="Generate QR Code"
+      />
+    </div>
+  );
   const maxCount = Math.max(...data.map(d => d.count), 1);
   const total = data.reduce((sum, d) => sum + d.count, 0);
   return (
@@ -472,8 +609,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFF] flex">
       <Sidebar business={business} effectivePlan={effectivePlan} />
-      <main className="flex-1 ml-[260px] p-6 lg:p-8 max-w-7xl">
+      <main className="flex-1 ml-[260px] p-6 lg:p-8">
         <ToastContainer toasts={toasts} onRemove={removeToast} />
+        <div className="flex flex-col lg:flex-row gap-6 max-w-7xl">
+          <div className="flex-1 min-w-0">
         {showTopBanner && !bannerDismissed && (
           <div className={`${bannerColor} rounded-2xl p-4 mb-6 flex items-center justify-between gap-4`}>
             <div className="flex items-center gap-3">
@@ -638,6 +777,15 @@ export default function DashboardPage() {
             {filteredPatients.length === 0 && <div className="p-8 text-center text-sm text-brand-muted">No patients found. <Link href="/patients/import" className="text-brand-blue hover:underline">Import patients</Link></div>}
           </div>
         </div>
+          </div>{/* close flex-1 content */}
+
+          {/* Right panel — Checklist */}
+          <div className="lg:w-[280px] shrink-0">
+            <div className="lg:sticky lg:top-24 space-y-4">
+              <OnboardingChecklist business={business} patients={patients} />
+            </div>
+          </div>
+        </div>{/* close flex-row */}
       </main>
 
       {/* ---- 密码重置对话框 ---- */}
