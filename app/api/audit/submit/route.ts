@@ -124,11 +124,12 @@ function generateMockReport(clinicName: string): MockReport {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { clinicName, email, name, placeId } = body as {
+    const { clinicName, email, name, placeId, website } = body as {
       clinicName?: string;
       email?: string;
       name?: string;
       placeId?: string;
+      website?: string;
     };
 
     // Validate required fields
@@ -157,6 +158,7 @@ export async function POST(req: NextRequest) {
     const trimmedEmail = email.trim().toLowerCase();
     const trimmedUserName = name?.trim() || null;
     const trimmedPlaceId = placeId?.trim() || null;
+    const trimmedWebsite = website?.trim() || null;
 
     // ---- 1. Save lead to Supabase ----
     const supabase = getSupabaseAdmin();
@@ -166,6 +168,7 @@ export async function POST(req: NextRequest) {
       google_place_id: trimmedPlaceId,
       email: trimmedEmail,
       name: trimmedUserName,
+      website: trimmedWebsite,
       source: "free-audit",
     });
 

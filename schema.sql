@@ -145,6 +145,7 @@ CREATE TABLE IF NOT EXISTS audit_leads (
   google_place_id TEXT,
   email TEXT NOT NULL,
   name TEXT,
+  website TEXT,
   report_sent BOOLEAN DEFAULT FALSE,
   report_sent_at TIMESTAMPTZ,
   source TEXT DEFAULT 'free-audit'
