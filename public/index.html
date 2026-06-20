@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Dental Review Audit — ReviewFlow</title>
+<meta name="description" content="Get a 5-minute audit comparing your Google & Yelp reviews against 3 local competitors. No credit card required.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          inter: ['Inter', 'system-ui', 'sans-serif'],
+        },
+        animation: {
+          'fade-up': 'fadeUp 0.8s ease-out forwards',
+          'fade-up-delay': 'fadeUp 0.8s 0.15s ease-out forwards',
+          'slide-left': 'slideLeft 0.7s 0.3s ease-out forwards',
+          'scale-in': 'scaleIn 0.7s ease-out forwards',
+          'stagger-1': 'fadeUp 0.5s 0.0s ease-out forwards',
+          'stagger-2': 'fadeUp 0.5s 0.1s ease-out forwards',
+          'stagger-3': 'fadeUp 0.5s 0.2s ease-out forwards',
+        },
+        keyframes: {
+          fadeUp: {
+            '0%': { opacity: '0', transform: 'translateY(30px)' },
+            '100%': { opacity: '1', transform: 'translateY(0)' },
+          },
+          slideLeft: {
+            '0%': { opacity: '0', transform: 'translateX(40px)' },
+            '100%': { opacity: '1', transform: 'translateX(0)' },
+          },
+          scaleIn: {
+            '0%': { opacity: '0', transform: 'scale(0.95)' },
+            '100%': { opacity: '1', transform: 'scale(1)' },
+          },
+        },
+      },
+    },
+  };
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', system-ui, sans-serif; }
+  .animate-on-scroll { opacity: 0; }
+  .animate-on-scroll.visible { animation: scaleIn 0.7s ease-out forwards; }
+  .stagger-card { opacity: 0; }
+  .stagger-card.visible:nth-child(1) { animation: fadeUp 0.5s 0.0s ease-out forwards; }
+  .stagger-card.visible:nth-child(2) { animation: fadeUp 0.5s 0.1s ease-out forwards; }
+  .stagger-card.visible:nth-child(3) { animation: fadeUp 0.5s 0.2s ease-out forwards; }
+
+  @keyframes countUp { from { --num: 0; } to { --num: 200; } }
+  .counter::after { counter-reset: num var(--num); content: counter(num); }
+
+  @keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scaleIn {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+</style>
+</head>
+<body class="bg-slate-50 font-inter antialiased">
+
+<!-- ===== NAVBAR ===== -->
+<nav class="fixed top-0 left-0 right-0 z-50 h-16 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
+  <div class="max-w-7xl mx-auto px-6 h-full flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2.5">
+      <div class="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </div>
+      <span class="font-extrabold text-lg text-white tracking-tight">ReviewFlow</span>
+    </a>
+    <a href="/register" class="px-5 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-full hover:bg-emerald-400 transition-colors shadow-lg shadow-emerald-500/20">
+      Sign up now
+    </a>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="relative min-h-screen bg-slate-900 pt-24 pb-20 md:pt-32 md:pb-28 overflow-hidden">
+  <!-- Grid texture -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none select-none">
+    <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 32px 32px;"></div>
+  </div>
+  <!-- Green glow orb -->
+  <div class="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full pointer-events-none" style="background: radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%);"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <!-- LEFT: Text -->
+      <div>
+        <h1 class="font-extrabold text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-white mb-6 opacity-0 animate-fade-up">
+          See How Your Clinic Compares
+        </h1>
+        <p class="text-lg text-slate-300 leading-relaxed mb-8 max-w-lg opacity-0 animate-fade-up-delay">
+          Free Review Audit — Get a personalized report comparing your Google &amp; Yelp reviews against local competitors. No credit card required.
+        </p>
+        <div class="flex flex-wrap items-center gap-4 text-sm text-slate-400 opacity-0 animate-fade-up-delay">
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Takes 45 seconds
+          </div>
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            No credit card
+          </div>
+          <div class="flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Instant delivery
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Form Card -->
+      <div class="relative opacity-0 animate-slide-left">
+        <div class="absolute -inset-1 rounded-[28px] opacity-70 blur-xl pointer-events-none" style="background: radial-gradient(ellipse at center, rgba(16,185,129,0.25) 0%, transparent 70%);"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl shadow-black/30 p-6 sm:p-8 border border-slate-200/60">
+          <h2 class="font-bold text-xl text-slate-900 mb-6 tracking-tight">Get My Free Audit</h2>
+          <form id="auditForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">Clinic Name <span class="text-red-500">*</span></label>
+              <input type="text" id="clinicName" required placeholder="e.g. Sunnyvale Dental Care"
+                class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-shadow">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-700 mb-1.5">Your Email <span class="text-red-500">*</span></label>
+              <input type="email" id="email" required placeholder="you@clinic.com"
+                class="w-full px-4 py-3 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition-shadow">
+            </div>
+            <div id="formError" class="hidden flex items-center gap-2 text-red-600 text-xs bg-red-50 px-4 py-3 rounded-lg"></div>
+            <button type="submit" id="submitBtn"
+              class="w-full py-3.5 bg-emerald-500 text-white font-bold rounded-xl text-sm hover:bg-emerald-400 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors shadow-lg shadow-emerald-500/25">
+              Generate My Free Audit Report
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </form>
+          <p id="successMsg" class="hidden text-center py-8">
+            <span class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-emerald-100 mb-3">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </span>
+            <span class="block font-bold text-slate-900">Report generating...</span>
+            <span class="block text-sm text-slate-500 mt-1">Check your inbox in 2 minutes.</span>
+          </p>
+          <p class="text-center text-xs text-slate-400 mt-4 form-footer">No credit card required. Takes 45 seconds.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOCIAL PROOF BAR ===== -->
+<section class="py-10 bg-white border-y border-slate-200">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+      <div class="flex items-center -space-x-1.5">
+        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500" title="Smile Dental">SD</div>
+        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500" title="Pearl Care">PC</div>
+        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500" title="Family Dentistry">FD</div>
+        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500" title="Bright Works">BW</div>
+        <div class="w-9 h-9 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500" title="Elite Practice">EP</div>
+        <div class="w-9 h-9 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">+494</div>
+      </div>
+      <p class="text-sm text-slate-500 font-medium">Trusted by <span class="font-bold text-slate-800" id="counter500">0</span>+ Dental Practices Across the US</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== VALUE MODULES ===== -->
+<section class="py-20 md:py-28 bg-slate-50">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="text-center mb-12">
+      <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-3">What's Inside</p>
+      <h2 class="font-extrabold text-3xl md:text-4xl text-slate-900 tracking-tight">Actionable insights, delivered in minutes</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-900 mb-2.5">Review Sentiment Analysis</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">AI-powered breakdown of every review — positive, neutral, or negative — so you know exactly what patients think.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-900 mb-2.5">Competitor Benchmarking</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">Side-by-side comparison against 3 local competitors on ratings, review volume, and response time.</p>
+      </div>
+      <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="font-bold text-lg text-slate-900 mb-2.5">Response Rate Score</h3>
+        <p class="text-sm text-slate-500 leading-relaxed">See how quickly you reply compared to competitors. Fast responses win back unhappy patients.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== REPORT PREVIEW ===== -->
+<section class="py-20 md:py-28 bg-white animate-on-scroll" id="reportPreview">
+  <div class="max-w-5xl mx-auto px-6 text-center">
+    <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-3">Sample Report</p>
+    <h2 class="font-extrabold text-3xl md:text-4xl text-slate-900 tracking-tight mb-3">What your audit looks like</h2>
+    <p class="text-slate-500 italic mb-12">&ldquo;This is what Dr. Chen from SmileCare Dental saw last week.&rdquo;</p>
+
+    <div class="relative inline-block">
+      <div class="absolute -inset-4 rounded-[28px] opacity-60 blur-2xl pointer-events-none" style="background: radial-gradient(ellipse at center, rgba(16,185,129,0.3) 0%, transparent 70%);"></div>
+      <div class="relative bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden text-left">
+        <!-- Browser bar -->
+        <div class="bg-slate-950 px-4 py-3 flex items-center gap-2">
+          <div class="flex gap-1.5"><div class="w-3 h-3 rounded-full bg-red-400"></div><div class="w-3 h-3 rounded-full bg-amber-400"></div><div class="w-3 h-3 rounded-full bg-emerald-400"></div></div>
+          <span class="text-xs text-slate-500 ml-3">ReviewFlow — Audit Report</span>
+        </div>
+        <!-- Content -->
+        <div class="p-6 md:p-8 space-y-6">
+          <div><p class="font-bold text-lg text-white">Sunnyvale Dental Care</p><p class="text-sm text-slate-400">vs. 3 Local Competitors — Austin, TX</p></div>
+          <!-- Bars -->
+          <div class="space-y-3">
+            <div class="flex items-center gap-3"><span class="text-xs text-slate-300 w-40">Pearl Dental Care</span><div class="flex-1 h-6 bg-slate-700/50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full" style="width:94%"></div></div><span class="text-xs font-bold text-emerald-400 w-10 text-right">4.7</span></div>
+            <div class="flex items-center gap-3"><span class="text-xs text-slate-300 w-40">Bright Smile</span><div class="flex-1 h-6 bg-slate-700/50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-blue-400 to-blue-300 rounded-full" style="width:88%"></div></div><span class="text-xs font-bold text-blue-400 w-10 text-right">4.4</span></div>
+            <div class="flex items-center gap-3"><span class="text-xs text-slate-300 w-40">Family Dental</span><div class="flex-1 h-6 bg-slate-700/50 rounded-full overflow-hidden"><div class="h-full bg-gradient-to-r from-blue-400 to-blue-300 rounded-full" style="width:84%"></div></div><span class="text-xs font-bold text-blue-400 w-10 text-right">4.2</span></div>
+            <div class="flex items-center gap-3"><span class="text-xs font-semibold text-white w-40">Your Clinic <span class="text-emerald-400 ml-1">●</span></span><div class="flex-1 h-6 bg-slate-700/50 rounded-full overflow-hidden ring-2 ring-amber-500/30"><div class="h-full bg-gradient-to-r from-amber-500 to-amber-400 rounded-full" style="width:76%"></div></div><span class="text-xs font-bold text-amber-400 w-10 text-right">3.8</span></div>
+          </div>
+          <!-- Alerts -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg><p class="text-xs text-red-400 font-semibold">2 unanswered negative reviews</p></div>
+            <div class="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg><p class="text-xs text-emerald-400 font-semibold">Competitors reply in 24h</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SOCIAL PROOF CARDS ===== -->
+<section class="py-20 md:py-28 bg-slate-900 relative" id="socialProof">
+  <div class="absolute inset-0 overflow-hidden pointer-events-none select-none"><div class="absolute inset-0 opacity-[0.06]" style="background-image:radial-gradient(circle at 1px 1px, white 1px, transparent 0);background-size:32px 32px;"></div></div>
+  <div class="relative z-10 max-w-6xl mx-auto px-6">
+    <div class="text-center mb-14">
+      <h2 class="font-extrabold text-3xl md:text-4xl text-white tracking-tight mb-3">Trusted by <span id="counter200">0</span>+ Dental Clinics</h2>
+      <p class="text-slate-400 text-lg">Real results from real practices across the US.</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Card 1 -->
+      <div class="stagger-card bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 hover:bg-slate-800/70 hover:-translate-y-1 transition-all duration-300">
+        <div class="flex gap-0.5 mb-4 text-emerald-400 fill-emerald-400">★ ★ ★ ★ ★</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="1.5" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+        <p class="text-sm text-slate-300 leading-relaxed mb-5">&ldquo;The free audit showed us we had 3 unanswered negative reviews. We signed up the same day and went from 3.8 to 4.7 in 2 months.&rdquo;</p>
+        <div class="flex items-center gap-3 pt-4 border-t border-slate-700/50">
+          <div class="w-10 h-10 rounded-full bg-emerald-500/20 ring-1 ring-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">SM</div>
+          <div><p class="text-sm font-semibold text-white">Dr. Sarah Mitchell</p><p class="text-xs text-slate-500">Owner, Smile Dental Studio — Austin, TX</p></div>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="stagger-card bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 hover:bg-slate-800/70 hover:-translate-y-1 transition-all duration-300">
+        <div class="flex gap-0.5 mb-4 text-emerald-400 fill-emerald-400">★ ★ ★ ★ ★</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="1.5" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+        <p class="text-sm text-slate-300 leading-relaxed mb-5">&ldquo;I thought we were doing fine until the audit revealed competitors were responding 3x faster. Signed up that afternoon.&rdquo;</p>
+        <div class="flex items-center gap-3 pt-4 border-t border-slate-700/50">
+          <div class="w-10 h-10 rounded-full bg-emerald-500/20 ring-1 ring-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">RK</div>
+          <div><p class="text-sm font-semibold text-white">Dr. Robert Kim</p><p class="text-xs text-slate-500">Owner, Westlake Family Dental — Denver, CO</p></div>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="stagger-card bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 hover:bg-slate-800/70 hover:-translate-y-1 transition-all duration-300">
+        <div class="flex gap-0.5 mb-4 text-emerald-400 fill-emerald-400">★ ★ ★ ★ ★</div>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#334155" stroke-width="1.5" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+        <p class="text-sm text-slate-300 leading-relaxed mb-5">&ldquo;The competitor comparison alone was worth it. We changed our strategy and hit page one on Google in 6 weeks.&rdquo;</p>
+        <div class="flex items-center gap-3 pt-4 border-t border-slate-700/50">
+          <div class="w-10 h-10 rounded-full bg-emerald-500/20 ring-1 ring-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-sm">LP</div>
+          <div><p class="text-sm font-semibold text-white">Dr. Lisa Park</p><p class="text-xs text-slate-500">Owner, Pearl Dental Group — Phoenix, AZ</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== BOTTOM CTA ===== -->
+<section class="py-20 md:py-28 bg-slate-900 relative overflow-hidden">
+  <div class="absolute inset-0 overflow-hidden pointer-events-none select-none"><div class="absolute inset-0 opacity-[0.06]" style="background-image:radial-gradient(circle at 1px 1px, white 1px, transparent 0);background-size:32px 32px;"></div></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style="background:radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%);"></div>
+  <div class="relative z-10 max-w-2xl mx-auto px-6 text-center">
+    <h2 class="font-extrabold text-3xl md:text-5xl text-white tracking-tight mb-4">Ready to see how you compare?</h2>
+    <p class="text-slate-400 text-lg mb-10 max-w-lg mx-auto">Join 500+ dental clinics that benchmark their reputation with ReviewFlow. Free report, no strings attached.</p>
+    <a href="#top" class="inline-flex items-center gap-2 px-8 py-4 bg-emerald-500 text-white font-bold rounded-full text-base hover:bg-emerald-400 hover:scale-[1.03] transition-all duration-200 shadow-xl shadow-emerald-500/25">
+      Get My Free Audit
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-slate-950 text-white py-10 border-t border-slate-800">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+      <a href="/" class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-md bg-emerald-500 flex items-center justify-center">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="font-bold text-lg tracking-tight">ReviewFlow</span>
+      </a>
+      <p class="text-sm text-slate-500">© 2026 ReviewFlow. Built for dental practices.</p>
+      <div class="flex gap-6 text-sm text-slate-400">
+        <a href="#" class="hover:text-white transition-colors">Log in</a>
+        <a href="#" class="hover:text-white transition-colors">Sign up</a>
+        <a href="#" class="hover:text-white transition-colors">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== SCRIPTS ===== -->
+<script>
+  // Form submit
+  document.getElementById('auditForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const clinicName = document.getElementById('clinicName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const errorEl = document.getElementById('formError');
+
+    if (!clinicName) {
+      errorEl.textContent = 'Please enter your clinic name.';
+      errorEl.classList.remove('hidden');
+      errorEl.classList.add('flex');
+      return;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errorEl.textContent = 'Please enter a valid email address.';
+      errorEl.classList.remove('hidden');
+      errorEl.classList.add('flex');
+      return;
+    }
+
+    errorEl.classList.add('hidden');
+    errorEl.classList.remove('flex');
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Generating...';
+
+    console.log('Audit Request:', { clinicName, email, timestamp: new Date().toISOString() });
+
+    setTimeout(function() {
+      document.getElementById('auditForm').classList.add('hidden');
+      document.querySelector('.form-footer').classList.add('hidden');
+      document.getElementById('successMsg').classList.remove('hidden');
+    }, 1500);
+  });
+
+  // Scroll animations
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.animate-on-scroll, .stagger-card').forEach(function(el) {
+    observer.observe(el);
+  });
+
+  // Counter animation for 500
+  (function() {
+    var el = document.getElementById('counter500');
+    var triggered = false;
+    var obs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting && !triggered) {
+        triggered = true;
+        var count = 0;
+        var step = function() {
+          count = Math.min(500, count + Math.ceil((500 - count) / 10));
+          el.textContent = count;
+          if (count < 500) requestAnimationFrame(function() { setTimeout(step, 40); });
+        };
+        step();
+      }
+    }, { threshold: 0.5 });
+    if (el) obs.observe(el);
+  })();
+
+  // Counter for 200
+  (function() {
+    var el = document.getElementById('counter200');
+    var triggered = false;
+    var obs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting && !triggered) {
+        triggered = true;
+        var count = 0;
+        var step = function() {
+          count = Math.min(200, count + Math.ceil((200 - count) / 10));
+          el.textContent = count;
+          if (count < 200) requestAnimationFrame(function() { setTimeout(step, 40); });
+        };
+        step();
+      }
+    }, { threshold: 0.5 });
+    if (el) obs.observe(el);
+  })();
+
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  });
+</script>
+
+</body>
+</html>
