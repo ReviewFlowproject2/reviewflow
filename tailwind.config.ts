@@ -43,13 +43,13 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // ReviewFlow brand colors (dark navy + emerald accent)
+        // ReviewFlow brand colors (v0 design: teal primary + light theme)
         brand: {
-          blue: "#1E40AF",    // blue-800 — links / CTAs in light sections
-          yellow: "#10B981",  // emerald-500 — accent / buttons (renamed from yellow, kept key for compat)
-          soft: "#F1F5F9",    // slate-100 — light backgrounds
+          blue: "#0D9488",    // teal-600 — primary CTAs / links
+          yellow: "#F59E0B",  // amber-500 — stars / accents (key kept for compat)
+          soft: "#F8FAFC",    // slate-50 — light backgrounds
           muted: "#64748B",   // slate-500 — body text
-          dark: "#0F172A",    // slate-900 — headings / dark sections
+          dark: "#0F172A",    // slate-900 — headings
         },
       },
       fontFamily: {
