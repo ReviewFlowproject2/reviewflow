@@ -134,3 +134,21 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_businesses_updated_at BEFORE UPDATE ON businesses
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================================
+-- 6. audit_leads: Free Audit 落地页线索
+-- ============================================================
+CREATE TABLE IF NOT EXISTS audit_leads (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  clinic_name TEXT NOT NULL,
+  google_place_id TEXT,
+  email TEXT NOT NULL,
+  name TEXT,
+  report_sent BOOLEAN DEFAULT FALSE,
+  report_sent_at TIMESTAMPTZ,
+  source TEXT DEFAULT 'free-audit'
+);
+
+CREATE INDEX idx_audit_leads_email ON audit_leads(email);
+CREATE INDEX idx_audit_leads_created ON audit_leads(created_at DESC);
