@@ -195,6 +195,19 @@ function HeroSection() {
 
   return (
     <section className="relative min-h-screen bg-slate-900 pt-4 pb-20 md:pb-28 overflow-hidden">
+      {/* Background video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-30"
+        poster="/videos/hero-poster.jpg"
+      >
+        <source src="/videos/hero-bg.mp4" type="video/mp4" />
+      </video>
+      {/* Dark overlay for text readability */}
+      <div className="absolute inset-0 bg-slate-900/60" />
       <ParticleCanvas />
       {/* Green glow orb top-right */}
       <div className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, rgba(16,185,129,0.10) 0%, transparent 70%)" }} />
