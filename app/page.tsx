@@ -100,6 +100,9 @@ function HeroSection() {
           <button onClick={() => router.push("/register")} className="px-8 py-3.5 bg-brand-yellow text-brand-blue font-semibold rounded-[10px] text-sm transition-all duration-200 hover:brightness-110 hover:scale-[1.02]">Start Free</button>
           <button onClick={() => router.push("/login")} className="px-8 py-3.5 border border-white/40 text-white font-semibold rounded-[10px] text-sm transition-all duration-200 hover:bg-white/10">Log In</button>
         </div>
+        <Link href="/free-audit" className="inline-block mt-5 text-sm text-white/60 hover:text-white/90 transition-colors underline underline-offset-4">
+          See how your clinic compares — Free Audit →
+        </Link>
       </div>
       <div className="hero-main-media fixed inset-0 w-screen h-screen bg-cover bg-center z-[1]" style={{ backgroundImage: "url('/assets/clinic-interior.jpg')", maskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)", WebkitMaskImage: "radial-gradient(ellipse at center, black 30%, transparent 70%)", maskPosition: "center center", WebkitMaskPosition: "center center", maskSize: "0% 0%", WebkitMaskSize: "0% 0%", maskRepeat: "no-repeat", WebkitMaskRepeat: "no-repeat" }} />
       <div className="hero-content-layer fixed inset-0 flex flex-col items-center justify-center z-[3] opacity-0 translate-y-[20px] text-brand-blue">
@@ -519,6 +522,9 @@ function Navbar() {
           <a href="#features" onClick={(e) => scrollToSection(e, "features")} className="hover:text-brand-blue transition-colors cursor-pointer">Features</a>
           <a href="#pricing" onClick={(e) => scrollToSection(e, "pricing")} className="hover:text-brand-blue transition-colors cursor-pointer">Pricing</a>
           <a href="#faq" onClick={(e) => scrollToSection(e, "faq")} className="hover:text-brand-blue transition-colors cursor-pointer">FAQ</a>
+          <Link href="/free-audit" className="text-green-600 font-semibold hover:text-green-700 transition-colors flex items-center gap-1">
+            Free Audit <span className="text-[10px] bg-green-100 px-1.5 py-0.5 rounded-full">New</span>
+          </Link>
         </div>
         <div className="flex items-center gap-4">
           {user ? (
