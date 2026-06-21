@@ -124,27 +124,27 @@ export default function MultiClinicPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center">
-        <div className="text-brand-muted">Loading clinics...</div>
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="text-slate-400">Loading clinics...</div>
       </div>
     );
   }
 
   if (!canUseFeature(effectivePlan, "multiClinic")) {
     return (
-      <div className="min-h-screen bg-[#F8FAFF] p-6">
+      <div className="min-h-screen bg-slate-950 p-6">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors">
               <ArrowLeft size={16} />Back to Dashboard
             </Link>
           </div>
-          <div className="bg-white rounded-2xl border border-brand-soft/50 p-10 text-center">
+          <div className="bg-white rounded-2xl border border-slate-700/50 p-10 text-center">
             <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-amber-500" />
             </div>
-            <h1 className="font-outfit font-bold text-xl text-brand-dark mb-2">Agency Plan Required</h1>
-            <p className="text-brand-muted text-sm mb-6">Multi-clinic management is only available on the Agency plan.</p>
+            <h1 className=" font-bold text-xl text-white mb-2">Agency Plan Required</h1>
+            <p className="text-slate-400 text-sm mb-6">Multi-clinic management is only available on the Agency plan.</p>
             <Link href="/dashboard/support" className="inline-flex items-center gap-2 px-6 py-2.5 bg-amber-500 text-white font-semibold rounded-xl text-sm hover:bg-amber-600 transition-colors">
               Upgrade to Agency
             </Link>
@@ -155,18 +155,18 @@ export default function MultiClinicPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFF] p-6">
+    <div className="min-h-screen bg-slate-950 p-6">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors">
             <ArrowLeft size={16} />Back to Dashboard
           </Link>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-outfit font-bold text-2xl text-brand-dark">Multi-Clinic Dashboard</h1>
-            <p className="text-brand-muted text-sm mt-1">Manage all your dental offices in one place.</p>
+            <h1 className=" font-bold text-2xl text-white">Multi-Clinic Dashboard</h1>
+            <p className="text-slate-400 text-sm mt-1">Manage all your dental offices in one place.</p>
           </div>
           {clinics.length >= getLimit(effectivePlan, "maxClinics") ? (
             <Link href="/dashboard/support" className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-600 transition-colors">
@@ -175,7 +175,7 @@ export default function MultiClinicPage() {
           ) : (
             <button
               onClick={() => setShowAddForm(!showAddForm)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-xl hover:bg-brand-dark transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl hover:bg-emerald-600 transition-colors"
             >
               <Plus size={16} />{showAddForm ? "Cancel" : "Add Clinic"}
             </button>
@@ -184,17 +184,17 @@ export default function MultiClinicPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl p-5 border border-brand-soft/50">
-            <p className="text-xs text-brand-muted mb-1">Total Clinics</p>
-            <p className="font-outfit font-bold text-2xl text-brand-dark">{clinics.length}</p>
+          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
+            <p className="text-xs text-slate-400 mb-1">Total Clinics</p>
+            <p className=" font-bold text-2xl text-white">{clinics.length}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 border border-brand-soft/50">
-            <p className="text-xs text-brand-muted mb-1">Total Reviews</p>
-            <p className="font-outfit font-bold text-2xl text-brand-dark">{clinics.reduce((sum, c) => sum + c.review_count, 0).toLocaleString()}</p>
+          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
+            <p className="text-xs text-slate-400 mb-1">Total Reviews</p>
+            <p className=" font-bold text-2xl text-white">{clinics.reduce((sum, c) => sum + c.review_count, 0).toLocaleString()}</p>
           </div>
-          <div className="bg-white rounded-2xl p-5 border border-brand-soft/50">
-            <p className="text-xs text-brand-muted mb-1">Avg Rating</p>
-            <p className="font-outfit font-bold text-2xl text-brand-dark">
+          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
+            <p className="text-xs text-slate-400 mb-1">Avg Rating</p>
+            <p className=" font-bold text-2xl text-white">
               {clinics.length > 0
                 ? (clinics.reduce((sum, c) => sum + c.avg_rating, 0) / clinics.length).toFixed(1)
                 : "0.0"}
@@ -204,23 +204,23 @@ export default function MultiClinicPage() {
 
         {/* Add Form */}
         {showAddForm && (
-          <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
-            <h3 className="font-semibold text-brand-dark text-sm mb-4">Add New Clinic</h3>
+          <div className="bg-white rounded-2xl border border-slate-700/50 p-6 mb-6">
+            <h3 className="font-semibold text-white text-sm mb-4">Add New Clinic</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-semibold text-brand-dark mb-1.5">Clinic Name *</label>
-                <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Downtown Dental" className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
+                <label className="block text-sm font-semibold text-white mb-1.5">Clinic Name *</label>
+                <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Downtown Dental" className="w-full rounded-xl border border-slate-700 p-3 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-brand-dark mb-1.5">Address</label>
-                <input type="text" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} placeholder="e.g. 456 Oak St, Austin, TX" className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
+                <label className="block text-sm font-semibold text-white mb-1.5">Address</label>
+                <input type="text" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} placeholder="e.g. 456 Oak St, Austin, TX" className="w-full rounded-xl border border-slate-700 p-3 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-semibold text-brand-dark mb-1.5">Google Review Link</label>
-                <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)} placeholder="https://g.page/.../review" className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
+                <label className="block text-sm font-semibold text-white mb-1.5">Google Review Link</label>
+                <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)} placeholder="https://g.page/.../review" className="w-full rounded-xl border border-slate-700 p-3 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
               </div>
             </div>
-            <button onClick={handleAdd} disabled={saving || !newName.trim()} className="px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center gap-2">
+            <button onClick={handleAdd} disabled={saving || !newName.trim()} className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
               <Plus size={16} />{saving ? "Saving..." : "Add Clinic"}
             </button>
           </div>
@@ -228,47 +228,47 @@ export default function MultiClinicPage() {
 
         {/* Clinics Grid */}
         {clinics.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-brand-soft/50 p-12 text-center">
-            <Building2 className="mx-auto text-brand-muted mb-3" size={40} />
-            <h3 className="font-semibold text-brand-dark mb-1">No clinics added yet</h3>
-            <p className="text-sm text-brand-muted mb-4">Add your first clinic to start managing multiple locations.</p>
-            <button onClick={() => setShowAddForm(true)} className="px-5 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors inline-flex items-center gap-2">
+          <div className="bg-white rounded-2xl border border-slate-700/50 p-12 text-center">
+            <Building2 className="mx-auto text-slate-400 mb-3" size={40} />
+            <h3 className="font-semibold text-white mb-1">No clinics added yet</h3>
+            <p className="text-sm text-slate-400 mb-4">Add your first clinic to start managing multiple locations.</p>
+            <button onClick={() => setShowAddForm(true)} className="px-5 py-2.5 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors inline-flex items-center gap-2">
               <Plus size={16} />Add First Clinic
             </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {clinics.map((clinic) => (
-              <div key={clinic.id} className={`bg-white rounded-2xl border p-6 transition-shadow hover:shadow-lg ${clinic.is_primary ? "border-brand-blue border-2" : "border-brand-soft/50"}`}>
+              <div key={clinic.id} className={`bg-white rounded-2xl border p-6 transition-shadow hover:shadow-lg ${clinic.is_primary ? "border-brand-blue border-2" : "border-slate-700/50"}`}>
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center text-brand-blue">
+                    <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center text-emerald-400">
                       <Building2 size={20} />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-brand-dark text-sm">{clinic.name}</h3>
-                      {clinic.is_primary && <span className="text-xs bg-brand-blue text-white px-2 py-0.5 rounded-full">Primary</span>}
+                      <h3 className="font-semibold text-white text-sm">{clinic.name}</h3>
+                      {clinic.is_primary && <span className="text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">Primary</span>}
                     </div>
                   </div>
-                  <button onClick={() => handleDelete(clinic.id)} className="text-brand-muted hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
+                  <button onClick={() => handleDelete(clinic.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="bg-brand-soft rounded-lg p-3 text-center">
-                    <p className="font-outfit font-bold text-lg text-brand-blue">{clinic.avg_rating.toFixed(1)}</p>
-                    <p className="text-xs text-brand-muted">Avg Rating</p>
+                  <div className="bg-slate-700 rounded-lg p-3 text-center">
+                    <p className=" font-bold text-lg text-emerald-400">{clinic.avg_rating.toFixed(1)}</p>
+                    <p className="text-xs text-slate-400">Avg Rating</p>
                   </div>
-                  <div className="bg-brand-soft rounded-lg p-3 text-center">
-                    <p className="font-outfit font-bold text-lg text-brand-blue">{clinic.review_count}</p>
-                    <p className="text-xs text-brand-muted">Reviews</p>
+                  <div className="bg-slate-700 rounded-lg p-3 text-center">
+                    <p className=" font-bold text-lg text-emerald-400">{clinic.review_count}</p>
+                    <p className="text-xs text-slate-400">Reviews</p>
                   </div>
                 </div>
 
-                {clinic.address && <p className="text-xs text-brand-muted mb-3">{clinic.address}</p>}
+                {clinic.address && <p className="text-xs text-slate-400 mb-3">{clinic.address}</p>}
 
                 <button
                   onClick={() => handleSwitchClinic(clinic.id)}
-                  className="w-full py-2 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors inline-flex items-center justify-center gap-2"
+                  className="w-full py-2 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors inline-flex items-center justify-center gap-2"
                 >
                   <ExternalLink size={14} />Switch to This Clinic
                 </button>

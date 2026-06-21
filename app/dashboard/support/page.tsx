@@ -70,37 +70,37 @@ export default function PricingPage() {
   return (
     <>
       <Script src="https://cdn.paddle.com/paddle/v2/paddle.js" strategy="afterInteractive" />
-      <div className="min-h-screen bg-[#F8FAFF]">
+      <div className="min-h-screen bg-slate-950">
         <div className="max-w-6xl mx-auto px-6 py-16">
           {/* Back to Dashboard */}
           <div className="mb-6">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors"
             >
               <ArrowLeft size={16} />
               Back to Dashboard
             </Link>
           </div>
 
-          <h1 className="font-outfit font-bold text-4xl text-brand-blue text-center mb-4">
+          <h1 className=" font-bold text-4xl text-emerald-400 text-center mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-brand-muted text-center mb-8">
+          <p className="text-slate-400 text-center mb-8">
             Start free. Upgrade when you&apos;re ready to automate.
           </p>
 
           {/* Billing Cycle Toggle */}
           <div className="flex justify-center mb-12">
-            <div className="bg-white rounded-full p-1 border border-[#E0E7F1] shadow-sm inline-flex">
+            <div className="bg-white rounded-full p-1 border border-slate-700 shadow-sm inline-flex">
               {cycles.map((c) => (
                 <button
                   key={c.key}
                   onClick={() => setCycle(c.key)}
                   className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
                     cycle === c.key
-                      ? "bg-brand-blue text-white shadow-md"
-                      : "text-brand-muted hover:text-brand-dark"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "text-slate-400 hover:text-white"
                   }`}
                 >
                   {c.label}
@@ -111,18 +111,18 @@ export default function PricingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             {/* FREE */}
-            <div className="bg-white rounded-[16px] p-8 border border-[#E0E7F1]">
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Free</h3>
-              <p className="text-brand-muted text-sm mb-4">Get started with QR codes</p>
-              <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">$0</div>
-              <p className="text-xs text-brand-muted mb-6">15-day free trial, no credit card</p>
+            <div className="bg-white rounded-[16px] p-8 border border-slate-700">
+              <h3 className=" font-bold text-xl text-white mb-1">Free</h3>
+              <p className="text-slate-400 text-sm mb-4">Get started with QR codes</p>
+              <div className=" font-bold text-3xl text-white mb-1">$0</div>
+              <p className="text-xs text-slate-400 mb-6">15-day free trial, no credit card</p>
               <Link
                 href="/register"
-                className="block w-full text-center py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-[10px] text-sm hover:bg-brand-blue hover:text-white transition-colors"
+                className="block w-full text-center py-2.5 border-2 border-brand-blue text-emerald-400 font-semibold rounded-[10px] text-sm hover:bg-emerald-500 hover:text-white transition-colors"
               >
                 Start Free Trial
               </Link>
-              <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <ul className="mt-6 space-y-3 text-sm text-white">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
@@ -133,28 +133,28 @@ export default function PricingPage() {
 
             {/* PRO */}
             <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-blue text-white text-xs font-semibold px-4 py-1 rounded-full">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-semibold px-4 py-1 rounded-full">
                 Most Popular
               </div>
               {getSaveLabel("pro") && (
-                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 right-4 bg-emerald-500/100 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   {getSaveLabel("pro")}
                 </div>
               )}
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Pro</h3>
-              <p className="text-brand-muted text-sm mb-4">Automate your reputation growth</p>
-              <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
-                ${PRICING[cycle].pro.price}<span className="text-lg text-brand-muted">{PRICING[cycle].pro.period}</span>
+              <h3 className=" font-bold text-xl text-white mb-1">Pro</h3>
+              <p className="text-slate-400 text-sm mb-4">Automate your reputation growth</p>
+              <div className=" font-bold text-3xl text-white mb-1">
+                ${PRICING[cycle].pro.price}<span className="text-lg text-slate-400">{PRICING[cycle].pro.period}</span>
               </div>
-              <p className="text-xs text-brand-muted mb-6">1st month free, cancel anytime</p>
+              <p className="text-xs text-slate-400 mb-6">1st month free, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].pro.priceId)}
-                className="block w-full text-center py-2.5 bg-brand-blue text-white font-semibold rounded-[10px] text-sm hover:bg-brand-dark transition-colors disabled:opacity-50"
+                className="block w-full text-center py-2.5 bg-emerald-500 text-white font-semibold rounded-[10px] text-sm hover:bg-emerald-600 transition-colors disabled:opacity-50"
                 disabled={!paddleLoaded}
               >
                 {paddleLoaded ? "Get 1st Month Free" : "Loading..."}
               </button>
-              <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <ul className="mt-6 space-y-3 text-sm text-white">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
@@ -169,19 +169,19 @@ export default function PricingPage() {
             {/* AGENCY */}
             <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
               {getSaveLabel("agency") && (
-                <div className="absolute -top-3 right-4 bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 right-4 bg-emerald-500/100 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   {getSaveLabel("agency")}
                 </div>
               )}
               <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
                 <Zap size={12} /> Agency Only
               </div>
-              <h3 className="font-outfit font-bold text-xl text-brand-dark mb-1">Agency</h3>
-              <p className="text-brand-muted text-sm mb-4">Manage multiple clinics</p>
-              <div className="font-outfit font-bold text-3xl text-brand-dark mb-1">
-                ${PRICING[cycle].agency.price}<span className="text-lg text-brand-muted">{PRICING[cycle].agency.period}</span>
+              <h3 className=" font-bold text-xl text-white mb-1">Agency</h3>
+              <p className="text-slate-400 text-sm mb-4">Manage multiple clinics</p>
+              <div className=" font-bold text-3xl text-white mb-1">
+                ${PRICING[cycle].agency.price}<span className="text-lg text-slate-400">{PRICING[cycle].agency.period}</span>
               </div>
-              <p className="text-xs text-brand-muted mb-6">1st month free, cancel anytime</p>
+              <p className="text-xs text-slate-400 mb-6">1st month free, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].agency.priceId)}
                 className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
@@ -189,7 +189,7 @@ export default function PricingPage() {
               >
                 {paddleLoaded ? "Get 1st Month Free" : "Loading..."}
               </button>
-              <ul className="mt-6 space-y-3 text-sm text-brand-dark">
+              <ul className="mt-6 space-y-3 text-sm text-white">
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
                 <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>White-label branding</li>
@@ -207,7 +207,7 @@ export default function PricingPage() {
                   <span>
                     <span className="font-semibold">Daily Reputation Digest</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">Morning email summary. No login needed.</span>
+                    <span className="block text-xs text-slate-400">Morning email summary. No login needed.</span>
                   </span>
                 </li>
 
@@ -216,7 +216,7 @@ export default function PricingPage() {
                   <span>
                     <span className="font-semibold">Priority Email Alerts</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">1-2⭐ reviews within 10 min via email</span>
+                    <span className="block text-xs text-slate-400">1-2⭐ reviews within 10 min via email</span>
                   </span>
                 </li>
 
@@ -225,7 +225,7 @@ export default function PricingPage() {
                   <span>
                     <span className="font-semibold">Multi-Recipient Alerts</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">Up to 5 staff members notified</span>
+                    <span className="block text-xs text-slate-400">Up to 5 staff members notified</span>
                   </span>
                 </li>
 
@@ -234,7 +234,7 @@ export default function PricingPage() {
                   <span>
                     <span className="font-semibold">1-on-1 Dedicated Support</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-brand-muted">Dedicated account manager + live chat</span>
+                    <span className="block text-xs text-slate-400">Dedicated account manager + live chat</span>
                   </span>
                 </li>
               </ul>
@@ -243,7 +243,7 @@ export default function PricingPage() {
 
           {/* FAQ Section */}
           <div className="max-w-3xl mx-auto mt-20">
-            <h2 className="font-outfit font-bold text-2xl text-brand-dark text-center mb-8">
+            <h2 className=" font-bold text-2xl text-white text-center mb-8">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
@@ -273,9 +273,9 @@ export default function PricingPage() {
                   a: "If you are not satisfied within the first 14 days of your paid subscription, contact us for a full refund — no questions asked."
                 }
               ].map((faq, i) => (
-                <div key={i} className="bg-white rounded-xl border border-[#E0E7F1] p-5">
-                  <h3 className="font-semibold text-brand-dark mb-2">{faq.q}</h3>
-                  <p className="text-sm text-brand-muted leading-relaxed">{faq.a}</p>
+                <div key={i} className="bg-white rounded-xl border border-slate-700 p-5">
+                  <h3 className="font-semibold text-white mb-2">{faq.q}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{faq.a}</p>
                 </div>
               ))}
             </div>
@@ -283,16 +283,16 @@ export default function PricingPage() {
 
           {/* Footer CTA */}
           <div className="text-center mt-16">
-            <p className="text-brand-muted text-sm mb-4">
+            <p className="text-slate-400 text-sm mb-4">
               Still have questions?{" "}
-              <a href="mailto:support@reviewflowdental.com" className="text-brand-blue hover:underline font-medium">
+              <a href="mailto:support@reviewflowdental.com" className="text-emerald-400 hover:underline font-medium">
                 Contact Support
               </a>
             </p>
-            <div className="flex items-center justify-center gap-6 text-xs text-brand-muted/60">
-              <Link href="/privacy" className="hover:text-brand-muted transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-brand-muted transition-colors">Terms of Service</Link>
-              <Link href="/cookies" className="hover:text-brand-muted transition-colors">Cookie Policy</Link>
+            <div className="flex items-center justify-center gap-6 text-xs text-slate-400/60">
+              <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms of Service</Link>
+              <Link href="/cookies" className="hover:text-slate-400 transition-colors">Cookie Policy</Link>
             </div>
           </div>
         </div>

@@ -74,59 +74,57 @@ function Sidebar({ business, effectivePlan }: { business: Business | null; effec
   const currentPlan = effectivePlan.tier;
 
   return (
-    <aside className="w-[260px] min-h-screen bg-white border-r border-[#E9F1FA] fixed left-0 top-0 flex flex-col z-40">
-      <div className="h-20 flex items-center px-6 border-b border-[#E9F1FA]">
-        <Link href="/" className="font-outfit font-bold text-xl text-brand-blue">ReviewFlow</Link>
+    <aside className="w-[260px] min-h-screen bg-slate-900 border-r border-slate-800 fixed left-0 top-0 flex flex-col z-40">
+      <div className="h-20 flex items-center px-6 border-b border-slate-800">
+        <Link href="/" className="flex items-center gap-2.5"><div className="size-8 rounded-lg bg-emerald-500 flex items-center justify-center"><Star size={14} className="text-white" fill="white" /></div><span className="font-extrabold text-lg text-white tracking-tight">ReviewFlow</span></Link>
       </div>
       <nav className="flex-1 px-4 py-6 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link key={item.label} href={item.href} className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-              isActive ? "bg-brand-blue text-white" : "text-brand-muted hover:bg-brand-soft hover:text-brand-dark"
+              isActive ? "bg-emerald-500/20 text-emerald-400" : "text-slate-400 hover:bg-slate-800 hover:text-white"
             }`}><item.icon size={18} />{item.label}</Link>
           );
         })}
       </nav>
       <div className="px-4 pb-4 space-y-3">
-        <div className="bg-brand-soft rounded-xl p-4">
+        <div className="bg-slate-800 rounded-xl p-4">
           {effectivePlan.isPaid ? (
             <>
-              <p className="text-xs text-brand-muted mb-1">Subscription</p>
-              <p className="font-outfit font-bold text-sm text-green-600">Active</p>
+              <p className="text-xs text-slate-400 mb-1">Subscription</p>
+              <p className="font-bold text-sm text-emerald-400">Active</p>
               {business?.trial_ends_at && (
-                <p className="text-xs text-brand-muted mt-1">
-                  Next billing: {new Date(business.trial_ends_at).toLocaleDateString()}
-                </p>
+                <p className="text-xs text-slate-500 mt-1">Next billing: {new Date(business.trial_ends_at).toLocaleDateString()}</p>
               )}
             </>
           ) : (
             <>
-              <p className="text-xs text-brand-muted mb-1">Trial period</p>
-              <p className="font-outfit font-bold text-lg text-brand-blue">{trialInfo.dateRange}</p>
-              <p className="text-xs text-brand-muted mt-1">
+              <p className="text-xs text-slate-400 mb-1">Trial period</p>
+              <p className="font-bold text-lg text-emerald-400">{trialInfo.dateRange}</p>
+              <p className="text-xs text-slate-400 mt-1">
                 {trialInfo.isExpired ? (
-                  <span className="text-red-500 font-medium">Trial expired</span>
+                  <span className="text-red-400 font-medium">Trial expired</span>
                 ) : (
                   <span>{trialInfo.daysLeft} days remaining</span>
                 )}
               </p>
             </>
           )}
-          <p className="text-xs text-brand-muted/70 mt-1">{business?.name || "Your Clinic"}</p>
+          <p className="text-xs text-slate-500 mt-1">{business?.name || "Your Clinic"}</p>
         </div>
-        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-          <p className="text-xs text-brand-muted mb-1">Current Plan</p>
-          <p className={`font-outfit font-bold text-sm ${planColor}`}>{planLabel}</p>
+        <div className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <p className="text-xs text-slate-400 mb-1">Current Plan</p>
+          <p className={`font-bold text-sm ${planColor}`}>{planLabel}</p>
           {effectivePlan.tier !== "agency" && (
-            <Link href="/dashboard/support" className={`mt-2 block w-full text-center py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${effectivePlan.tier === "free" ? "bg-brand-blue hover:bg-brand-dark" : "bg-amber-500 hover:bg-amber-600"}`}>
+            <Link href="/dashboard/support" className={`mt-2 block w-full text-center py-1.5 text-white text-xs font-semibold rounded-lg transition-colors ${effectivePlan.tier === "free" ? "bg-emerald-500 hover:bg-emerald-600" : "bg-amber-500 hover:bg-amber-600"}`}>
               Upgrade to {effectivePlan.tier === "free" ? "Pro" : "Agency"}
             </Link>
           )}
         </div>
       </div>
       <div className="px-4 pb-6">
-        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-brand-muted hover:bg-brand-soft hover:text-brand-dark transition-colors">
+        <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
           <LogOut size={18} />Log Out
         </button>
       </div>
@@ -146,11 +144,11 @@ function EmptyState({ icon: Icon, title, desc, action, actionLabel, href }: {
       <h3 className="font-semibold text-slate-700 mb-1">{title}</h3>
       <p className="text-sm text-slate-500 max-w-xs mb-4">{desc}</p>
       {href ? (
-        <Link href={href} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:text-brand-dark transition-colors">
+        <Link href={href} className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-400 hover:text-white transition-colors">
           {actionLabel || "Get started"} <ChevronRight size={14} />
         </Link>
       ) : action ? (
-        <button onClick={action} className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-blue hover:text-brand-dark transition-colors">
+        <button onClick={action} className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-400 hover:text-white transition-colors">
           {actionLabel || "Get started"} <ChevronRight size={14} />
         </button>
       ) : null}
@@ -205,11 +203,11 @@ function OnboardingChecklist({ business, patients }: { business: Business | null
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+    <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <CheckSquare size={16} className="text-brand-blue" />
-          <h3 className="font-bold text-sm text-slate-900">Setup Progress</h3>
+          <CheckSquare size={16} className="text-emerald-400" />
+          <h3 className="font-bold text-sm text-white">Setup Progress</h3>
           <span className="text-xs text-slate-400">{items.length - incomplete.length}/{items.length}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -223,9 +221,9 @@ function OnboardingChecklist({ business, patients }: { business: Business | null
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-slate-100 rounded-full mb-4 overflow-hidden">
+      <div className="h-1.5 bg-slate-700 rounded-full mb-4 overflow-hidden">
         <div
-          className="h-full bg-brand-blue rounded-full transition-all duration-500"
+          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
           style={{ width: `${((items.length - incomplete.length) / items.length) * 100}%` }}
         />
       </div>
@@ -239,7 +237,7 @@ function OnboardingChecklist({ business, patients }: { business: Business | null
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
               item.done
                 ? "text-slate-400 line-through decoration-slate-300"
-                : "text-slate-700 hover:bg-slate-50 font-medium"
+                : "text-slate-300 hover:bg-slate-700 font-medium"
             }`}
           >
             {item.done ? (
@@ -259,10 +257,10 @@ function OnboardingChecklist({ business, patients }: { business: Business | null
 // ==================== Trend Chart (CSS only) ====================
 function TrendChart({ data, days }: { data: TrendData[]; days: number }) {
   if (data.length === 0) return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8">
+    <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 mb-8 w-full">
       <div className="flex items-center gap-2 mb-4">
         <TrendingUp className="w-5 h-5 text-slate-400" />
-        <h2 className="font-semibold text-lg text-slate-500">Review Trends</h2>
+        <h2 className="font-semibold text-lg text-slate-300">Review Trends</h2>
       </div>
       <EmptyState
         icon={BarChart3}
@@ -279,13 +277,13 @@ function TrendChart({ data, days }: { data: TrendData[]; days: number }) {
     <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 w-full">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-brand-blue" />
-          <h2 className="font-semibold text-lg text-brand-dark">Review Trends</h2>
-          <span className="text-xs text-brand-muted">({days}-day)</span>
+          <TrendingUp className="w-5 h-5 text-emerald-400" />
+          <h2 className="font-semibold text-lg text-white">Review Trends</h2>
+          <span className="text-xs text-slate-400">({days}-day)</span>
         </div>
         <div className="text-right">
-          <p className="text-xs text-brand-muted">{days}-day total</p>
-          <p className="font-bold text-xl text-brand-blue">{total}</p>
+          <p className="text-xs text-slate-400">{days}-day total</p>
+          <p className="font-bold text-xl text-emerald-400">{total}</p>
         </div>
       </div>
       <div className="flex items-end gap-1.5 h-44 px-2">
@@ -555,10 +553,10 @@ export default function DashboardPage() {
   };
 
   const statCards = [
-    { label: "New Reviews (7d)", value: stats.newReviews.toString(), change: "This week", icon: MessageCircle, color: "text-brand-blue", bg: "bg-brand-blue/10" },
-    { label: "Avg Rating", value: stats.avgRating.toFixed(1), change: "All time", icon: Star, color: "text-brand-yellow", bg: "bg-brand-yellow/10" },
-    { label: "Negative Reviews", value: stats.pendingAlerts.toString(), change: "Needs attention", icon: ShieldAlert, color: "text-red-500", bg: "bg-red-50" },
-    { label: "Email Success Rate", value: `${stats.emailSuccess}%`, change: "Delivered/Open", icon: CheckCircle, color: "text-green-500", bg: "bg-green-50" },
+    { label: "New Reviews (7d)", value: stats.newReviews.toString(), change: "This week", icon: MessageCircle, color: "text-blue-400", bg: "bg-blue-500/10" },
+    { label: "Avg Rating", value: stats.avgRating.toFixed(1), change: "All time", icon: Star, color: "text-amber-400", bg: "bg-amber-500/10" },
+    { label: "Negative Reviews", value: stats.pendingAlerts.toString(), change: "Needs attention", icon: ShieldAlert, color: "text-red-400", bg: "bg-red-500/10" },
+    { label: "Email Success Rate", value: `${stats.emailSuccess}%`, change: "Delivered/Open", icon: CheckCircle, color: "text-emerald-400", bg: "bg-emerald-500/10" },
   ];
 
   const getStatusBadge = (status: string) => {
@@ -581,18 +579,18 @@ export default function DashboardPage() {
     switch (patient.email_status) {
       case "pending": return <button onClick={() => updateStatus(patient.id, "checked_in")} disabled={isUpdating} className="rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 text-yellow-600 hover:bg-yellow-50 disabled:opacity-50"><UserCheck size={12} />{isUpdating ? "Updating..." : "Check In"}</button>;
       case "checked_in": return <button onClick={() => updateStatus(patient.id, "ready_to_send")} disabled={isUpdating} className="rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 text-purple-600 hover:bg-purple-50 disabled:opacity-50"><Stethoscope size={12} />{isUpdating ? "Updating..." : "Complete Visit"}</button>;
-      case "ready_to_send": return <button onClick={() => handleSendEmail(patient.id, !!patient.email)} disabled={isSending || !patient.email} className={`rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 disabled:opacity-50 ${patient.email ? "text-brand-blue hover:bg-brand-soft" : "text-gray-400 cursor-not-allowed"}`}><Mail size={12} />{isSending ? "Sending..." : patient.email ? "Send Email" : "No Email"}</button>;
+      case "ready_to_send": return <button onClick={() => handleSendEmail(patient.id, !!patient.email)} disabled={isSending || !patient.email} className={`rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 disabled:opacity-50 ${patient.email ? "text-emerald-400 hover:bg-slate-700" : "text-gray-400 cursor-not-allowed"}`}><Mail size={12} />{isSending ? "Sending..." : patient.email ? "Send Email" : "No Email"}</button>;
       case "sent": return <div className="flex items-center justify-end gap-2"><button onClick={() => handleSendEmail(patient.id, !!patient.email)} disabled={isSending} className="rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 text-gray-500 hover:bg-gray-50 disabled:opacity-50"><RefreshCw size={12} />{isSending ? "Sending..." : "Resend"}</button>{sentCount > 0 && <span className="text-xs text-gray-400 leading-none">x{sentCount}</span>}</div>;
       case "delivered": case "opened": return <div className="flex items-center justify-end gap-2"><button onClick={() => handleSendEmail(patient.id, !!patient.email)} disabled={isSending} className="rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 text-green-500 hover:bg-green-50 disabled:opacity-50"><RefreshCw size={12} />{isSending ? "Sending..." : "Resend"}</button>{sentTime && <span className="text-xs text-gray-400 flex items-center gap-1 leading-none"><Clock size={10} />{sentTime}</span>}</div>;
       case "failed": return <button onClick={() => handleSendEmail(patient.id, !!patient.email)} disabled={isSending} className="rounded-lg text-xs px-3 py-1.5 transition-colors inline-flex items-center gap-1 text-red-500 hover:bg-red-50 disabled:opacity-50"><AlertTriangle size={12} />{isSending ? "Retrying..." : "Retry"}</button>;
-      default: return <span className="text-xs text-brand-muted/50">-</span>;
+      default: return <span className="text-xs text-slate-400/50">-</span>;
     }
   };
 
   const filteredPatients = patients.filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.phone.includes(searchTerm));
   const showTopBanner = effectivePlan.tier !== "agency";
   const upgradeTarget = effectivePlan.tier === "free" ? "Pro" : "Agency";
-  const bannerColor = effectivePlan.tier === "free" ? "bg-brand-blue" : "bg-amber-500";
+  const bannerColor = effectivePlan.tier === "free" ? "bg-emerald-500" : "bg-amber-500";
   const bannerText = effectivePlan.tier === "free"
     ? "You're on the Free plan. Upgrade to Pro to automate review requests and monitor your reputation."
     : "You're on Pro. Upgrade to Agency to unlock Daily Digest, multi-clinic management, and team collaboration.";
@@ -600,28 +598,28 @@ export default function DashboardPage() {
   const isNearPatientLimit = patients.length >= patientLimit * 0.9;
 
   if (loading) return (
-    <div className="min-h-screen bg-[#F8FAFF] flex">
-      <div className="w-[260px] min-h-screen bg-white border-r border-[#E9F1FA] fixed left-0 top-0 z-40 flex flex-col">
-        <div className="h-20 flex items-center px-6 border-b border-[#E9F1FA]">
-          <span className="font-outfit font-bold text-xl text-brand-blue">ReviewFlow</span>
+    <div className="min-h-screen bg-slate-950 flex">
+      <div className="w-[260px] min-h-screen bg-slate-900 border-r border-slate-800 fixed left-0 top-0 z-40 flex flex-col">
+        <div className="h-20 flex items-center px-6 border-b border-slate-800">
+          <span className="font-extrabold text-xl text-white">ReviewFlow</span>
         </div>
         <div className="flex-1 px-4 py-6 space-y-2">
           {Array.from({ length: 7 }).map((_, i) => (
-            <div key={i} className="h-10 bg-brand-soft rounded-lg animate-pulse" />
+            <div key={i} className="h-10 bg-slate-800 rounded-lg animate-pulse" />
           ))}
         </div>
       </div>
-      <main className="flex-1 ml-[260px] p-6 lg:p-8 max-w-7xl flex items-center justify-center">
+      <main className="flex-1 ml-[260px] p-6 lg:p-8 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin" />
-          <p className="text-brand-muted text-sm">Loading dashboard...</p>
+          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm">Loading dashboard...</p>
         </div>
       </main>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFF] flex">
+    <div className="min-h-screen bg-slate-950 flex">
       <Sidebar business={business} effectivePlan={effectivePlan} />
       <main className="flex-1 ml-[260px] p-6 lg:p-8">
         <ToastContainer toasts={toasts} onRemove={removeToast} />
@@ -634,7 +632,7 @@ export default function DashboardPage() {
               <p className="text-white text-sm font-medium">{bannerText}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Link href="/dashboard/support" className="px-4 py-2 bg-white text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors" style={{ color: bannerColor === "bg-brand-blue" ? "#2563eb" : "#d97706" }}>
+              <Link href="/dashboard/support" className="px-4 py-2 bg-white text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors" style={{ color: bannerColor === "bg-emerald-500" ? "#2563eb" : "#d97706" }}>
                 Upgrade to {upgradeTarget}
               </Link>
               <button onClick={dismissBanner} className="p-1.5 text-white/70 hover:text-white hover:bg-white/20 rounded-lg transition-colors" title="Dismiss">
@@ -660,10 +658,10 @@ export default function DashboardPage() {
         )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="font-outfit font-bold text-2xl text-brand-dark">Overview</h1>
-            <p className="text-brand-muted text-sm mt-1">Welcome back, {business?.name || "Your Clinic"}</p>
+            <h1 className="font-bold text-2xl text-white">Overview</h1>
+            <p className="text-slate-400 text-sm mt-1">Welcome back, {business?.name || "Your Clinic"}</p>
           </div>
-          <Link href={trialExpired && effectivePlan.tier === "free" ? "/dashboard/support" : "/patients/import"} className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors ${trialExpired && effectivePlan.tier === "free" ? "bg-red-500 hover:bg-red-600" : "bg-brand-blue hover:bg-brand-dark"}`}>
+          <Link href={trialExpired && effectivePlan.tier === "free" ? "/dashboard/support" : "/patients/import"} className={`inline-flex items-center gap-2 px-4 py-2 text-white text-sm font-semibold rounded-xl transition-colors ${trialExpired && effectivePlan.tier === "free" ? "bg-red-500 hover:bg-red-600" : "bg-emerald-500 hover:bg-emerald-600"}`}>
             {trialExpired && effectivePlan.tier === "free" ? <><AlertTriangle size={16} />Upgrade to Import</> : <><Plus size={16} />Import Patients</>}
           </Link>
         </div>
@@ -671,13 +669,13 @@ export default function DashboardPage() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {statCards.map((stat) => (
-            <div key={stat.label} className="bg-white rounded-2xl p-6 border border-brand-soft/50 transition-all duration-200 hover:shadow-card">
+            <div key={stat.label} className="bg-slate-800 rounded-2xl p-6 border border-slate-700 transition-all duration-200 hover:border-slate-600">
               <div className="flex items-center justify-between mb-4">
                 <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}><stat.icon className={`w-5 h-5 ${stat.color}`} /></div>
-                <span className="text-xs text-brand-muted bg-brand-soft px-2 py-1 rounded-full">{stat.change}</span>
+                <span className="text-xs text-slate-400 bg-slate-700 px-2 py-1 rounded-full">{stat.change}</span>
               </div>
-              <div className="font-outfit font-bold text-2xl text-brand-dark">{stat.value}</div>
-              <div className="text-sm text-brand-muted mt-1">{stat.label}</div>
+              <div className="font-bold text-2xl text-white">{stat.value}</div>
+              <div className="text-sm text-slate-400 mt-1">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -685,12 +683,12 @@ export default function DashboardPage() {
         {/* Trend Chart */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-brand-muted" />
-            <span className="text-sm text-brand-muted">Review activity</span>
+            <Calendar size={16} className="text-slate-400" />
+            <span className="text-sm text-slate-400">Review activity</span>
           </div>
-          <div className="flex bg-white rounded-lg border border-brand-soft p-0.5">
-            <button onClick={() => setTrendDays(7)} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${trendDays === 7 ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-dark"}`}>7 Days</button>
-            <button onClick={() => setTrendDays(30)} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${trendDays === 30 ? "bg-brand-blue text-white" : "text-brand-muted hover:text-brand-dark"}`}>30 Days</button>
+          <div className="flex bg-slate-800 rounded-lg border border-slate-700 p-0.5">
+            <button onClick={() => setTrendDays(7)} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${trendDays === 7 ? "bg-emerald-500 text-white" : "text-slate-400 hover:text-white"}`}>7 Days</button>
+            <button onClick={() => setTrendDays(30)} className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${trendDays === 30 ? "bg-emerald-500 text-white" : "text-slate-400 hover:text-white"}`}>30 Days</button>
           </div>
         </div>
         <TrendChart data={trendData} days={trendDays} />
@@ -699,26 +697,26 @@ export default function DashboardPage() {
         {alerts.length > 0 && (
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="w-5 h-5 text-brand-yellow" />
-              <h2 className="font-outfit font-semibold text-lg text-brand-dark">Negative Review Alerts</h2>
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+              <h2 className="font-outfit font-semibold text-lg text-white">Negative Review Alerts</h2>
               <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-medium">{alerts.length} pending</span>
             </div>
             <div className="space-y-3">
               {alerts.map((alert) => (
-                <div key={alert.id} className="bg-white rounded-2xl p-5 border border-brand-yellow shadow-sm">
+                <div key={alert.id} className="bg-slate-800 rounded-2xl p-5 border border-amber-500/30 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="font-semibold text-brand-dark">{alert.patient_name}</span>
-                        <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} className={i < alert.rating ? "fill-brand-yellow text-brand-yellow" : "text-gray-200"} />)}</div>
-                        <span className="text-xs bg-brand-yellow text-brand-blue px-2 py-0.5 rounded-full font-semibold">NEW</span>
+                        <span className="font-semibold text-white">{alert.patient_name}</span>
+                        <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} className={i < alert.rating ? "fill-amber-400 text-amber-400" : "text-gray-200"} />)}</div>
+                        <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-semibold">NEW</span>
                       </div>
-                      <p className="text-sm text-brand-muted line-clamp-2">{alert.comment}</p>
-                      <span className="text-xs text-brand-muted/60 mt-1 block">{new Date(alert.created_at).toLocaleDateString()}</span>
+                      <p className="text-sm text-slate-400 line-clamp-2">{alert.comment}</p>
+                      <span className="text-xs text-slate-400/60 mt-1 block">{new Date(alert.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button onClick={() => handleResolveAlert(alert.id)} disabled={resolvingId === alert.id} className="inline-flex items-center gap-1.5 px-3 py-2 bg-green-50 text-green-600 text-sm font-medium rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"><CheckSquare size={14} />{resolvingId === alert.id ? "Resolving..." : "Mark Resolved"}</button>
-                      <a href={business?.google_review_link || "#"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-blue text-white text-sm font-medium rounded-lg hover:bg-brand-dark transition-colors"><ExternalLink size={14} />Reply on Google</a>
+                      <a href={business?.google_review_link || "#"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 transition-colors"><ExternalLink size={14} />Reply on Google</a>
                     </div>
                   </div>
                 </div>
@@ -728,44 +726,44 @@ export default function DashboardPage() {
         )}
 
         {/* Patient List */}
-        <div className="bg-white rounded-2xl border border-brand-soft/50 overflow-hidden">
-          <div className="p-5 border-b border-brand-soft/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+          <div className="p-5 border-b border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h2 className="font-outfit font-semibold text-lg text-brand-dark">Recent Patients</h2>
+              <h2 className="font-semibold text-lg text-white">Recent Patients</h2>
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                patients.length >= patientLimit ? "bg-red-50 text-red-600" :
-                isNearPatientLimit ? "bg-yellow-50 text-yellow-600" : "bg-brand-soft text-brand-muted"
+                patients.length >= patientLimit ? "bg-red-500/10 text-red-400" :
+                isNearPatientLimit ? "bg-amber-500/10 text-amber-400" : "bg-slate-700 text-slate-400"
               }`}>
                 {patients.length}/{patientLimit} slots used
               </span>
             </div>
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
-              <input placeholder="Search patients..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-3 w-full sm:w-64 h-10 rounded-xl border border-brand-soft text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input placeholder="Search patients..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 pr-3 w-full sm:w-64 h-10 rounded-xl border border-slate-700 bg-slate-700 text-white placeholder:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500" />
             </div>
           </div>
           <div className="hidden md:block">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-brand-soft/50">
-                  <th className="text-left text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Patient</th>
-                  <th className="text-left text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Phone</th>
-                  <th className="text-left text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Email</th>
-                  <th className="text-left text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Visit Date</th>
-                  <th className="text-left text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Status</th>
-                  <th className="text-left text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Rating</th>
-                  <th className="text-right text-xs font-semibold text-brand-muted uppercase tracking-wider px-5 py-3">Action</th>
+                <tr className="border-b border-slate-700/50">
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Patient</th>
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Phone</th>
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Email</th>
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Visit Date</th>
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Status</th>
+                  <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Rating</th>
+                  <th className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPatients.map((patient) => (
-                  <tr key={patient.id} className="border-b border-brand-soft/30 hover:bg-[#FAFCFF] transition-colors">
-                    <td className="px-5 py-4 text-sm font-medium text-brand-dark">{patient.name}</td>
-                    <td className="px-5 py-4 text-sm text-brand-muted">{patient.phone}</td>
-                    <td className="px-5 py-4 text-sm text-brand-muted">{patient.email || <span className="text-red-400 text-xs">No email</span>}</td>
-                    <td className="px-5 py-4 text-sm text-brand-muted">{new Date(patient.visit_date).toLocaleDateString()}</td>
+                  <tr key={patient.id} className="border-b border-slate-700/30 hover:bg-[#FAFCFF] transition-colors">
+                    <td className="px-5 py-4 text-sm font-medium text-white">{patient.name}</td>
+                    <td className="px-5 py-4 text-sm text-slate-400">{patient.phone}</td>
+                    <td className="px-5 py-4 text-sm text-slate-400">{patient.email || <span className="text-red-400 text-xs">No email</span>}</td>
+                    <td className="px-5 py-4 text-sm text-slate-400">{new Date(patient.visit_date).toLocaleDateString()}</td>
                     <td className="px-5 py-4">{getStatusBadge(patient.email_status)}</td>
-                    <td className="px-5 py-4">{patient.review_rating ? <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} className={i < patient.review_rating! ? "fill-brand-yellow text-brand-yellow" : "text-gray-200"} />)}</div> : <span className="text-xs text-brand-muted/50">-</span>}</td>
+                    <td className="px-5 py-4">{patient.review_rating ? <div className="flex gap-0.5">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} className={i < patient.review_rating! ? "fill-amber-400 text-amber-400" : "text-gray-200"} />)}</div> : <span className="text-xs text-slate-400/50">-</span>}</td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         {getActionButton(patient)}
@@ -774,21 +772,21 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ))}
-                {filteredPatients.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-brand-muted">No patients found. <Link href="/patients/import" className="text-brand-blue hover:underline">Import patients</Link></td></tr>}
+                {filteredPatients.length === 0 && <tr><td colSpan={7} className="px-5 py-8 text-center text-sm text-slate-400">No patients found. <Link href="/patients/import" className="text-emerald-400 hover:underline">Import patients</Link></td></tr>}
               </tbody>
             </table>
           </div>
-          <div className="md:hidden divide-y divide-brand-soft/50">
+          <div className="md:hidden divide-y divide-slate-700/50">
             {filteredPatients.map((patient) => (
               <div key={patient.id} className="p-4">
-                <div className="flex items-center justify-between mb-2"><span className="font-medium text-brand-dark">{patient.name}</span>{getStatusBadge(patient.email_status)}</div>
-                <div className="text-sm text-brand-muted mb-1">{patient.phone}</div>
-                <div className="text-sm text-brand-muted mb-2">{patient.email || <span className="text-red-400 text-xs">No email</span>}{" · "}{new Date(patient.visit_date).toLocaleDateString()}</div>
+                <div className="flex items-center justify-between mb-2"><span className="font-medium text-white">{patient.name}</span>{getStatusBadge(patient.email_status)}</div>
+                <div className="text-sm text-slate-400 mb-1">{patient.phone}</div>
+                <div className="text-sm text-slate-400 mb-2">{patient.email || <span className="text-red-400 text-xs">No email</span>}{" · "}{new Date(patient.visit_date).toLocaleDateString()}</div>
                 <div className="mb-2 flex items-center justify-between">{getActionButton(patient)}<button onClick={() => handleDeletePatient(patient.id)} className="text-red-400 hover:text-red-600 transition-colors p-1" title="Delete patient"><X size={14} /></button></div>
-                {patient.review_rating && <div className="flex gap-0.5 mb-2">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} className={i < patient.review_rating! ? "fill-brand-yellow text-brand-yellow" : "text-gray-200"} />)}</div>}
+                {patient.review_rating && <div className="flex gap-0.5 mb-2">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} className={i < patient.review_rating! ? "fill-amber-400 text-amber-400" : "text-gray-200"} />)}</div>}
               </div>
             ))}
-            {filteredPatients.length === 0 && <div className="p-8 text-center text-sm text-brand-muted">No patients found. <Link href="/patients/import" className="text-brand-blue hover:underline">Import patients</Link></div>}
+            {filteredPatients.length === 0 && <div className="p-8 text-center text-sm text-slate-400">No patients found. <Link href="/patients/import" className="text-emerald-400 hover:underline">Import patients</Link></div>}
           </div>
         </div>
           </div>{/* close flex-1 content */}
@@ -811,11 +809,11 @@ export default function DashboardPage() {
                 <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-7 h-7 text-green-500" />
                 </div>
-                <h2 className="font-outfit font-bold text-xl text-brand-dark mb-2">Password Updated</h2>
-                <p className="text-brand-muted text-sm mb-4">Your password has been successfully reset.</p>
+                <h2 className="font-outfit font-bold text-xl text-white mb-2">Password Updated</h2>
+                <p className="text-slate-400 text-sm mb-4">Your password has been successfully reset.</p>
                 <button
                   onClick={() => setShowRecoveryDialog(false)}
-                  className="px-6 py-2.5 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors"
+                  className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors"
                 >
                   Continue to Dashboard
                 </button>
@@ -823,12 +821,12 @@ export default function DashboardPage() {
             ) : (
               <>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-xl bg-brand-soft flex items-center justify-center">
-                    <Lock size={20} className="text-brand-blue" />
+                  <div className="w-10 h-10 rounded-xl bg-slate-700 flex items-center justify-center">
+                    <Lock size={20} className="text-emerald-400" />
                   </div>
                   <div>
-                    <h2 className="font-outfit font-bold text-lg text-brand-dark">Set New Password</h2>
-                    <p className="text-xs text-brand-muted">Create a new password for your account</p>
+                    <h2 className="font-outfit font-bold text-lg text-white">Set New Password</h2>
+                    <p className="text-xs text-slate-400">Create a new password for your account</p>
                   </div>
                 </div>
                 {recoveryError && (
@@ -838,7 +836,7 @@ export default function DashboardPage() {
                 )}
                 <form onSubmit={handleRecoverySubmit} className="space-y-4 mt-4">
                   <div>
-                    <label className="block text-sm font-semibold text-brand-dark mb-1.5">New Password</label>
+                    <label className="block text-sm font-semibold text-white mb-1.5">New Password</label>
                     <div className="relative">
                       <input
                         type={recoveryShowPw ? "text" : "password"}
@@ -847,28 +845,28 @@ export default function DashboardPage() {
                         placeholder="Enter new password"
                         value={recoveryPassword}
                         onChange={(e) => setRecoveryPassword(e.target.value)}
-                        className="w-full rounded-xl border border-brand-soft p-3 pr-10 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+                        className="w-full rounded-xl border border-slate-700 p-3 pr-10 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                       />
-                      <button type="button" onClick={() => setRecoveryShowPw(!recoveryShowPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted">
+                      <button type="button" onClick={() => setRecoveryShowPw(!recoveryShowPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
                         {recoveryShowPw ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-brand-dark mb-1.5">Confirm Password</label>
+                    <label className="block text-sm font-semibold text-white mb-1.5">Confirm Password</label>
                     <input
                       type={recoveryShowPw ? "text" : "password"}
                       required
                       placeholder="Confirm new password"
                       value={recoveryConfirm}
                       onChange={(e) => setRecoveryConfirm(e.target.value)}
-                      className="w-full rounded-xl border border-brand-soft p-3 text-sm text-brand-dark placeholder:text-brand-muted/60 focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-brand-blue"
+                      className="w-full rounded-xl border border-slate-700 p-3 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={recoveryLoading}
-                    className="w-full py-3 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                   >
                     {recoveryLoading ? "Updating..." : "Reset Password"}
                   </button>

@@ -253,48 +253,48 @@ export default function QRCodePage(){
   const bgStyle=(isGrad:boolean,c1:string,c2:string)=>isGrad?`linear-gradient(135deg,${c1},${c2})`:c1;
   const Icon=t.d_icon?IconMap[t.d_icon]:null;
 
-  if(loading)return<div className="min-h-screen bg-[#F8FAFF] flex items-center justify-center"><div className="text-brand-muted">Loading...</div></div>;
+  if(loading)return<div className="min-h-screen bg-slate-950 flex items-center justify-center"><div className="text-slate-400">Loading...</div></div>;
 
-  return(<div className="min-h-screen bg-[#F8FAFF] p-6"><div className="max-w-6xl mx-auto">
-    <div className="mb-6"><Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-brand-muted hover:text-brand-blue"><ArrowLeft size={16}/>Back to Dashboard</Link></div>
-    <div className="flex items-center gap-4 mb-8"><div className="w-12 h-12 rounded-xl bg-brand-soft flex items-center justify-center"><QrCode className="w-6 h-6 text-brand-blue"/></div><div><h1 className="font-outfit font-bold text-2xl text-brand-dark">QR Code Generator</h1><p className="text-brand-muted text-sm">7 professional templates — Desk Stand + Business Card (Front & Back)</p></div></div>
+  return(<div className="min-h-screen bg-slate-950 p-6"><div className="max-w-6xl mx-auto">
+    <div className="mb-6"><Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400"><ArrowLeft size={16}/>Back to Dashboard</Link></div>
+    <div className="flex items-center gap-4 mb-8"><div className="w-12 h-12 rounded-xl bg-slate-700 flex items-center justify-center"><QrCode className="w-6 h-6 text-emerald-400"/></div><div><h1 className=" font-bold text-2xl text-white">QR Code Generator</h1><p className="text-slate-400 text-sm">7 professional templates — Desk Stand + Business Card (Front & Back)</p></div></div>
 
     {/* Step 1: Link */}
-    <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
-      <div className="flex items-center gap-3 mb-4"><span className="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center text-sm font-bold">1</span><h2 className="font-semibold text-brand-dark">Google Review Link</h2></div>
+    <div className="bg-white rounded-2xl border border-slate-700/50 p-6 mb-6">
+      <div className="flex items-center gap-3 mb-4"><span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">1</span><h2 className="font-semibold text-white">Google Review Link</h2></div>
       {!link?(<div>
-        <div className="bg-yellow-50 rounded-xl border border-yellow-200 p-4 mb-4"><div className="flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 shrink-0"/><div><p className="text-sm text-yellow-800 font-medium">No review link yet</p><button onClick={()=>setGuide(!guide)} className="text-xs text-yellow-700 underline inline-flex items-center gap-1"><HelpCircle size={12}/>How to find {guide?"▲":"▼"}</button>{guide&&<div className="mt-2 text-xs text-yellow-700 space-y-1"><p>1. Go to business.google.com → Your Business</p><p>2. Click "Get more reviews" → Copy the short URL</p></div>}</div></div></div>
-        <div className="flex gap-2"><input type="url" value={link} onChange={e=>setLink(e.target.value)} placeholder="https://g.page/your-clinic/review" className="flex-1 rounded-xl border border-brand-soft p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue"/><button onClick={save} disabled={saving||!link.trim()} className="px-5 py-2 bg-brand-blue text-white font-semibold rounded-xl text-sm hover:bg-brand-dark disabled:opacity-50">{saving?"Saving...":"Save & Continue"}</button></div>
-      </div>):(<div className="flex items-center justify-between gap-3"><div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-green-50 rounded-xl text-sm text-green-700"><CheckCircle size={14} className="text-green-500 shrink-0"/><span className="truncate">{link}</span></div><button onClick={()=>{navigator.clipboard.writeText(link);setCopy(true);setTimeout(()=>setCopy(false),2000)}} className="p-2 text-brand-muted hover:text-brand-blue">{copied?<CheckCircle size={14} className="text-green-500"/>:<Copy size={14}/>}</button><button onClick={()=>setLink("")} className="p-2 text-brand-muted hover:text-red-500"><RefreshCw size={14}/></button></div>)}
+        <div className="bg-amber-500/10 rounded-xl border border-yellow-200 p-4 mb-4"><div className="flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0"/><div><p className="text-sm text-yellow-800 font-medium">No review link yet</p><button onClick={()=>setGuide(!guide)} className="text-xs text-yellow-700 underline inline-flex items-center gap-1"><HelpCircle size={12}/>How to find {guide?"▲":"▼"}</button>{guide&&<div className="mt-2 text-xs text-yellow-700 space-y-1"><p>1. Go to business.google.com → Your Business</p><p>2. Click "Get more reviews" → Copy the short URL</p></div>}</div></div></div>
+        <div className="flex gap-2"><input type="url" value={link} onChange={e=>setLink(e.target.value)} placeholder="https://g.page/your-clinic/review" className="flex-1 rounded-xl border border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue"/><button onClick={save} disabled={saving||!link.trim()} className="px-5 py-2 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 disabled:opacity-50">{saving?"Saving...":"Save & Continue"}</button></div>
+      </div>):(<div className="flex items-center justify-between gap-3"><div className="flex-1 flex items-center gap-2 px-3 py-2.5 bg-emerald-500/10 rounded-xl text-sm text-emerald-400"><CheckCircle size={14} className="text-green-500 shrink-0"/><span className="truncate">{link}</span></div><button onClick={()=>{navigator.clipboard.writeText(link);setCopy(true);setTimeout(()=>setCopy(false),2000)}} className="p-2 text-slate-400 hover:text-emerald-400">{copied?<CheckCircle size={14} className="text-green-500"/>:<Copy size={14}/>}</button><button onClick={()=>setLink("")} className="p-2 text-slate-400 hover:text-red-500"><RefreshCw size={14}/></button></div>)}
     </div>
 
     {/* Step 2: Template + Info */}
-    <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
-      <div className="flex items-center gap-3 mb-4"><span className="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center text-sm font-bold">2</span><h2 className="font-semibold text-brand-dark">Choose Template & Business Card Info</h2></div>
+    <div className="bg-white rounded-2xl border border-slate-700/50 p-6 mb-6">
+      <div className="flex items-center gap-3 mb-4"><span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">2</span><h2 className="font-semibold text-white">Choose Template & Business Card Info</h2></div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        {TPL.map(tm=>(<button key={tm.id} onClick={()=>{if(isFree&&tm.id==="luxury-blue-gold")return;setSel(tm.id)}} className={`p-3 rounded-xl border-2 text-left transition-all relative ${sel===tm.id?"border-brand-blue bg-brand-soft":isFree&&tm.id==="luxury-blue-gold"?"border-gray-100 opacity-50 cursor-not-allowed":"border-gray-100 hover:border-brand-blue/30"}`}>
-          <div className="relative w-full aspect-square rounded-lg mb-2 overflow-hidden bg-gray-50 cursor-pointer" onClick={e=>{e.stopPropagation();setPreview(preview===tm.id?null:tm.id)}}>
+        {TPL.map(tm=>(<button key={tm.id} onClick={()=>{if(isFree&&tm.id==="luxury-blue-gold")return;setSel(tm.id)}} className={`p-3 rounded-xl border-2 text-left transition-all relative ${sel===tm.id?"border-brand-blue bg-slate-700":isFree&&tm.id==="luxury-blue-gold"?"border-slate-600 opacity-50 cursor-not-allowed":"border-slate-600 hover:border-brand-blue/30"}`}>
+          <div className="relative w-full aspect-square rounded-lg mb-2 overflow-hidden bg-slate-700 cursor-pointer" onClick={e=>{e.stopPropagation();setPreview(preview===tm.id?null:tm.id)}}>
             <img src={tm.preview} alt={tm.name} className="w-full h-full object-cover"/>
             {isFree&&tm.id==="luxury-blue-gold"&&<div className="absolute inset-0 bg-black/50 flex items-center justify-center"><Lock size={24} className="text-white"/></div>}
           </div>
           <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full border" style={{background:tm.d_bgIsGrad?tm.d_bg1:tm.d_bg}}/><span className="font-medium text-xs">{tm.name}</span></div>
-          <p className="text-[10px] text-brand-muted mt-1">{tm.desc}</p>
-          {sel===tm.id&&<CheckCircle size={14} className="absolute top-2 right-2 text-brand-blue"/>}
+          <p className="text-[10px] text-slate-400 mt-1">{tm.desc}</p>
+          {sel===tm.id&&<CheckCircle size={14} className="absolute top-2 right-2 text-emerald-400"/>}
         </button>))}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {[{l:"Clinic Name",v:cname,s:setCname},{l:"Doctor Name",v:dr,s:setDr,ph:"Dr. Smith"},{l:"Card Tagline",v:title,s:setTitle,ph:"Your smile is our priority"},{l:"Phone",v:phone,s:setPhone,ph:"555-123-4567"},{l:"Website",v:web,s:setWeb,ph:"clinic.com"}].map(f=>(<div key={f.l}><label className="text-xs text-brand-muted mb-1 block">{f.l}</label><input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.ph||""} className="w-full rounded-lg border px-2 py-1.5 text-sm"/></div>))}
+        {[{l:"Clinic Name",v:cname,s:setCname},{l:"Doctor Name",v:dr,s:setDr,ph:"Dr. Smith"},{l:"Card Tagline",v:title,s:setTitle,ph:"Your smile is our priority"},{l:"Phone",v:phone,s:setPhone,ph:"555-123-4567"},{l:"Website",v:web,s:setWeb,ph:"clinic.com"}].map(f=>(<div key={f.l}><label className="text-xs text-slate-400 mb-1 block">{f.l}</label><input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.ph||""} className="w-full rounded-lg border px-2 py-1.5 text-sm"/></div>))}
       </div>
     </div>
 
     {/* Step 3: Previews */}
-    {link&&qrDataUrl&&(<div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-6">
-      <div className="flex items-center gap-3 mb-6"><span className="w-8 h-8 rounded-full bg-brand-blue text-white flex items-center justify-center text-sm font-bold">3</span><h2 className="font-semibold text-brand-dark">Preview & Download</h2></div>
+    {link&&qrDataUrl&&(<div className="bg-white rounded-2xl border border-slate-700/50 p-6 mb-6">
+      <div className="flex items-center gap-3 mb-6"><span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">3</span><h2 className="font-semibold text-white">Preview & Download</h2></div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
 
         {/* === DESK STAND === */}
         <div className="text-center w-full max-w-[260px]">
-          <h3 className="font-semibold text-sm text-brand-dark mb-3">Desk Stand <span className="text-xs text-brand-muted font-normal">5"×5"</span></h3>
+          <h3 className="font-semibold text-sm text-white mb-3">Desk Stand <span className="text-xs text-slate-400 font-normal">5"×5"</span></h3>
           <div ref={dRef} className="w-full rounded-[16px] relative shadow-xl flex flex-col items-center"
             style={{aspectRatio:"45/52",background:bgStyle(t.d_bgIsGrad,t.d_bg1,t.d_bg2),border:t.d_border,boxShadow:`0 8px 20px ${t.d_bg1}30`,overflow:"visible"}}>
             {/* Four corner ornaments for 01 & 07 */}
@@ -323,12 +323,12 @@ export default function QRCodePage(){
             {/* Bottom accent for 02 */}
             {sel==="mint-green"&&<div className="absolute bottom-0 w-full h-[4%]" style={{background:`linear-gradient(90deg,transparent,#6BC4B0,transparent)`}}/>}
           </div>
-          <button onClick={()=>dl(dRef.current,`desk-stand-${sel}.png`)} className="mt-3 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-dark inline-flex items-center gap-2"><Download size={14}/>Download</button>
+          <button onClick={()=>dl(dRef.current,`desk-stand-${sel}.png`)} className="mt-3 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg hover:bg-emerald-600 inline-flex items-center gap-2"><Download size={14}/>Download</button>
         </div>
 
         {/* === CARD FRONT === */}
         <div className="text-center w-full max-w-[260px]">
-          <h3 className="font-semibold text-sm text-brand-dark mb-3">Card Front <span className="text-xs text-brand-muted font-normal">3.5"×2"</span></h3>
+          <h3 className="font-semibold text-sm text-white mb-3">Card Front <span className="text-xs text-slate-400 font-normal">3.5"×2"</span></h3>
           <div ref={fRef} className="w-full rounded-xl overflow-visible relative shadow-lg flex flex-col" style={{aspectRatio:"3.5/2.3",background:bgStyle(t.cf_bgIsGrad,t.cf_bg1,t.cf_bg2)}}>
             {/* Corner ornaments */}
             {t.cf_corner&&(<>
@@ -355,12 +355,12 @@ export default function QRCodePage(){
             {/* Fallback: show default script text if no custom title */}
             {!title&&t.cf_script&&<p className="text-center mt-auto mb-[8%] px-3" style={{fontFamily:t.cf_scriptFont,fontSize:14,color:t.cf_scriptColor}}>{t.cf_script}</p>}
           </div>
-          <button onClick={()=>dl(fRef.current,`card-front-${sel}.png`)} className="mt-3 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-dark inline-flex items-center gap-2"><Download size={14}/>Download</button>
+          <button onClick={()=>dl(fRef.current,`card-front-${sel}.png`)} className="mt-3 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg hover:bg-emerald-600 inline-flex items-center gap-2"><Download size={14}/>Download</button>
         </div>
 
         {/* === CARD BACK === */}
         <div className="text-center w-full max-w-[260px]">
-          <h3 className="font-semibold text-sm text-brand-dark mb-3">Card Back <span className="text-xs text-brand-muted font-normal">3.5"×2"</span></h3>
+          <h3 className="font-semibold text-sm text-white mb-3">Card Back <span className="text-xs text-slate-400 font-normal">3.5"×2"</span></h3>
           <div ref={bRef} className="w-full rounded-xl overflow-visible relative shadow-lg flex flex-col items-center" style={{aspectRatio:"3.5/2.5",background:bgStyle(t.cb_bgIsGrad,t.cb_bg1,t.cb_bg2)}}>
             {/* QR */}
             <div className="mt-[8%]" style={{background:t.cb_qrWrapBg,borderRadius:`${t.cb_qrWrapRadius*2}px`,border:t.cb_qrBorder,padding:t.cb_qrWrapBg==="transparent"?0:6}}>
@@ -375,15 +375,15 @@ export default function QRCodePage(){
             {/* Leaf deco for 06 */}
             {sel==="forest-green"&&<div className="absolute bottom-[5%] right-[7%]"><Leaf size={12} color="#3D7A4F"/></div>}
           </div>
-          <button onClick={()=>dl(bRef.current,`card-back-${sel}.png`)} className="mt-3 px-4 py-2 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-dark inline-flex items-center gap-2"><Download size={14}/>Download</button>
+          <button onClick={()=>dl(bRef.current,`card-back-${sel}.png`)} className="mt-3 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-lg hover:bg-emerald-600 inline-flex items-center gap-2"><Download size={14}/>Download</button>
         </div>
       </div>
-      <div className="text-center pt-6 mt-6 border-t border-brand-soft/50">
-        <button onClick={async()=>{await dl(dRef.current,`desk-stand-${sel}.png`);setTimeout(async()=>{await dl(fRef.current,`card-front-${sel}.png`)},300);setTimeout(async()=>{await dl(bRef.current,`card-back-${sel}.png`)},600)}} className="px-6 py-2.5 border-2 border-brand-blue text-brand-blue font-semibold rounded-xl text-sm hover:bg-brand-blue hover:text-white inline-flex items-center gap-2"><Printer size={14}/>Download All 3</button>
+      <div className="text-center pt-6 mt-6 border-t border-slate-700/50">
+        <button onClick={async()=>{await dl(dRef.current,`desk-stand-${sel}.png`);setTimeout(async()=>{await dl(fRef.current,`card-front-${sel}.png`)},300);setTimeout(async()=>{await dl(bRef.current,`card-back-${sel}.png`)},600)}} className="px-6 py-2.5 border-2 border-brand-blue text-emerald-400 font-semibold rounded-xl text-sm hover:bg-emerald-500 hover:text-white inline-flex items-center gap-2"><Printer size={14}/>Download All 3</button>
       </div>
     </div>)}
-    {link&&<div className="bg-brand-soft rounded-2xl p-6"><h3 className="font-semibold text-brand-dark text-sm mb-3">Placement Tips</h3><ul className="space-y-2 text-sm text-brand-muted"><li>• Desk stand at front desk where patients check out</li><li>• Business cards in waiting room and treatment rooms</li><li>• Include card with receipts for patients who review later</li></ul></div>}
+    {link&&<div className="bg-slate-700 rounded-2xl p-6"><h3 className="font-semibold text-white text-sm mb-3">Placement Tips</h3><ul className="space-y-2 text-sm text-slate-400"><li>• Desk stand at front desk where patients check out</li><li>• Business cards in waiting room and treatment rooms</li><li>• Include card with receipts for patients who review later</li></ul></div>}
   </div>
-  {preview&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={()=>setPreview(null)}><div className="bg-white rounded-2xl p-4 max-w-md mx-4" onClick={e=>e.stopPropagation()}><img src={TPL.find(x=>x.id===preview)?.preview} alt="Preview" className="w-full rounded-xl"/><button onClick={()=>setPreview(null)} className="mt-3 w-full py-2 text-sm font-semibold text-brand-muted hover:text-brand-dark">Close</button></div></div>}
+  {preview&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={()=>setPreview(null)}><div className="bg-white rounded-2xl p-4 max-w-md mx-4" onClick={e=>e.stopPropagation()}><img src={TPL.find(x=>x.id===preview)?.preview} alt="Preview" className="w-full rounded-xl"/><button onClick={()=>setPreview(null)} className="mt-3 w-full py-2 text-sm font-semibold text-slate-400 hover:text-white">Close</button></div></div>}
   </div>);
 }

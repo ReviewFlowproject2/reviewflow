@@ -102,7 +102,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-slate-50">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 ${toast.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+        <div className={`fixed top-20 right-6 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-semibold flex items-center gap-2 ${toast.type === "success" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-500/10 text-red-400 border border-red-200"}`}>
           {toast.type === "success" ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
           {toast.message}
           <button onClick={() => setToast(null)}><X size={14} /></button>
@@ -186,10 +186,10 @@ export default function SettingsPage() {
             </div>
 
             <div className="bg-white rounded-2xl border border-red-200 p-6 shadow-sm">
-              <h2 className="font-bold text-lg text-red-700 mb-2">Sign Out</h2>
+              <h2 className="font-bold text-lg text-red-400 mb-2">Sign Out</h2>
               <p className="text-sm text-slate-500 mb-4">You will be redirected to the login page.</p>
               <button onClick={handleLogout}
-                className="px-6 py-2.5 border-2 border-red-200 text-red-600 font-semibold rounded-full text-sm hover:bg-red-50 transition-colors inline-flex items-center gap-2">
+                className="px-6 py-2.5 border-2 border-red-200 text-red-400 font-semibold rounded-full text-sm hover:bg-red-500/10 transition-colors inline-flex items-center gap-2">
                 <LogOut size={16} />Sign Out
               </button>
             </div>
@@ -228,7 +228,7 @@ export default function SettingsPage() {
                         <span className={isOver ? "text-red-500 font-semibold" : "text-slate-500"}>{item.used} / {item.limit}</span>
                       </div>
                       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div className={`h-full rounded-full ${isOver ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${pct}%` }} />
+                        <div className={`h-full rounded-full ${isOver ? "bg-red-500/100" : "bg-emerald-500"}`} style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );

@@ -73,42 +73,42 @@ export default function ImportPatientsPage() {
     setImporting(false);
   };
 
-  const inputClass = "w-full rounded-xl border border-slate-300 p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500";
+  const inputClass = "w-full rounded-xl border border-slate-600 p-3 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500";
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-950">
       <div className="max-w-4xl mx-auto px-6 py-8">
-        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-6"><ArrowLeft size={14} /> Back to Dashboard</Link>
-        <h1 className="font-extrabold text-3xl text-slate-900 tracking-tight mb-2">Import Patients</h1>
-        <p className="text-slate-500 mb-8">Upload a CSV with patient data to send review requests.</p>
+        <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white mb-6"><ArrowLeft size={14} /> Back to Dashboard</Link>
+        <h1 className="font-extrabold text-3xl text-white tracking-tight mb-2">Import Patients</h1>
+        <p className="text-slate-400 mb-8">Upload a CSV with patient data to send review requests.</p>
 
         {importedCount > 0 ? (
-          <div className="bg-white rounded-2xl border border-emerald-200 p-8 text-center shadow-sm">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4"><CheckCircle className="w-7 h-7 text-emerald-500" /></div>
-            <h2 className="font-bold text-xl text-slate-900 mb-2">Import Complete</h2>
-            <p className="text-slate-500 mb-6">{importedCount} patients imported successfully.</p>
+          <div className="bg-slate-800 rounded-2xl border border-emerald-500/30 p-8 text-center shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4"><CheckCircle className="w-7 h-7 text-emerald-400" /></div>
+            <h2 className="font-bold text-xl text-white mb-2">Import Complete</h2>
+            <p className="text-slate-400 mb-6">{importedCount} patients imported successfully.</p>
             <button onClick={() => { setImportedCount(0); setFile(null); }} className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-full text-sm hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">Import Another File</button>
           </div>
         ) : (
           <>
             {/* Template download */}
             <div className="flex items-center justify-between mb-6">
-              <button onClick={downloadTemplate} className="text-sm text-emerald-600 font-semibold hover:text-emerald-700 flex items-center gap-1.5"><Download size={16} />Download CSV Template</button>
+              <button onClick={downloadTemplate} className="text-sm text-emerald-400 font-semibold hover:text-emerald-300 flex items-center gap-1.5"><Download size={16} />Download CSV Template</button>
             </div>
 
             {/* Upload area */}
-            <label className="block w-full border-2 border-dashed border-slate-300 rounded-2xl p-10 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-colors bg-white mb-6">
+            <label className="block w-full border-2 border-dashed border-slate-600 rounded-2xl p-10 text-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-500/10/50 transition-colors bg-slate-800 mb-6">
               <Upload size={32} className="text-slate-400 mx-auto mb-3" />
-              <p className="font-semibold text-slate-700 mb-1">{file ? file.name : "Drop your CSV here or click to browse"}</p>
+              <p className="font-semibold text-slate-300 mb-1">{file ? file.name : "Drop your CSV here or click to browse"}</p>
               <p className="text-sm text-slate-400">CSV format: name, phone, email, visit_date</p>
               <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
             </label>
 
             {/* Error rows */}
             {errorRows.length > 0 && (
-              <div className="bg-white rounded-2xl border border-red-200 shadow-sm mb-6 overflow-hidden">
+              <div className="bg-slate-800 rounded-2xl border border-red-500/100/30 shadow-sm mb-6 overflow-hidden">
                 <button onClick={() => setShowErrors(!showErrors)} className="w-full flex items-center justify-between p-4 text-left">
-                  <span className="font-semibold text-red-700 flex items-center gap-2"><AlertTriangle size={16} />{errorRows.length} rows with errors</span>
+                  <span className="font-semibold text-red-400 flex items-center gap-2"><AlertTriangle size={16} />{errorRows.length} rows with errors</span>
                   {showErrors ? <ChevronUp size={18} className="text-red-400" /> : <ChevronDown size={18} className="text-red-400" />}
                 </button>
                 {showErrors && (
@@ -117,11 +117,11 @@ export default function ImportPatientsPage() {
                       <thead><tr className="text-left text-xs text-slate-400 border-b border-slate-100"><th className="py-2 pr-4">Row</th><th className="py-2 pr-4">Name</th><th className="py-2 pr-4">Phone</th><th className="py-2">Errors</th></tr></thead>
                       <tbody>
                         {errorRows.map((r) => (
-                          <tr key={r.rowNumber} className="border-b border-red-50">
-                            <td className="py-2 pr-4 text-slate-500">#{r.rowNumber}</td>
-                            <td className="py-2 pr-4 text-slate-700">{r.name || "-"}</td>
-                            <td className="py-2 pr-4 text-slate-500">{r.phone || "-"}</td>
-                            <td className="py-2 text-red-600">{r.errors.join(", ")}</td>
+                          <tr key={r.rowNumber} className="border-b border-red-500/10">
+                            <td className="py-2 pr-4 text-slate-400">#{r.rowNumber}</td>
+                            <td className="py-2 pr-4 text-slate-300">{r.name || "-"}</td>
+                            <td className="py-2 pr-4 text-slate-400">{r.phone || "-"}</td>
+                            <td className="py-2 text-red-400">{r.errors.join(", ")}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -133,9 +133,9 @@ export default function ImportPatientsPage() {
 
             {/* Preview table */}
             {preview.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+              <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-sm overflow-hidden mb-6">
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
-                  <span className="font-semibold text-slate-900 flex items-center gap-2"><CheckCircle size={16} className="text-emerald-500" />{preview.length} valid rows</span>
+                  <span className="font-semibold text-white flex items-center gap-2"><CheckCircle size={16} className="text-emerald-400" />{preview.length} valid rows</span>
                   <button onClick={handleImport} disabled={importing}
                     className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-full text-sm hover:bg-emerald-600 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-500/20">
                     {importing ? "Importing..." : `Import ${preview.length} Patients`}
@@ -148,10 +148,10 @@ export default function ImportPatientsPage() {
                       {preview.slice(0, 10).map((r) => (
                         <tr key={r.rowNumber} className="border-b border-slate-50">
                           <td className="py-2.5 px-4 text-slate-400">{r.rowNumber}</td>
-                          <td className="py-2.5 px-4 text-slate-700 font-medium">{r.name}</td>
-                          <td className="py-2.5 px-4 text-slate-500">{r.phone}</td>
-                          <td className="py-2.5 px-4 text-slate-500">{r.email || "-"}</td>
-                          <td className="py-2.5 px-4 text-slate-500">{r.visit_date || "-"}</td>
+                          <td className="py-2.5 px-4 text-slate-300 font-medium">{r.name}</td>
+                          <td className="py-2.5 px-4 text-slate-400">{r.phone}</td>
+                          <td className="py-2.5 px-4 text-slate-400">{r.email || "-"}</td>
+                          <td className="py-2.5 px-4 text-slate-400">{r.visit_date || "-"}</td>
                         </tr>
                       ))}
                     </tbody>
