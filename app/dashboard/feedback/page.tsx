@@ -109,10 +109,10 @@ export default function ReviewsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    const { data: biz } = await supabase.from("businesses").select("google_review_link").eq("user_id", user.id).single();
+    const { data: biz } = await supabase.from("businesses").select("id,google_review_link").eq("user_id", user.id).single();
     if (biz) setGoogleLink(biz.google_review_link || "");
 
-    const businessId = user.id;
+    const businessId = biz?.id || user.id;
     const { data: revs } = await supabase
       .from("reviews")
       .select("*")
