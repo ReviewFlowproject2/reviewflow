@@ -573,10 +573,10 @@ const FEATURE_ITEMS = [
 
 function FeatureBar() {
   return (
-    <div className="bg-slate-800/50 border-b border-slate-700/50">
+    <div className="bg-gray-50 border-b border-gray-200">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-10 flex items-center gap-4 sm:gap-8 overflow-x-auto scrollbar-none whitespace-nowrap">
         {FEATURE_ITEMS.map((f) => (
-          <div key={f.label} className="flex items-center gap-1.5 text-xs font-medium text-slate-300 shrink-0">
+          <div key={f.label} className="flex items-center gap-1.5 text-xs font-medium text-gray-500 shrink-0">
             <span className="text-sm">{f.icon}</span>
             <span className="hidden sm:inline">{f.label}</span>
           </div>
@@ -588,9 +588,8 @@ function FeatureBar() {
 
 export default function FreeAuditPage() {
   return (
-    <main className="min-h-screen bg-slate-900 antialiased">
+    <main className="min-h-screen bg-white antialiased">
       <SiteHeader />
-      <FeatureBar />
       <HeroSection />
       <ReportPreviewSection />
       <SocialProofSection />

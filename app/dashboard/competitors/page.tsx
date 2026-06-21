@@ -4,11 +4,11 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
-import { getEffectivePlan, getLimit, canUseFeature, type EffectivePlan } from "@/lib/plan-config";
+import { getEffectivePlan, getLimit, type EffectivePlan } from "@/lib/plan-config";
 import {
   ArrowLeft, Search, Plus, Star, TrendingUp,
   MapPin, Trash2, Link as LinkIcon, Wand2,
-  Lock, RefreshCw, Globe, AlertTriangle, Zap,
+  Lock, RefreshCw, Globe, AlertTriangle,
   CheckCircle, Clock, ExternalLink
 } from "lucide-react";
 
@@ -41,7 +41,6 @@ export default function CompetitorTrackingPage() {
   const [loading, setLoading] = useState(true);
   const [effectivePlan, setEffectivePlan] = useState<EffectivePlan>(getEffectivePlan(null));
 
-  // Add form
   const [showAddForm, setShowAddForm] = useState(false);
   const [addMode, setAddMode] = useState<"search" | "url" | "manual">("search");
   const [newName, setNewName] = useState("");
@@ -52,13 +51,11 @@ export default function CompetitorTrackingPage() {
   const [newPlaceId, setNewPlaceId] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Search state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<GooglePlace[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState("");
 
-  // Refresh state
   const [refreshing, setRefreshing] = useState(false);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
@@ -72,7 +69,6 @@ export default function CompetitorTrackingPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { router.push("/login"); return; }
 
-    // 通过 API 获取 business（绕过 RLS）
     try {
       const res = await fetch("/api/business/ensure", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       const data = await res.json();
@@ -91,7 +87,6 @@ export default function CompetitorTrackingPage() {
 
   useEffect(() => { loadCompetitors(); }, [loadCompetitors]);
 
-  // ==================== Google Search ====================
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
@@ -119,10 +114,9 @@ export default function CompetitorTrackingPage() {
     setNewPlaceId(place.place_id);
     setNewGoogleLink(`https://www.google.com/maps/place/?q=place_id:${place.place_id}`);
     setSearchResults([]);
-    setAddMode("manual"); // switch to manual to review auto-filled data
+    setAddMode("manual");
   };
 
-  // ==================== URL Parse ====================
   const handleUrlParse = async () => {
     if (!newGoogleLink.trim()) return;
     setSearching(true);
@@ -145,11 +139,9 @@ export default function CompetitorTrackingPage() {
     setSearching(false);
   };
 
-  // ==================== Add Competitor ====================
   const handleAdd = async () => {
     if (!newName.trim()) return;
     setSaving(true);
-
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -169,28 +161,20 @@ export default function CompetitorTrackingPage() {
     });
 
     if (!error) {
-      setNewName("");
-      setNewAddress("");
-      setNewRating("");
-      setNewReviews("");
-      setNewGoogleLink("");
-      setNewPlaceId("");
-      setSearchQuery("");
-      setSearchResults([]);
+      setNewName(""); setNewAddress(""); setNewRating(""); setNewReviews("");
+      setNewGoogleLink(""); setNewPlaceId(""); setSearchQuery(""); setSearchResults([]);
       setShowAddForm(false);
       loadCompetitors();
     }
     setSaving(false);
   };
 
-  // ==================== Delete ====================
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this competitor?")) return;
     await supabase.from("competitors").delete().eq("id", id);
     loadCompetitors();
   };
 
-  // ==================== Refresh Single ====================
   const handleRefreshSingle = async (comp: Competitor) => {
     setRefreshingId(comp.id);
     try {
@@ -200,16 +184,11 @@ export default function CompetitorTrackingPage() {
         body: JSON.stringify({ competitorIds: [comp.id] }),
       });
       const data = await res.json();
-      if (data.updated > 0) {
-        loadCompetitors();
-      }
-    } catch (e) {
-      console.error("Refresh error:", e);
-    }
+      if (data.updated > 0) loadCompetitors();
+    } catch (e) { console.error("Refresh error:", e); }
     setRefreshingId(null);
   };
 
-  // ==================== Refresh All ====================
   const handleRefreshAll = async () => {
     setRefreshing(true);
     const ids = competitors.map(c => c.id);
@@ -220,39 +199,32 @@ export default function CompetitorTrackingPage() {
         body: JSON.stringify({ competitorIds: ids }),
       });
       loadCompetitors();
-    } catch (e) {
-      console.error("Refresh all error:", e);
-    }
+    } catch (e) { console.error("Refresh all error:", e); }
     setRefreshing(false);
   };
 
-  // ==================== Computed ====================
   const competitorLimit = getLimit(effectivePlan, "maxCompetitors");
   const atCompetitorLimit = competitors.length >= competitorLimit;
-  const canAccess = effectivePlan.tier !== "free"; // Pro 和 Agency 可进
+  const canAccess = effectivePlan.tier !== "free";
 
-  // Free → 拦截，显示升级提示
   if (!canAccess) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6">
+      <div className="min-h-screen bg-gray-50 p-6">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6">
-            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors">
+            <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal-600 transition-colors">
               <ArrowLeft size={16} />Back to Dashboard
             </Link>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-700/50 p-12 text-center">
+          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
             <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
               <Lock className="w-8 h-8 text-amber-500" />
             </div>
-            <h1 className=" font-bold text-xl text-white mb-2">Agency Plan Required</h1>
-            <p className="text-slate-400 text-sm mb-6 max-w-md mx-auto">
+            <h1 className="font-bold text-xl text-gray-900 mb-2">Agency Plan Required</h1>
+            <p className="text-gray-500 text-sm mb-6 max-w-md mx-auto">
               Competitor Tracking with real-time Google data is an Agency-only feature. Upgrade to monitor nearby clinics, track their ratings, and stay ahead of the competition.
             </p>
-            <Link
-              href="/dashboard/support"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl text-sm hover:bg-amber-600 transition-colors"
-            >
+            <Link href="/dashboard/support" className="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl text-sm hover:bg-amber-600 transition-colors">
               <Lock size={16} />Upgrade to Agency
             </Link>
           </div>
@@ -264,10 +236,8 @@ export default function CompetitorTrackingPage() {
   const avgRating = competitors.length > 0
     ? (competitors.reduce((sum, c) => sum + c.rating, 0) / competitors.length).toFixed(1)
     : "0.0";
-
   const totalReviews = competitors.reduce((sum, c) => sum + c.review_count, 0);
 
-  // Data freshness helper
   const getFreshness = (refreshedAt?: string) => {
     if (!refreshedAt) return { label: "Manual", color: "text-gray-400", icon: Clock };
     const hours = (Date.now() - new Date(refreshedAt).getTime()) / 3600000;
@@ -278,17 +248,20 @@ export default function CompetitorTrackingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-slate-400">Loading competitors...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-500">Loading competitors...</div>
       </div>
     );
   }
 
+  const inputClass = "w-full rounded-xl border border-gray-300 p-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500";
+  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
+
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
         <div className="mb-6">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal-600 transition-colors">
             <ArrowLeft size={16} />Back to Dashboard
           </Link>
         </div>
@@ -296,32 +269,23 @@ export default function CompetitorTrackingPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className=" font-bold text-2xl text-white">Competitor Tracking</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Monitor nearby dental offices with real-time Google data.
-            </p>
+            <h1 className="font-bold text-2xl text-gray-900">Competitor Tracking</h1>
+            <p className="text-gray-500 text-sm mt-1">Monitor nearby dental offices with real-time Google data.</p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Refresh All */}
             {competitors.length > 0 && (
-              <button
-                onClick={handleRefreshAll}
-                disabled={refreshing}
-                className="inline-flex items-center gap-2 px-3 py-2 border border-slate-700 text-slate-400 text-sm font-semibold rounded-xl hover:bg-slate-700 transition-colors disabled:opacity-50"
-              >
+              <button onClick={handleRefreshAll} disabled={refreshing}
+                className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50">
                 <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />{refreshing ? "Refreshing..." : "Refresh All"}
               </button>
             )}
-            {/* Add Button */}
             {atCompetitorLimit ? (
               <Link href="/dashboard/support" className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-600 transition-colors">
                 <Lock size={16} />Upgrade ({competitors.length}/{competitorLimit})
               </Link>
             ) : (
-              <button
-                onClick={() => { setShowAddForm(!showAddForm); setAddMode("search"); setSearchResults([]); setSearchError(""); }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white text-sm font-semibold rounded-xl hover:bg-emerald-600 transition-colors"
-              >
+              <button onClick={() => { setShowAddForm(!showAddForm); setAddMode("search"); setSearchResults([]); setSearchError(""); }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-xl hover:bg-teal-700 transition-colors">
                 <Plus size={16} />{showAddForm ? "Cancel" : "Add Competitor"}
               </button>
             )}
@@ -330,63 +294,56 @@ export default function CompetitorTrackingPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
-            <p className="text-xs text-slate-400 mb-1">Tracking</p>
-            <p className=" font-bold text-2xl text-white">{competitors.length}<span className="text-sm text-slate-400 font-normal">/{competitorLimit}</span></p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
-            <p className="text-xs text-slate-400 mb-1">Avg Rating</p>
-            <p className=" font-bold text-2xl text-white">{avgRating}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
-            <p className="text-xs text-slate-400 mb-1">Total Reviews</p>
-            <p className=" font-bold text-2xl text-white">{totalReviews.toLocaleString()}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-5 border border-slate-700/50">
-            <p className="text-xs text-slate-400 mb-1">Data Source</p>
-            <p className=" font-bold text-sm text-white flex items-center gap-1.5 mt-1">
-              <Globe size={16} className="text-green-500" />Google Places
-            </p>
-          </div>
+          {[
+            { label: "Tracking", value: competitors.length, sub: `/${competitorLimit}` },
+            { label: "Avg Rating", value: avgRating },
+            { label: "Total Reviews", value: totalReviews.toLocaleString() },
+            { label: "Data Source", value: null, icon: Globe, iconColor: "text-green-500", text: "Google Places" },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white rounded-2xl p-5 border border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">{stat.label}</p>
+              {stat.value !== null ? (
+                <p className="font-bold text-2xl text-gray-900">
+                  {stat.value}
+                  {stat.sub && <span className="text-sm text-gray-400 font-normal">{stat.sub}</span>}
+                </p>
+              ) : (
+                <p className="font-bold text-sm text-gray-900 flex items-center gap-1.5 mt-1">
+                  {stat.icon && <stat.icon size={16} className={stat.iconColor} />}
+                  {stat.text}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
 
         {/* Add Form */}
         {showAddForm && (
-          <div className="bg-white rounded-2xl border border-slate-700/50 p-6 mb-6">
-            <h3 className="font-semibold text-white text-sm mb-4">Add New Competitor</h3>
-
-            {/* Mode Tabs */}
-            <div className="flex gap-1 bg-slate-700 rounded-xl p-1 mb-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 text-sm mb-4">Add New Competitor</h3>
+            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4">
               {([
                 { key: "search" as const, label: "Search Google", icon: Search },
                 { key: "url" as const, label: "Paste URL", icon: LinkIcon },
                 { key: "manual" as const, label: "Manual Entry", icon: Plus },
               ]).map(m => (
-                <button
-                  key={m.key}
-                  onClick={() => setAddMode(m.key)}
+                <button key={m.key} onClick={() => setAddMode(m.key)}
                   className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors inline-flex items-center justify-center gap-1.5 ${
-                    addMode === m.key ? "bg-white text-white shadow-sm" : "text-slate-400 hover:text-white"
-                  }`}
-                >
+                    addMode === m.key ? "bg-teal-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-900"
+                  }`}>
                   <m.icon size={13} />{m.label}
                 </button>
               ))}
             </div>
 
-            {/* ---- SEARCH MODE ---- */}
             {addMode === "search" && (
               <div>
                 <div className="flex gap-2 mb-3">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                  <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    placeholder="Search dental clinics on Google Maps..."
-                    className="flex-1 rounded-xl border border-slate-700 p-3 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
-                  />
-                  <button onClick={handleSearch} disabled={searching || !searchQuery.trim()} className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50">
+                    placeholder="Search dental clinics on Google Maps..." className={`flex-1 ${inputClass}`} />
+                  <button onClick={handleSearch} disabled={searching || !searchQuery.trim()}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-colors disabled:opacity-50">
                     {searching ? "Searching..." : "Search"}
                   </button>
                 </div>
@@ -394,22 +351,19 @@ export default function CompetitorTrackingPage() {
                 {searchResults.length > 0 && (
                   <div className="space-y-2 mb-3">
                     {searchResults.map((place) => (
-                      <div
-                        key={place.place_id}
-                        onClick={() => selectSearchResult(place)}
-                        className="flex items-center justify-between p-3 rounded-xl border border-slate-700 hover:border-brand-blue hover:bg-slate-700/50 cursor-pointer transition-colors"
-                      >
+                      <div key={place.place_id} onClick={() => selectSearchResult(place)}
+                        className="flex items-center justify-between p-3 rounded-xl border border-gray-200 hover:border-teal-500 hover:bg-gray-50 cursor-pointer transition-colors">
                         <div>
-                          <p className="text-sm font-semibold text-white">{place.name}</p>
-                          <p className="text-xs text-slate-400">{place.address}</p>
+                          <p className="text-sm font-semibold text-gray-900">{place.name}</p>
+                          <p className="text-xs text-gray-500">{place.address}</p>
                         </div>
                         <div className="text-right shrink-0">
                           <div className="flex items-center gap-1">
                             <Star size={12} className="fill-amber-400 text-amber-400" />
-                            <span className="text-sm font-bold text-white">{place.rating.toFixed(1)}</span>
-                            <span className="text-xs text-slate-400">({place.review_count})</span>
+                            <span className="text-sm font-bold text-gray-900">{place.rating.toFixed(1)}</span>
+                            <span className="text-xs text-gray-400">({place.review_count})</span>
                           </div>
-                          <span className="text-xs text-emerald-400">+ Add</span>
+                          <span className="text-xs text-teal-600">+ Add</span>
                         </div>
                       </div>
                     ))}
@@ -418,19 +372,14 @@ export default function CompetitorTrackingPage() {
               </div>
             )}
 
-            {/* ---- URL MODE ---- */}
             {addMode === "url" && (
               <div className="mb-3">
-                <p className="text-xs text-slate-400 mb-2">Paste a Google Maps URL and we'll fetch the real-time data.</p>
+                <p className="text-xs text-gray-500 mb-2">Paste a Google Maps URL and we'll fetch the real-time data.</p>
                 <div className="flex gap-2">
-                  <input
-                    type="url"
-                    value={newGoogleLink}
-                    onChange={(e) => setNewGoogleLink(e.target.value)}
-                    placeholder="https://www.google.com/maps/place/..."
-                    className="flex-1 rounded-xl border border-slate-700 p-3 text-sm text-white placeholder:text-slate-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500"
-                  />
-                  <button onClick={handleUrlParse} disabled={searching || !newGoogleLink.trim()} className="px-4 py-2 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5">
+                  <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)}
+                    placeholder="https://www.google.com/maps/place/..." className={`flex-1 ${inputClass}`} />
+                  <button onClick={handleUrlParse} disabled={searching || !newGoogleLink.trim()}
+                    className="px-4 py-2 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5">
                     <Wand2 size={14} />{searching ? "Fetching..." : "Fetch Data"}
                   </button>
                 </div>
@@ -438,39 +387,39 @@ export default function CompetitorTrackingPage() {
               </div>
             )}
 
-            {/* ---- Form Fields (shown for all modes after data is filled) ---- */}
             {(addMode === "manual" || newName) && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">Clinic Name *</label>
-                  <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Bright Smile Dental" className="w-full rounded-xl border border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+                  <label className={labelClass}>Clinic Name *</label>
+                  <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)}
+                    placeholder="e.g. Bright Smile Dental" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">Address</label>
-                  <input type="text" value={newAddress} onChange={(e) => setNewAddress(e.target.value)} placeholder="Auto-filled from Google" className="w-full rounded-xl border border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue bg-slate-700" />
+                  <label className={labelClass}>Address</label>
+                  <input type="text" value={newAddress} onChange={(e) => setNewAddress(e.target.value)}
+                    placeholder="Auto-filled from Google" className={`${inputClass} bg-gray-50`} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">
-                    Rating {newRating && <span className="text-green-500 text-xs font-normal">(from Google)</span>}
-                  </label>
-                  <input type="number" step="0.1" min="1" max="5" value={newRating} onChange={(e) => setNewRating(e.target.value)} placeholder="e.g. 4.2" className="w-full rounded-xl border border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+                  <label className={labelClass}>Rating {newRating && <span className="text-green-500 text-xs font-normal">(from Google)</span>}</label>
+                  <input type="number" step="0.1" min="1" max="5" value={newRating} onChange={(e) => setNewRating(e.target.value)}
+                    placeholder="e.g. 4.2" className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-white mb-1.5">
-                    Review Count {newReviews && <span className="text-green-500 text-xs font-normal">(from Google)</span>}
-                  </label>
-                  <input type="number" min="0" value={newReviews} onChange={(e) => setNewReviews(e.target.value)} placeholder="e.g. 127" className="w-full rounded-xl border border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+                  <label className={labelClass}>Review Count {newReviews && <span className="text-green-500 text-xs font-normal">(from Google)</span>}</label>
+                  <input type="number" min="0" value={newReviews} onChange={(e) => setNewReviews(e.target.value)}
+                    placeholder="e.g. 127" className={inputClass} />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-white mb-1.5">Google Maps Link</label>
-                  <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)} placeholder="https://www.google.com/maps/place/..." className="w-full rounded-xl border border-slate-700 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue" />
+                  <label className={labelClass}>Google Maps Link</label>
+                  <input type="url" value={newGoogleLink} onChange={(e) => setNewGoogleLink(e.target.value)}
+                    placeholder="https://www.google.com/maps/place/..." className={inputClass} />
                 </div>
               </div>
             )}
 
-            {/* ---- Save Button ---- */}
             {newName && (
-              <button onClick={handleAdd} disabled={saving} className="px-6 py-2.5 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
+              <button onClick={handleAdd} disabled={saving}
+                className="px-6 py-2.5 bg-teal-600 text-white font-semibold rounded-xl text-sm hover:bg-teal-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2">
                 <Plus size={16} />{saving ? "Saving..." : "Add Competitor"}
               </button>
             )}
@@ -479,42 +428,40 @@ export default function CompetitorTrackingPage() {
 
         {/* Competitors List */}
         {competitors.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-700/50 p-12 text-center">
-            <Globe className="mx-auto text-slate-400 mb-3" size={48} />
-            <h3 className="font-semibold text-white mb-1">No competitors tracked yet</h3>
-            <p className="text-sm text-slate-400 mb-4">Search Google Maps to add nearby dental clinics and track their reviews in real-time.</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
+            <Globe className="mx-auto text-gray-400 mb-3" size={48} />
+            <h3 className="font-semibold text-gray-900 mb-1">No competitors tracked yet</h3>
+            <p className="text-sm text-gray-500 mb-4">Search Google Maps to add nearby dental clinics and track their reviews in real-time.</p>
             {atCompetitorLimit ? (
               <Link href="/dashboard/support" className="px-5 py-2.5 bg-amber-500 text-white font-semibold rounded-xl text-sm hover:bg-amber-600 transition-colors inline-flex items-center gap-2">
                 <Lock size={16} />Upgrade to Add Competitors
               </Link>
             ) : (
-              <button onClick={() => { setShowAddForm(true); setAddMode("search"); }} className="px-5 py-2.5 bg-emerald-500 text-white font-semibold rounded-xl text-sm hover:bg-emerald-600 transition-colors inline-flex items-center gap-2">
+              <button onClick={() => { setShowAddForm(true); setAddMode("search"); }}
+                className="px-5 py-2.5 bg-teal-600 text-white font-semibold rounded-xl text-sm hover:bg-teal-700 transition-colors inline-flex items-center gap-2">
                 <Search size={16} />Search on Google Maps
               </button>
             )}
           </div>
         ) : (
-          <div className="bg-white rounded-2xl border border-slate-700/50 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
             <div className="hidden md:block">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-slate-700/50">
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Clinic</th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Rating</th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Reviews</th>
-                    <th className="text-left text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Address</th>
-                    <th className="text-center text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 py-3">Data</th>
-                    <th className="text-right text-xs font-semibold text-slate-400 uppercase tracking-wider px-5 py-3">Action</th>
+                  <tr className="border-b border-gray-200">
+                    {["Clinic", "Rating", "Reviews", "Address", "Data", "Action"].map((h, i) => (
+                      <th key={h} className={`text-xs font-semibold text-gray-500 uppercase tracking-wider px-5 py-3 bg-gray-50 ${i === 3 ? "text-left" : i === 4 ? "text-center" : i === 5 ? "text-right" : "text-left"}`}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {competitors.map((c) => {
                     const freshness = getFreshness(c.data_refreshed_at);
                     return (
-                      <tr key={c.id} className="border-b border-slate-700/30 hover:bg-[#FAFCFF] transition-colors">
+                      <tr key={c.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td className="px-5 py-4">
-                          <p className="text-sm font-medium text-white">{c.name}</p>
-                          <p className="text-xs text-slate-400">{c.platform}</p>
+                          <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                          <p className="text-xs text-gray-400">{c.platform}</p>
                         </td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
@@ -523,19 +470,17 @@ export default function CompetitorTrackingPage() {
                                 <Star key={i} size={12} className={i < Math.round(c.rating) ? "fill-amber-400 text-amber-400" : "text-gray-200"} />
                               ))}
                             </div>
-                            <span className="text-sm font-semibold text-white">{c.rating.toFixed(1)}</span>
+                            <span className="text-sm font-semibold text-gray-900">{c.rating.toFixed(1)}</span>
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <span className="text-sm text-white font-medium">{c.review_count.toLocaleString()}</span>
-                          {c.data_refreshed_at && (
-                            <span className="text-xs text-green-500 ml-1">▸ live</span>
-                          )}
+                          <span className="text-sm text-gray-900 font-medium">{c.review_count.toLocaleString()}</span>
+                          {c.data_refreshed_at && <span className="text-xs text-green-500 ml-1">▸ live</span>}
                         </td>
-                        <td className="px-5 py-4 text-sm text-slate-400">
+                        <td className="px-5 py-4 text-sm text-gray-500">
                           <span className="line-clamp-1">{c.address || "—"}</span>
                           {c.google_link && (
-                            <a href={c.google_link} target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline text-xs block mt-1">
+                            <a href={c.google_link} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline text-xs block mt-1">
                               View on Google Maps →
                             </a>
                           )}
@@ -548,15 +493,11 @@ export default function CompetitorTrackingPage() {
                         </td>
                         <td className="px-5 py-4 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => handleRefreshSingle(c)}
-                              disabled={refreshingId === c.id}
-                              className="text-slate-400 hover:text-emerald-400 transition-colors p-1.5"
-                              title="Refresh from Google"
-                            >
+                            <button onClick={() => handleRefreshSingle(c)} disabled={refreshingId === c.id}
+                              className="text-gray-400 hover:text-teal-600 transition-colors p-1.5" title="Refresh from Google">
                               <RefreshCw size={13} className={refreshingId === c.id ? "animate-spin" : ""} />
                             </button>
-                            <button onClick={() => handleDelete(c.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                            <button onClick={() => handleDelete(c.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1" title="Delete">
                               <Trash2 size={13} />
                             </button>
                           </div>
@@ -568,19 +509,18 @@ export default function CompetitorTrackingPage() {
               </table>
             </div>
 
-            {/* Mobile View */}
-            <div className="md:hidden divide-y divide-brand-soft/50">
+            <div className="md:hidden divide-y divide-gray-100">
               {competitors.map((c) => {
                 const freshness = getFreshness(c.data_refreshed_at);
                 return (
                   <div key={c.id} className="p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-white">{c.name}</span>
+                      <span className="font-medium text-gray-900">{c.name}</span>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => handleRefreshSingle(c)} disabled={refreshingId === c.id} className="text-slate-400 hover:text-emerald-400 transition-colors p-1">
+                        <button onClick={() => handleRefreshSingle(c)} disabled={refreshingId === c.id} className="text-gray-400 hover:text-teal-600 transition-colors p-1">
                           <RefreshCw size={13} className={refreshingId === c.id ? "animate-spin" : ""} />
                         </button>
-                        <button onClick={() => handleDelete(c.id)} className="text-slate-400 hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
+                        <button onClick={() => handleDelete(c.id)} className="text-gray-400 hover:text-red-500 transition-colors p-1"><Trash2 size={14} /></button>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 mb-1">
@@ -589,14 +529,14 @@ export default function CompetitorTrackingPage() {
                           <Star key={i} size={12} className={i < Math.round(c.rating) ? "fill-amber-400 text-amber-400" : "text-gray-200"} />
                         ))}
                       </div>
-                      <span className="text-sm font-semibold text-white">{c.rating.toFixed(1)}</span>
-                      <span className="text-xs text-slate-400">({c.review_count.toLocaleString()} reviews)</span>
+                      <span className="text-sm font-semibold text-gray-900">{c.rating.toFixed(1)}</span>
+                      <span className="text-xs text-gray-500">({c.review_count.toLocaleString()} reviews)</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
                       <freshness.icon size={11} className={freshness.color} />
                       <span className={freshness.color}>{freshness.label} data</span>
                     </div>
-                    {c.address && <p className="text-xs text-slate-400 mt-1">{c.address}</p>}
+                    {c.address && <p className="text-xs text-gray-500 mt-1">{c.address}</p>}
                   </div>
                 );
               })}

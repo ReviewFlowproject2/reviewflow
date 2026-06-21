@@ -126,7 +126,7 @@ export default function SettingsPage() {
           ].map((tab) => (
             <button key={tab.key} onClick={() => setActiveTab(tab.key as any)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
-                activeTab === tab.key ? "bg-slate-900 text-white shadow-sm" : "text-slate-500 hover:text-slate-900"
+                activeTab === tab.key ? "bg-teal-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-900"
               }`}>
               <tab.icon size={16} />{tab.label}
             </button>

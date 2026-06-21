@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Zap, Users, Bell, Headphones, MessageSquare, ArrowLeft } from "lucide-react";
+import { Check, Zap, Users, Bell, Headphones, ArrowLeft } from "lucide-react";
 import Script from "next/script";
 import { useState, useEffect } from "react";
 
@@ -30,7 +30,7 @@ const AgencyBadge = ({ children }: { children: React.ReactNode }) => (
   </span>
 );
 
-export default function PricingPage() {
+export default function SupportPricingPage() {
   const [cycle, setCycle] = useState<BillingCycle>("monthly");
   const [paddleLoaded, setPaddleLoaded] = useState(false);
 
@@ -70,37 +70,37 @@ export default function PricingPage() {
   return (
     <>
       <Script src="https://cdn.paddle.com/paddle/v2/paddle.js" strategy="afterInteractive" />
-      <div className="min-h-screen bg-slate-950">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-6xl mx-auto px-6 py-16">
           {/* Back to Dashboard */}
           <div className="mb-6">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-emerald-400 transition-colors"
+              className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-teal-600 transition-colors"
             >
               <ArrowLeft size={16} />
               Back to Dashboard
             </Link>
           </div>
 
-          <h1 className=" font-bold text-4xl text-emerald-400 text-center mb-4">
+          <h1 className="font-bold text-4xl text-gray-900 text-center mb-4">
             Simple, Transparent Pricing
           </h1>
-          <p className="text-slate-400 text-center mb-8">
+          <p className="text-gray-500 text-center mb-8">
             Start free. Upgrade when you&apos;re ready to automate.
           </p>
 
           {/* Billing Cycle Toggle */}
           <div className="flex justify-center mb-12">
-            <div className="bg-white rounded-full p-1 border border-slate-700 shadow-sm inline-flex">
+            <div className="bg-white rounded-lg p-1 border border-gray-200 shadow-sm inline-flex">
               {cycles.map((c) => (
                 <button
                   key={c.key}
                   onClick={() => setCycle(c.key)}
-                  className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                  className={`px-6 py-2 rounded-lg text-sm font-semibold transition-all ${
                     cycle === c.key
-                      ? "bg-emerald-500 text-white shadow-md"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-teal-600 text-white shadow-sm"
+                      : "text-gray-500 hover:text-gray-900"
                   }`}
                 >
                   {c.label}
@@ -111,130 +111,123 @@ export default function PricingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
             {/* FREE */}
-            <div className="bg-white rounded-[16px] p-8 border border-slate-700">
-              <h3 className=" font-bold text-xl text-white mb-1">Free</h3>
-              <p className="text-slate-400 text-sm mb-4">Get started with QR codes</p>
-              <div className=" font-bold text-3xl text-white mb-1">$0</div>
-              <p className="text-xs text-slate-400 mb-6">15-day free trial, no credit card</p>
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+              <h3 className="font-bold text-xl text-gray-900 mb-1">Free</h3>
+              <p className="text-gray-500 text-sm mb-4">Get started with QR codes</p>
+              <div className="font-bold text-3xl text-gray-900 mb-1">$0</div>
+              <p className="text-xs text-gray-400 mb-6">15-day free trial, no credit card</p>
               <Link
                 href="/register"
-                className="block w-full text-center py-2.5 border-2 border-brand-blue text-emerald-400 font-semibold rounded-[10px] text-sm hover:bg-emerald-500 hover:text-white transition-colors"
+                className="block w-full text-center py-2.5 border-2 border-teal-600 text-teal-600 font-semibold rounded-lg text-sm hover:bg-teal-600 hover:text-white transition-colors"
               >
                 Start Free Trial
               </Link>
-              <ul className="mt-6 space-y-3 text-sm text-white">
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>QR code generation</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Google Review link</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Basic dashboard</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Up to 50 patients</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Email support</li>
+              <ul className="mt-6 space-y-3 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>QR code generation</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Google Review link</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Basic dashboard</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Up to 50 patients</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Email support</li>
               </ul>
             </div>
 
             {/* PRO */}
-            <div className="bg-white rounded-[16px] p-8 border-2 border-brand-blue scale-105 shadow-card relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-xs font-semibold px-4 py-1 rounded-full">
+            <div className="bg-white rounded-2xl p-8 border-2 border-teal-500 ring-2 ring-teal-500 md:scale-105 shadow-sm relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-teal-600 text-white text-xs font-semibold px-4 py-1 rounded-full">
                 Most Popular
               </div>
               {getSaveLabel("pro") && (
-                <div className="absolute -top-3 right-4 bg-emerald-500/100 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 right-4 bg-teal-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   {getSaveLabel("pro")}
                 </div>
               )}
-              <h3 className=" font-bold text-xl text-white mb-1">Pro</h3>
-              <p className="text-slate-400 text-sm mb-4">Automate your reputation growth</p>
-              <div className=" font-bold text-3xl text-white mb-1">
-                ${PRICING[cycle].pro.price}<span className="text-lg text-slate-400">{PRICING[cycle].pro.period}</span>
+              <h3 className="font-bold text-xl text-gray-900 mb-1">Pro</h3>
+              <p className="text-gray-500 text-sm mb-4">Automate your reputation growth</p>
+              <div className="font-bold text-3xl text-gray-900 mb-1">
+                ${PRICING[cycle].pro.price}<span className="text-lg text-gray-400">{PRICING[cycle].pro.period}</span>
               </div>
-              <p className="text-xs text-slate-400 mb-6">1st month free, cancel anytime</p>
+              <p className="text-xs text-gray-400 mb-6">1st month free, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].pro.priceId)}
-                className="block w-full text-center py-2.5 bg-emerald-500 text-white font-semibold rounded-[10px] text-sm hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                className="block w-full text-center py-2.5 bg-teal-600 text-white font-semibold rounded-lg text-sm hover:bg-teal-700 transition-colors disabled:opacity-50"
                 disabled={!paddleLoaded}
               >
                 {paddleLoaded ? "Get 1st Month Free" : "Loading..."}
               </button>
-              <ul className="mt-6 space-y-3 text-sm text-white">
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Free</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Automated email follow-ups</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Real-time negative review alerts</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1,000 patients / month</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>3 competitor tracking</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>30-day historical data</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>1 team member</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Priority email support</li>
+              <ul className="mt-6 space-y-3 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Everything in Free</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Automated email follow-ups</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Real-time negative review alerts</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>1,000 patients / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>3 competitor tracking</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>30-day historical data</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>1 team member</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Priority email support</li>
               </ul>
             </div>
 
             {/* AGENCY */}
-            <div className="bg-white rounded-[16px] p-8 border-2 border-amber-400 relative shadow-lg">
+            <div className="bg-white rounded-2xl p-8 border-2 border-amber-400 shadow-sm relative">
               {getSaveLabel("agency") && (
-                <div className="absolute -top-3 right-4 bg-emerald-500/100 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                <div className="absolute -top-3 right-4 bg-teal-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
                   {getSaveLabel("agency")}
                 </div>
               )}
               <div className="absolute -top-3 left-4 bg-amber-500 text-white text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
                 <Zap size={12} /> Agency Only
               </div>
-              <h3 className=" font-bold text-xl text-white mb-1">Agency</h3>
-              <p className="text-slate-400 text-sm mb-4">Manage multiple clinics</p>
-              <div className=" font-bold text-3xl text-white mb-1">
-                ${PRICING[cycle].agency.price}<span className="text-lg text-slate-400">{PRICING[cycle].agency.period}</span>
+              <h3 className="font-bold text-xl text-gray-900 mb-1">Agency</h3>
+              <p className="text-gray-500 text-sm mb-4">Manage multiple clinics</p>
+              <div className="font-bold text-3xl text-gray-900 mb-1">
+                ${PRICING[cycle].agency.price}<span className="text-lg text-gray-400">{PRICING[cycle].agency.period}</span>
               </div>
-              <p className="text-xs text-slate-400 mb-6">1st month free, cancel anytime</p>
+              <p className="text-xs text-gray-400 mb-6">1st month free, cancel anytime</p>
               <button
                 onClick={() => openCheckout(PRICING[cycle].agency.priceId)}
-                className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-[10px] text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
+                className="block w-full text-center py-2.5 bg-amber-500 text-white font-semibold rounded-lg text-sm hover:bg-amber-600 transition-colors disabled:opacity-50"
                 disabled={!paddleLoaded}
               >
                 {paddleLoaded ? "Get 1st Month Free" : "Loading..."}
               </button>
-              <ul className="mt-6 space-y-3 text-sm text-white">
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Everything in Pro</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Multi-clinic dashboard</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>White-label branding</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>API access</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Custom integrations</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>10,000 patients / month</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>20 competitor tracking</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Unlimited historical data</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>5 team members</li>
-                <li className="flex items-center gap-2"><Check size={14} className="text-green-500 shrink-0"/>Export monthly reports</li>
-
-                {/* Agency Exclusive Features */}
+              <ul className="mt-6 space-y-3 text-sm text-gray-600">
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Everything in Pro</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Multi-clinic dashboard</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>White-label branding</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>API access</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>10,000 patients / month</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>20 competitor tracking</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>Unlimited historical data</li>
+                <li className="flex items-center gap-2"><Check size={14} className="text-teal-600 shrink-0"/>5 team members</li>
                 <li className="flex items-start gap-2">
                   <Zap size={14} className="text-amber-500 shrink-0 mt-0.5"/>
                   <span>
-                    <span className="font-semibold">Daily Reputation Digest</span>
+                    <span className="font-semibold text-gray-900">Daily Reputation Digest</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-slate-400">Morning email summary. No login needed.</span>
+                    <span className="block text-xs text-gray-400">Morning email summary. No login needed.</span>
                   </span>
                 </li>
-
                 <li className="flex items-start gap-2">
                   <Bell size={14} className="text-amber-500 shrink-0 mt-0.5"/>
                   <span>
-                    <span className="font-semibold">Priority Email Alerts</span>
+                    <span className="font-semibold text-gray-900">Priority Email Alerts</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-slate-400">1-2⭐ reviews within 10 min via email</span>
+                    <span className="block text-xs text-gray-400">1-2⭐ reviews within 10 min via email</span>
                   </span>
                 </li>
-
                 <li className="flex items-start gap-2">
                   <Users size={14} className="text-amber-500 shrink-0 mt-0.5"/>
                   <span>
-                    <span className="font-semibold">Multi-Recipient Alerts</span>
+                    <span className="font-semibold text-gray-900">Multi-Recipient Alerts</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-slate-400">Up to 5 staff members notified</span>
+                    <span className="block text-xs text-gray-400">Up to 5 staff members notified</span>
                   </span>
                 </li>
-
                 <li className="flex items-start gap-2">
                   <Headphones size={14} className="text-amber-500 shrink-0 mt-0.5"/>
                   <span>
-                    <span className="font-semibold">1-on-1 Dedicated Support</span>
+                    <span className="font-semibold text-gray-900">1-on-1 Dedicated Support</span>
                     <AgencyBadge>Agency Only</AgencyBadge>
-                    <span className="block text-xs text-slate-400">Dedicated account manager + live chat</span>
+                    <span className="block text-xs text-gray-400">Dedicated account manager + live chat</span>
                   </span>
                 </li>
               </ul>
@@ -243,56 +236,37 @@ export default function PricingPage() {
 
           {/* FAQ Section */}
           <div className="max-w-3xl mx-auto mt-20">
-            <h2 className=" font-bold text-2xl text-white text-center mb-8">
+            <h2 className="font-bold text-2xl text-gray-900 text-center mb-8">
               Frequently Asked Questions
             </h2>
             <div className="space-y-4">
               {[
-                {
-                  q: "Do I need a credit card to start?",
-                  a: "No credit card required for the Free plan. Pro and Agency plans include a 15-day free trial — first month free when you subscribe. We only ask for payment details when you decide to continue after the trial."
-                },
-                {
-                  q: "Can I cancel anytime?",
-                  a: "Yes, you can cancel your subscription at any time from your account settings. No questions asked, no hidden fees."
-                },
-                {
-                  q: "What happens after the 15-day trial?",
-                  a: "You get 15 days of full access. If you subscribe to Pro or Agency, your first month is free. If you don't subscribe, your account automatically downgrades to the Free plan. You keep all your data and can upgrade again anytime."
-                },
-                {
-                  q: "Is my patient data secure?",
-                  a: "Absolutely. We use bank-level encryption (AES-256) and never share your patient data with third parties. We are HIPAA-compliant and GDPR-ready."
-                },
-                {
-                  q: "Can I switch plans later?",
-                  a: "Yes, you can upgrade or downgrade at any time. When upgrading, you only pay the prorated difference. When downgrading, the new rate applies at the next billing cycle."
-                },
-                {
-                  q: "Do you offer refunds?",
-                  a: "If you are not satisfied within the first 14 days of your paid subscription, contact us for a full refund — no questions asked."
-                }
+                { q: "Do I need a credit card to start?", a: "No credit card required for the Free plan. Pro and Agency plans include a 15-day free trial — first month free when you subscribe." },
+                { q: "Can I cancel anytime?", a: "Yes, you can cancel your subscription at any time from your account settings. No questions asked, no hidden fees." },
+                { q: "What happens after the 15-day trial?", a: "You get 15 days of full access. If you subscribe to Pro or Agency, your first month is free. If you don't subscribe, your account automatically downgrades to the Free plan." },
+                { q: "Is my patient data secure?", a: "Absolutely. We use bank-level encryption (AES-256) and never share your patient data with third parties. HIPAA-compliant and GDPR-ready." },
+                { q: "Can I switch plans later?", a: "Yes, you can upgrade or downgrade at any time. When upgrading, you only pay the prorated difference." },
+                { q: "Do you offer refunds?", a: "If you are not satisfied within the first 14 days of your paid subscription, contact us for a full refund — no questions asked." },
               ].map((faq, i) => (
-                <div key={i} className="bg-white rounded-xl border border-slate-700 p-5">
-                  <h3 className="font-semibold text-white mb-2">{faq.q}</h3>
-                  <p className="text-sm text-slate-400 leading-relaxed">{faq.a}</p>
+                <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm">
+                  <h3 className="font-semibold text-gray-900 mb-2">{faq.q}</h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">{faq.a}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Footer CTA */}
+          {/* Footer */}
           <div className="text-center mt-16">
-            <p className="text-slate-400 text-sm mb-4">
+            <p className="text-gray-500 text-sm mb-4">
               Still have questions?{" "}
-              <a href="mailto:support@reviewflowdental.com" className="text-emerald-400 hover:underline font-medium">
+              <a href="mailto:support@reviewflowdental.com" className="text-teal-600 hover:underline font-medium">
                 Contact Support
               </a>
             </p>
-            <div className="flex items-center justify-center gap-6 text-xs text-slate-400/60">
-              <Link href="/privacy" className="hover:text-slate-400 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-slate-400 transition-colors">Terms of Service</Link>
-              <Link href="/cookies" className="hover:text-slate-400 transition-colors">Cookie Policy</Link>
+            <div className="flex items-center justify-center gap-6 text-xs text-gray-400">
+              <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms of Service</Link>
             </div>
           </div>
         </div>
