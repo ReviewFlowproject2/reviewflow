@@ -429,10 +429,14 @@ export default function DashboardPage() {
       if (businessId) {
         const [ptsResult, revsResult, allReviewsResult, allPatientsResult] = await Promise.all([
           supabase.from("patients").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(50),
-          supabase.from("reviews").select("*").eq("business_id", businessId).eq("resolved", false).lt("rating", 4).order("created_at", { ascending: false }).limit(10),
-          supabase.from("reviews").select("rating,created_at").eq("business_id", businessId).gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
+          supabase.from("reviews").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(20),
+          supabase.from("reviews").select("rating,created_at").eq("business_id", businessId),
           supabase.from("patients").select("email_status").eq("business_id", businessId),
         ]);
+
+        console.log("🔍 Dashboard Debug — businessId:", businessId);
+        console.log("🔍 allReviews count:", allReviewsResult.data?.length || 0, allReviewsResult.data);
+        console.log("🔍 alerts count:", revsResult.data?.length || 0, revsResult.data);
 
         if (ptsResult.error) console.error("Patients fetch error:", ptsResult.error);
         else setPatients(ptsResult.data || []);
