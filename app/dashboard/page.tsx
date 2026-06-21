@@ -276,29 +276,38 @@ function TrendChart({ data, days }: { data: TrendData[]; days: number }) {
   const maxCount = Math.max(...data.map(d => d.count), 1);
   const total = data.reduce((sum, d) => sum + d.count, 0);
   return (
-    <div className="bg-white rounded-2xl border border-brand-soft/50 p-6 mb-8">
+    <div className="bg-white rounded-2xl border border-slate-200 p-6 mb-8 w-full">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-brand-blue" />
-          <h2 className="font-outfit font-semibold text-lg text-brand-dark">Review Trends</h2>
+          <h2 className="font-semibold text-lg text-brand-dark">Review Trends</h2>
+          <span className="text-xs text-brand-muted">({days}-day)</span>
         </div>
         <div className="text-right">
           <p className="text-xs text-brand-muted">{days}-day total</p>
-          <p className="font-outfit font-bold text-xl text-brand-blue">{total}</p>
+          <p className="font-bold text-xl text-brand-blue">{total}</p>
         </div>
       </div>
-      <div className="flex items-end gap-1 h-40 px-2">
+      <div className="flex items-end gap-1.5 h-44 px-2">
         {data.map((d, i) => {
-          const height = Math.max((d.count / maxCount) * 100, 4);
+          const height = Math.max((d.count / maxCount) * 100, 6);
           const isWeekend = new Date(d.date).getDay() === 0 || new Date(d.date).getDay() === 6;
           return (
             <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-              <div className="w-full bg-brand-soft rounded-t-md transition-all duration-300 group-hover:bg-brand-blue/30 relative" style={{ height: `${height}%` }}>
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                  {d.count} reviews
+              <div
+                className="w-full rounded-t-md transition-all duration-300 group-hover:opacity-80 relative"
+                style={{
+                  height: `${height}%`,
+                  background: isWeekend
+                    ? "linear-gradient(to top, #94a3b8, #cbd5e1)"
+                    : "linear-gradient(to top, #0D9488, #14b8a6)",
+                }}
+              >
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  {d.count} review{d.count !== 1 ? "s" : ""}
                 </div>
               </div>
-              <span className={`text-[10px] ${isWeekend ? "text-brand-muted/40" : "text-brand-muted"}`}>
+              <span className={`text-[10px] ${isWeekend ? "text-slate-400/50" : "text-slate-500"}`}>
                 {new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
             </div>
@@ -427,16 +436,14 @@ export default function DashboardPage() {
 
       // 并行加载：patients + reviews + 统计 → 一次往返
       if (businessId) {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
         const [ptsResult, revsResult, allReviewsResult, allPatientsResult] = await Promise.all([
           supabase.from("patients").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(50),
-          supabase.from("reviews").select("*").eq("business_id", businessId).order("created_at", { ascending: false }).limit(20),
-          supabase.from("reviews").select("rating,created_at").eq("business_id", businessId),
+          supabase.from("reviews").select("*").eq("business_id", businessId).lt("rating", 4).order("created_at", { ascending: false }).limit(10),
+          supabase.from("reviews").select("rating,created_at").eq("business_id", businessId).gte("created_at", thirtyDaysAgo),
           supabase.from("patients").select("email_status").eq("business_id", businessId),
         ]);
-
-        console.log("🔍 Dashboard Debug — businessId:", businessId);
-        console.log("🔍 allReviews count:", allReviewsResult.data?.length || 0, allReviewsResult.data);
-        console.log("🔍 alerts count:", revsResult.data?.length || 0, revsResult.data);
 
         if (ptsResult.error) console.error("Patients fetch error:", ptsResult.error);
         else setPatients(ptsResult.data || []);
