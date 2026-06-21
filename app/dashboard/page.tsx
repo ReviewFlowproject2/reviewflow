@@ -301,8 +301,6 @@ function TrendChart({ data, days }: { data: TrendData[]; days: number }) {
                   height: `${barH}px`,
                   background: d.count === 0
                     ? "rgba(148,163,184,0.15)"
-                    : isWeekend
-                    ? "linear-gradient(to top, #64748b, #94a3b8)"
                     : "linear-gradient(to top, #0D9488, #14b8a6)",
                 }}
               >
