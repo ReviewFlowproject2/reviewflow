@@ -290,24 +290,29 @@ function TrendChart({ data, days }: { data: TrendData[]; days: number }) {
       </div>
       <div className="flex items-end gap-1.5 h-44 px-2">
         {data.map((d, i) => {
-          const height = Math.max((d.count / maxCount) * 100, 6);
+          const pct = Math.max((d.count / maxCount) * 100, 6);
+          const barH = Math.max(d.count > 0 ? (d.count / maxCount) * 160 : 8, 8);
           const isWeekend = new Date(d.date).getDay() === 0 || new Date(d.date).getDay() === 6;
           return (
-            <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+            <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative justify-end h-full">
               <div
-                className="w-full rounded-t-md transition-all duration-300 group-hover:opacity-80 relative"
+                className="w-full rounded-t transition-all duration-300 group-hover:opacity-80"
                 style={{
-                  height: `${height}%`,
-                  background: isWeekend
-                    ? "linear-gradient(to top, #94a3b8, #cbd5e1)"
+                  height: `${barH}px`,
+                  background: d.count === 0
+                    ? "rgba(148,163,184,0.15)"
+                    : isWeekend
+                    ? "linear-gradient(to top, #64748b, #94a3b8)"
                     : "linear-gradient(to top, #0D9488, #14b8a6)",
                 }}
               >
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                  {d.count} review{d.count !== 1 ? "s" : ""}
-                </div>
+                {d.count > 0 && (
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                    {d.count} review{d.count !== 1 ? "s" : ""}
+                  </div>
+                )}
               </div>
-              <span className={`text-[10px] ${isWeekend ? "text-slate-400/50" : "text-slate-500"}`}>
+              <span className={`text-[10px] shrink-0 ${isWeekend ? "text-slate-400/50" : "text-slate-500"}`}>
                 {new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
             </div>
